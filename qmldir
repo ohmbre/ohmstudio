@@ -1,1 +1,25 @@
+StyledText 1.0 StyledText.qml
+Model 1.0 Model.qml
 singleton Style 1.0 Style.qml
+Helpers 1.0 Helpers.js
+View 1.0 View.qml
+ConnectionView 1.0 connection/ConnectionView.qml
+Connection 1.0 connection/Connection.qml
+ModuleView 1.0 module/ModuleView.qml
+Module 1.0 module/Module.qml
+HwModule 1.0 module/hw/HwModule.qml
+GateHwModule 1.0 module/hw/gate/GateHwModule.qml
+ClockModule 1.0 module/clock/ClockModule.qml
+PatchView 1.0 patch/PatchView.qml
+Patch 1.0 patch/Patch.qml
+Basic 1.0 patch/example/Basic.qml
+JackView 1.0 jack/JackView.qml
+Jack 1.0 jack/Jack.qml
+OutJack 1.0 jack/out/OutJack.qml
+OutJackView 1.0 jack/out/OutJackView.qml
+GateOutJack 1.0 jack/out/gate/GateOutJack.qml
+InJackView 1.0 jack/in/InJackView.qml
+InJack 1.0 jack/in/InJack.qml
+GateInJack 1.0 jack/in/gate/GateInJack.qml
+GateJack 1.0 jack/gate/GateJack.qml
+CV 1.0 cv/CV.qml

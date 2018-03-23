@@ -1,9 +1,8 @@
 import QtQuick 2.0
+import ".."
+import "../../"
 
 JackView {
-    id: jackOutView
-    property double extension
-    color: Style.jackOutColor
-    colorLit: Style.jackOutLitColor
-
+    bgColor: Style.outJackColor
+    bgColorLit: Style.outJackLitColor
 }

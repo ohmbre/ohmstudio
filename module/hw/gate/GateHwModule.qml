@@ -1,3 +1,6 @@
+import ".."
+import "../.."
+import "../../.."
 HwModule {
     label: "Gate Out"
     inJacks: [

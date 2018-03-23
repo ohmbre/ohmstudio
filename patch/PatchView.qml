@@ -1,6 +1,8 @@
 import QtQuick 2.10
 import QtQuick.Shapes 1.11
 
+import ".."
+
 Flickable {
     id: patchView
     property Patch patch

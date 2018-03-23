@@ -1,3 +1,4 @@
+import ".."
 Model {
     property string label
     //property list<CV> cvs

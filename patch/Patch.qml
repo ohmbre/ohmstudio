@@ -1,3 +1,4 @@
+import ".."
 Model {
      property string name
      property list<Module> modules

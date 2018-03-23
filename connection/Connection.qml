@@ -1,3 +1,4 @@
+import ".."
 
 Model {
     property OutJack fromOutJack

@@ -1,32 +1,32 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="qmldir">qmldir</file>
-        <file alias="StyledText.qml">StyledText.qml</file>
-        <file alias="Model.qml">Model.qml</file>
-        <file alias="main.qml">main.qml</file>
-        <file alias="Style.qml">Style.qml</file>
-        <file alias="helpers.js">helpers.js</file>
-        <file alias="View.qml">View.qml</file>
-        <file alias="ConnectionView.qml">connection/ConnectionView.qml</file>
-        <file alias="Connection.qml">connection/Connection.qml</file>
-        <file alias="ModuleView.qml">module/ModuleView.qml</file>
-        <file alias="Module.qml">module/Module.qml</file>
-        <file alias="HwModule.qml">module/hw/HwModule.qml</file>
-        <file alias="GateHwModule.qml">module/hw/gate/GateHwModule.qml</file>
-        <file alias="ClockModule.qml">module/clock/ClockModule.qml</file>
-        <file alias="PatchView.qml">patch/PatchView.qml</file>
-        <file alias="Patch.qml">patch/Patch.qml</file>
-        <file alias="basic.qml">patch/example/basic.qml</file>
-        <file alias="JackView.qml">jack/JackView.qml</file>
-        <file alias="Jack.qml">jack/Jack.qml</file>
-        <file alias="OutJack.qml">jack/out/OutJack.qml</file>
-        <file alias="OutJackView.qml">jack/out/OutJackView.qml</file>
-        <file alias="GateOutJack.qml">jack/out/gate/GateOutJack.qml</file>
-        <file alias="InJackView.qml">jack/in/InJackView.qml</file>
-        <file alias="InJack.qml">jack/in/InJack.qml</file>
-        <file alias="GateInJack.qml">jack/in/gate/GateInJack.qml</file>
-        <file alias="GateJack.qml">jack/gate/GateJack.qml</file>
-        <file alias="CV.qml">cv/CV.qml</file>
-        <file alias="Asap-Medium.ttf">fonts/Asap-Medium.ttf</file>
+        <file>qmldir</file>
+        <file>StyledText.qml</file>
+        <file>Model.qml</file>
+        <file>Style.qml</file>
+        <file>Helpers.js</file>
+        <file>View.qml</file>
+        <file>connection/ConnectionView.qml</file>
+        <file>connection/Connection.qml</file>
+        <file>module/ModuleView.qml</file>
+        <file>module/Module.qml</file>
+        <file>module/hw/HwModule.qml</file>
+        <file>module/hw/gate/GateHwModule.qml</file>
+        <file>module/clock/ClockModule.qml</file>
+        <file>patch/PatchView.qml</file>
+        <file>patch/Patch.qml</file>
+        <file>patch/example/Basic.qml</file>
+        <file>jack/JackView.qml</file>
+        <file>jack/Jack.qml</file>
+        <file>jack/out/OutJack.qml</file>
+        <file>jack/out/OutJackView.qml</file>
+        <file>jack/out/gate/GateOutJack.qml</file>
+        <file>jack/in/InJackView.qml</file>
+        <file>jack/in/InJack.qml</file>
+        <file>jack/in/gate/GateInJack.qml</file>
+        <file>jack/gate/GateJack.qml</file>
+        <file>cv/CV.qml</file>
+        <file>fonts/Asap-Medium.ttf</file>
+        <file>qmldir</file>
     </qresource>
 </RCC>

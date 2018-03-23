@@ -1,4 +1,5 @@
-
+import ".."
+import "../.."
 Module {
     label: "Clock"
     /*cvs: [

@@ -1,13 +1,13 @@
 import QtQuick 2.10
-import "helpers.js" as F
-import "."
+import "../Helpers.js" as F
+import ".."
 
 Rectangle {
     id: moduleView
     property Module module
     property point coords
-    property double jInScale: 1.0
-    property double jOutScale: 1.7
+    property double inJackExtend: 2.7
+    property double outJackExtend: 2.7
     width: moduleLabel.implicitWidth + 14
     height: moduleLabel.implicitHeight + 14
     x: F.centerRectX(moduleView,parent) + coords.x
@@ -21,10 +21,7 @@ Rectangle {
 
     StyledText {
         id: moduleLabel
-        //width: 60
-
         text: module.label
-
     }
 
     MouseArea {
@@ -36,8 +33,12 @@ Rectangle {
         propagateComposedEvents: true
         preventStealing: true
         onClicked: {
-            //for (var i = 0; i < module.inJacks.length; i++)
-            //    module.inJacks[i].view.scale = 25;
+            for (var i = 0; i < module.inJacks.length; i++)
+                F.dDump(module.inJacks[0].view.path)
+            for (i = 0; i < module.outJacks.length; i++)
+                F.dDump(module.outJacks[0].view.path)
+
+            //module.inJacks[i].view.scale = 25;
 
         }
 
@@ -49,28 +50,20 @@ Rectangle {
     Repeater {
         anchors.fill: parent
         model: module.inJacks
-        JackView {
+        InJackView {
             jack: modelData
-            bgColor: Style.jackInColor
-            clearRadians: 2*Math.PI / module.inJacks.length
-            sweepRadians: Math.min(clearRadians - minPadRadians, maxSweepRadians)
-            centerRadians: index * clearRadians + Math.PI/2
-            scaleX: jInScale * moduleView.width/2;
-            scaleY: jInScale * moduleView.height/2;
+            index: index
+            extend: inJackExtend
         }
     }
 
     Repeater {
         anchors.fill: parent
         model: module.outJacks
-        JackView {
+        OutJackView {
             jack: modelData
-            bgColor: Style.jackOutColor
-            clearRadians: 2*Math.PI / module.outJacks.length
-            sweepRadians: Math.min(clearRadians - minPadRadians, maxSweepRadians)
-            centerRadians: index * clearRadians + Math.PI/2
-            scaleX: jOutScale * moduleView.width/2;
-            scaleY: jOutScale * moduleView.height/2;
+            index: index
+            extend: outJackExtend
         }
     }
 

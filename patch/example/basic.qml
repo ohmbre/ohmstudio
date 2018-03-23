@@ -1,3 +1,5 @@
+import ".."
+import "../.."
 
 Patch {
     id: basicPatch

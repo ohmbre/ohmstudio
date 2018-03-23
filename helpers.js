@@ -15,6 +15,13 @@ function centerRectY(insideRect, outsideRect) {
     return outsideRect.height/2 - insideRect.height/2;
 }
 
+function readFile(fileUrl) {
+    var request = new XMLHttpRequest();
+    request.open("GET", fileUrl, false);
+    request.send(null);
+    return request.responseText;
+}
+
 function dDump(obj) {
     console.log(obj);
     for (var prop in obj)

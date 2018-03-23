@@ -1,6 +1,7 @@
 import QtQuick 2.10
 import QtQuick.Shapes 1.11
-import "helpers.js" as F
+import ".."
+import "../Helpers.js" as F
 
 Shape {
     width: patchView.width;
