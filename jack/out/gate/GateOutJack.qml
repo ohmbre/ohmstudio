@@ -1,0 +1,3 @@
+InJack {
+    property GateJack gate
+}

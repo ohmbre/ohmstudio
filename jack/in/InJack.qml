@@ -1,0 +1,3 @@
+Jack {
+    jackDir: dirIn
+}
