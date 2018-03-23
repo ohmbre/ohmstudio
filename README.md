@@ -19,7 +19,7 @@ Work-in-progress virtual modular synthesizer for audio and video.  Custom design
 * Slick, usable touch screen interface suitable for both music/video producting and live performance
 * OpenGL visual canvas controlled by the same control or audio signals that can be used for music, routed straight out of the HDMI port through a GPU 
 * Portability to other platforms, yet prioritized to use cases that integrate with and extend what should be a common singular and powerful platform
-* Open source software and low-cost or DIY commodity (yet specialized) open hardware, free of hindrance from (but often enhanced by) commercial interest
+* Open source software and low-cost or DIY commodity (yet specialized) open hardware, free of hindrance from (but often enhanced by) commercial interest.  For example, browser-to-device integration is a priority for the near future.
 
 If you would like to build your own Ωhmbre device, it's open hardware and DIY-able. The schematics, pcb design files, and build docs can be found over [here](https://github.com/ohmbre/ohmbre).
 
