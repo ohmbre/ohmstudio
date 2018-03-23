@@ -1,12 +1,12 @@
 # Ωhmstudio
 
-Work-in-progress virtual modular synthesizer for audio and video.  Custom designed for ohmbre hardware synthesizer, a eurorack module with a touchscreen and nice audio and control voltage analog-to-digital/digital-to-analog converters to play nicely with patching in and out of analog synthsizers.  Yet it is easily portable to any Unix/Android/Mac/iOS/Windows/Browser platform thanks to the qml language it uses.
+Work-in-progress virtual modular synthesizer for audio and video.  Custom designed for ohmbre hardware synthesizer, a eurorack module with a touchscreen and analog-to-digital / vice-versa converters to play nicely with patching in and out of analog synthsizers.  Yet it is easily portable to any Unix / Android / Mac / iOS / Windows / Browser platform thanks to the qml language it uses.
 
 ### Build and Runtime Dependencies
 
-[Qt Libraries and Headers](https://www.qt.io/download-qt-installer) (run using `qmlscene View.qml`)
-Additionally it can be compiled and run using a C++ compiler and qbs build tools (best use [gcc](https://gcc.gnu.org/) for linux-based platforms, [llvm](http://releases.llvm.org/download.html) for Mac/iOS)
-Alternatively, you can run it with [Python](https://www.python.org/downloads/Python) and [PySide](https://wiki.qt.io/PySide2_GettingStarted) Qt bindings using `python main.py`
+* [Qt Libraries and Headers](https://www.qt.io/download-qt-installer) (run using `qmlscene View.qml`)
+* Additionally it can be compiled and run using a C++ compiler and qbs build tools (best use [gcc](https://gcc.gnu.org/) for linux-based platforms, [llvm](http://releases.llvm.org/download.html) for Mac/iOS)
+* Alternatively, you can run it with [Python](https://www.python.org/downloads/Python) and [PySide](https://wiki.qt.io/PySide2_GettingStarted) Qt bindings using `python main.py`
 
 ###
 
