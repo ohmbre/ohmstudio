@@ -18,6 +18,8 @@ Work-in-progress virtual modular synthesizer for audio and video.  Custom design
 * Ability for non-developers to create and share modules too by a mode to export patches as meta-modules
 * Slick, usable touch screen interface suitable for both music/video producting and live performance
 * OpenGL visual canvas controlled by the same control or audio signals that can be used for music, routed straight out of the HDMI port through a GPU 
+* Portability to other platforms, yet prioritized to use cases that integrate with and extend what should be a common singular and powerful platform
+* Open source software and low-cost or DIY commodity (yet specialized) open hardware, free of hindrance from (but often enhanced by) commercial interest
 
 [![ohmbre](https://i.imgur.com/CpHEKZk.png)](https://vimeo.com/261403175 "Demo #1 - Toying with UI paradigm - click to watch")
 
