@@ -20,7 +20,7 @@ ApplicationWindow {
         height: parent.height
         TextField {
             id: patchUrl
-            text: "Basic.qml"
+            text: "basic.qml"
             width: parent.width * 0.9
             height: 30
         }

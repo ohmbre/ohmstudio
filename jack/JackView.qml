@@ -6,25 +6,30 @@ import "../Helpers.js" as F
 Shape {
     id: jackView
     property Jack jack
-    property int index
-    readonly property double minPadRadians: 0.1
-    readonly property double maxSweepRadians: 1.0
-    property double clearRadians: 2*Math.PI / moduleView.module.inJacks.length
-    property double sweepRadians: Math.min(clearRadians - minPadRadians, maxSweepRadians)
-    property double centerRadians: index * clearRadians + Math.PI/2
+    property int position
+    property int siblings
+    property int direction
     property double extend
-    property double scaleX: extend * moduleView.width/2
-    property double scaleY: extend * moduleView.height/2
+
+    property double extendRatio: .7
+    readonly property double minPadRadians: 0.1
+    readonly property double maxSweepRadians: 0.8
+    property double clearRadians: 2*Math.PI / siblings
+    property double sweepRadians: Math.min(clearRadians - minPadRadians, maxSweepRadians)
+    property double centerRadians: direction * (position * clearRadians + Math.PI/2)
+    property double scaleY: (extendRatio*extend+1) * moduleView.height/2
+    property double scaleX: scaleY + (moduleView.width - moduleView.height)/2;
     property color bgColor
     property color bgColorLit
-    anchors.centerIn: parent
+    x: F.centerRectX(jackView, moduleView)
+    y: F.centerRectY(jackView, moduleView)
     z: -2
-
-    property ShapePath path: ShapePath {
-        strokeWidth: 2
+    ShapePath {
+        id: shapePath
         fillColor: bgColor
-        startX: 0; startY: 0
+        strokeColor: "#00000000"
 
+        startX: 0; startY: 0
         PathLine {
             id: linePath
             x: scaleX * Math.cos(centerRadians-sweepRadians/2)
@@ -41,22 +46,35 @@ Shape {
         PathLine {x: 0; y:0}
 
     }
+    Item {
+        height: childrenRect.height
+        y: -height/2.0 -(scaleY+2)*Math.sin(centerRadians)
+        x: (scaleX+2)*Math.cos(centerRadians)
+        rotation: -centerRadians*180/Math.PI
+        transformOrigin: Item.Left
 
-    StyledText{
-        text: jack.label;
-        color: Style.jackLabelColor;
-
-        centered: false
-        y: -height/2
-        x: -height/2
-        transform: [Rotation {angle: -centerRadians*180/Math.PI},
-         Translate {
-            x: scaleX*Math.cos(centerRadians)
-            y: -scaleY*Math.sin(centerRadians)
-        }]
+        Text{
+            text: jack.label;
+            property color bg: Style.jackLabelColor
+            color: Qt.rgba(bg.r, bg.g, bg.b, bg.a * extend);
+            font.family: asapFont.name
+            font.pixelSize: 8
+            rotation: (parent.x >= 0 ? 0 : 180)
+        }
     }
+
+    MouseArea {
+        height: 30
+        width: 30
+        hoverEnabled: true
+        onEntered: shapePath.fillColor = bgColorLit
+        onExited: shapePath.fillColor = bgColor
+    }
+
     Component.onCompleted: {
         jack.view = jackView;
-        //F.dDump(jackView);
+        F.dDump(jackView);
     }
 }
+
+

@@ -6,18 +6,68 @@ Rectangle {
     id: moduleView
     property Module module
     property point coords
-    property double inJackExtend: 2.7
-    property double outJackExtend: 2.7
-    width: moduleLabel.implicitWidth + 14
-    height: moduleLabel.implicitHeight + 14
+    property double inJackExtend: 0
+    property double outJackExtend: 0
+
     x: F.centerRectX(moduleView,parent) + coords.x
     y: F.centerRectY(moduleView,parent) + coords.y
-    visible: true
-    radius: 14
-    border.width: 1.5
-    border.color: Style.moduleBorderColor
-    color: Style.moduleColor
+
     z: 1
+    width: moduleLabel.implicitWidth + 14
+    height: moduleLabel.implicitHeight + 14
+    radius: 14
+    color: Style.moduleColor
+    border.color: Style.moduleBorderColor
+    border.width: 1.5
+    antialiasing: true
+
+    Behavior on inJackExtend { SmoothedAnimation { velocity: 200 } }
+    Behavior on outJackExtend { SmoothedAnimation { velocity: 200 } }
+    property string initNextState: (module.inJacks.length ? "inJacksExpanded" :
+                                                 (module.outJacks.length ? "outJacksExpanded" :
+                                                                        "collapsed"))
+    property string nextState: initNextState
+
+    states: [
+        State {
+            name: "inJacksExpanded"
+            PropertyChanges {
+                target: moduleView
+                inJackExtend: 1
+                outJackExtend: 0
+                nextState: module.outJacks.length ? "outJacksExpanded" : "collapsed"
+            }
+        },
+        State {
+            name: "outJacksExpanded"
+            PropertyChanges {
+                target: moduleView
+                inJackExtend: 0
+                outJackExtend: 1
+                nextState: "collapsed"
+            }
+        },
+        State {
+
+            name: "collapsed"
+            PropertyChanges {
+                id: collapsed
+                target: moduleView
+                inJackExtend: 0
+                outJackExtend: 0
+                nextState: initNextState
+            }
+        }
+    ]
+
+    transitions: [
+        Transition {
+            to: "*"
+            NumberAnimation { properties: "inJackExtend,outJackExtend"; easing.type: Easing.InQuad }
+        }
+    ]
+
+
 
     StyledText {
         id: moduleLabel
@@ -33,15 +83,8 @@ Rectangle {
         propagateComposedEvents: true
         preventStealing: true
         onClicked: {
-            for (var i = 0; i < module.inJacks.length; i++)
-                F.dDump(module.inJacks[0].view.path)
-            for (i = 0; i < module.outJacks.length; i++)
-                F.dDump(module.outJacks[0].view.path)
-
-            //module.inJacks[i].view.scale = 25;
-
+            moduleView.state = nextState
         }
-
     }
 
     readonly property real minPadRadians: 0.1
@@ -52,7 +95,8 @@ Rectangle {
         model: module.inJacks
         InJackView {
             jack: modelData
-            index: index
+            position: index
+            siblings: module.inJacks.length
             extend: inJackExtend
         }
     }
@@ -62,7 +106,8 @@ Rectangle {
         model: module.outJacks
         OutJackView {
             jack: modelData
-            index: index
+            position: index
+            siblings: module.outJacks.length
             extend: outJackExtend
         }
     }

@@ -15,7 +15,7 @@
         <file>module/clock/ClockModule.qml</file>
         <file>patch/PatchView.qml</file>
         <file>patch/Patch.qml</file>
-        <file>patch/example/Basic.qml</file>
+        <file>patch/example/basic.qml</file>
         <file>jack/JackView.qml</file>
         <file>jack/Jack.qml</file>
         <file>jack/out/OutJack.qml</file>
@@ -27,6 +27,5 @@
         <file>jack/gate/GateJack.qml</file>
         <file>cv/CV.qml</file>
         <file>fonts/Asap-Medium.ttf</file>
-        <file>qmldir</file>
     </qresource>
 </RCC>

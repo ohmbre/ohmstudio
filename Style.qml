@@ -8,11 +8,11 @@ QtObject {
     property color moduleSelectedColor: "#FF62ABFA"
     property color moduleBorderColor: "#FFCDCDCD"
 
-    property color inJackColor: "red" //"#728872"
+    property color inJackColor: "#A0728872"
     property color inJackLitColor: "#FFD1D7DB"
-
-    property color outJackColor: "green"//"#887272"
+    property color outJackColor: "#A0887272"
     property color outJackLitColor: "#FFD1D7DB"
     property color jackLabelColor: "#FFC8C8C8"
+
     property color edgeColor: "#FFCC5D4E"
 }

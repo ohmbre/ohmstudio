@@ -15,8 +15,13 @@ Module {
         }
     ]*/
     outJacks: [
-        GateOutJack {
-            label: "trig"
+        GateOutJack {label: "trig"},
+        OutJack {label: "wtf"},
+        OutJack {label: "test"}
+    ]
+    inJacks: [
+        InJack {
+            label: "tempo"
         }
     ]
 }

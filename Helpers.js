@@ -23,7 +23,7 @@ function readFile(fileUrl) {
 }
 
 function dDump(obj) {
-    console.log(obj);
+    console.warn(obj);
     for (var prop in obj)
-        console.log("      "+prop+": "+obj[prop]);
+        console.warn("      "+prop+": "+obj[prop]);
 }

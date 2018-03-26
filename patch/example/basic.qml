@@ -7,12 +7,13 @@ Patch {
 
     modules: [
         ClockModule {},
+        ClockModule {},
         GateHwModule {}
     ]
     connections: [
         Connection {
-            fromOutJack: basicPatch.modules[0].outJacks[0]
-            toInJack: basicPatch.modules[1].inJacks[0]
+            fromOutJack: modules[0].outJacks[0]
+            toInJack: modules[1].inJacks[0]
         }
     ]
 }
