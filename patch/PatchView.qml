@@ -1,16 +1,18 @@
 import QtQuick 2.10
-import QtQuick.Shapes 1.11
 
 import ".."
 
 Flickable {
     id: patchView
     property Patch patch
-    anchors.fill: patchView.parent
-    contentWidth: width*2; contentHeight: height*2
-    contentX: width/2; contentY: height/2
+
+    anchors.fill: parent
+    contentWidth: 1600; contentHeight: 1200
+    contentX: contentWidth/2 - width/2
+    contentY: contentHeight/2 - height/2
     flickableDirection: Flickable.HorizontalAndVerticalFlick
     antialiasing: true
+
 
     //maximumFlickVelocity: 10
 
@@ -24,12 +26,11 @@ Flickable {
 
 
     Repeater {
-        model: patch.connections
-        ConnectionView {
-           connection: modelData
+        model: patch.edges
+        EdgeView {
+           edge: modelData
         }
     }
-
 
     PinchArea {
         anchors.fill: parent
@@ -38,6 +39,7 @@ Flickable {
         pinch.maximumScale: 10
         pinch.dragAxis: Pinch.XAndYAxis
     }
+
     MouseArea {
         anchors.fill: parent
         anchors.centerIn: parent
@@ -45,11 +47,13 @@ Flickable {
         propagateComposedEvents: true
         //preventStealing: true
         onWheel: {
-            console.log("wheel");
             patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
 
         }
     }
+
+    EdgeDragView {id: childEdgeDragView}
+    property alias edgeDragView: childEdgeDragView
 
 }
 

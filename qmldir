@@ -3,8 +3,9 @@ Model 1.0 Model.qml
 singleton Style 1.0 Style.qml
 Helpers 1.0 Helpers.js
 View 1.0 View.qml
-ConnectionView 1.0 connection/ConnectionView.qml
-Connection 1.0 connection/Connection.qml
+EdgeView 1.0 edge/EdgeView.qml
+EdgeDragView 1.0 edge/EdgeDragView.qml
+Edge 1.0 edge/Edge.qml
 ModuleView 1.0 module/ModuleView.qml
 Module 1.0 module/Module.qml
 HwModule 1.0 module/hw/HwModule.qml

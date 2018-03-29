@@ -11,14 +11,17 @@ Rectangle {
 
     x: F.centerRectX(moduleView,parent) + coords.x
     y: F.centerRectY(moduleView,parent) + coords.y
-
     z: 1
-    width: moduleLabel.implicitWidth + 14
-    height: moduleLabel.implicitHeight + 14
-    radius: 14
+    width: 50
+    height: 50
+    property double rx: width/2
+    property double ry: height/2
+    property double rxext: rx + Style.jackExtension
+    property double ryext: ry + Style.jackExtension
+    radius: Math.min(rx,ry)
     color: Style.moduleColor
     border.color: Style.moduleBorderColor
-    border.width: 1.5
+    border.width: Style.moduleBorderWidth
     antialiasing: true
 
     Behavior on inJackExtend { SmoothedAnimation { velocity: 200 } }
@@ -72,19 +75,34 @@ Rectangle {
     StyledText {
         id: moduleLabel
         text: module.label
+        padding: Style.moduleLabelPadding
+        anchors.fill: parent
+
+        Component.onCompleted: {
+            moduleView.height = contentHeight + padding*2;
+            moduleView.width = contentWidth + padding*2;
+        }
     }
 
-    MouseArea {
+    MouseArea { // around module label and rounded rect
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
         drag.target: parent
         drag.axis: Drag.XAndYAxis
-        //drag.smoothed: true
+        drag.smoothed: true
         propagateComposedEvents: true
         preventStealing: true
         onClicked: {
             moduleView.state = nextState
         }
+    }
+
+    Rectangle { // around perimeter
+        width: rxext*2
+        height: ryext * 2
+        x: -Style.jackExtension
+        y: -Style.jackExtension
+        color: "#A0FFFFFF"
     }
 
     readonly property real minPadRadians: 0.1
@@ -111,6 +129,8 @@ Rectangle {
             extend: outJackExtend
         }
     }
+
+
 
     Component.onCompleted: {
         module.view = moduleView;

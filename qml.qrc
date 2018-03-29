@@ -6,8 +6,9 @@
         <file>Style.qml</file>
         <file>Helpers.js</file>
         <file>View.qml</file>
-        <file>connection/ConnectionView.qml</file>
-        <file>connection/Connection.qml</file>
+        <file>edge/Edge.qml</file>
+        <file>edge/EdgeView.qml</file>
+        <file>edge/EdgeDragView.qml</file>
         <file>module/ModuleView.qml</file>
         <file>module/Module.qml</file>
         <file>module/hw/HwModule.qml</file>

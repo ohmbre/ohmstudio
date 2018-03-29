@@ -1,11 +1,10 @@
 import QtQuick 2.10
 
 Text {
-    property bool centered: true
-    anchors.centerIn: centered ? parent : undefined
     fontSizeMode: Text.FixedSize
-    textFormat: Text.AutoText
-    horizontalAlignment: centered ? Text.AlignHCenter : undefined
+    textFormat: Text.PlainText
+    horizontalAlignment: Text.AlignHCenter
+    verticalAlignment: Text.AlignVCenter
     wrapMode: Text.WordWrap
     color: "#ffffff"
     font.family: asapFont.name

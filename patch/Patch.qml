@@ -2,7 +2,7 @@ import ".."
 Model {
      property string name
      property list<Module> modules
-     property list<Connection> connections
+     property list<Edge> edges
 }
 
 
