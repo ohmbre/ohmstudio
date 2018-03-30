@@ -4,9 +4,9 @@ singleton Style 1.0 Style.qml
 singleton Constants 1.0 Constants.qml
 Helpers 1.0 Helpers.js
 View 1.0 View.qml
-EdgeView 1.0 edge/EdgeView.qml
-EdgeDragView 1.0 edge/EdgeDragView.qml
-Edge 1.0 edge/Edge.qml
+CableView 1.0 cable/CableView.qml
+CableDragView 1.0 cable/CableDragView.qml
+Cable 1.0 cable/Cable.qml
 ModuleView 1.0 module/ModuleView.qml
 Module 1.0 module/Module.qml
 HwModule 1.0 module/hw/HwModule.qml

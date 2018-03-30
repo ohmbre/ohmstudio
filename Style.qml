@@ -20,7 +20,7 @@ QtObject {
     property color jackLabelColor: "#FFC8C8C8"
     property real jackLabelGap: 2
 
-    property color edgeColor: "#FFCC5D4E"
-    property double edgeControlStiffness: 5
-    property double edgeGravity: 5
+    property color cableColor: "#FFCC5D4E"
+    property double cableControlStiffness: 5
+    property double cableGravity: 100
 }

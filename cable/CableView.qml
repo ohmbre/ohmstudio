@@ -4,10 +4,10 @@ import ".."
 import "../Helpers.js" as F
 
 Shape {
-    property Edge edge
-    property OutJackView ojv: edge.fromOutJack.view
+    property Cable cable
+    property OutJackView ojv: cable.fromOutJack.view
     property ModuleView ojm: ojv.parent
-    property InJackView ijv: edge.toInJack.view
+    property InJackView ijv: cable.toInJack.view
     property ModuleView ijm: ijv.parent
 
     width: patchView.width;
@@ -16,9 +16,9 @@ Shape {
     layer.samples: 4
 
     ShapePath {
-        id: edgeView
+        id: cableView
         strokeWidth: 2.5
-        strokeColor: Style.edgeColor
+        strokeColor: Style.cableColor
         fillColor: "transparent"
         joinStyle: ShapePath.RoundJoin
         strokeStyle: ShapePath.SolidLine
@@ -27,7 +27,7 @@ Shape {
 
         PathCubic {
             id: pathCubic
-            property double c: Style.edgeControlStiffness
+            property double c: Style.cableControlStiffness
             x: F.centerX(ijm)
             y: F.centerY(ijm)
             control1X:
@@ -43,8 +43,7 @@ Shape {
     }
 
     Component.onCompleted: {
-        edge.view = edgeView;
-        console.log("created edge");
+        cable.view = cableView;
     }
 }
 

@@ -26,9 +26,9 @@ Flickable {
 
 
     Repeater {
-        model: patch.edges
-        EdgeView {
-           edge: modelData
+        model: patch.cables
+        CableView {
+           cable: modelData
         }
     }
 
@@ -52,8 +52,8 @@ Flickable {
         }
     }
 
-    EdgeDragView {id: childEdgeDragView; }
-    property alias edgeDragView: childEdgeDragView
+    CableDragView {id: childCableDragView; }
+    property alias cableDragView: childCableDragView
 
 }
 

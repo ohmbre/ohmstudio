@@ -87,7 +87,10 @@ Rectangle {
 
     MouseArea { // around module label and rounded rect
         id: moduleMouseArea
-        anchors.fill: parent
+        height: (parent.height > parent.width) ? (parent.height - radius ) : parent.height
+        width: (parent.width > parent.height) ? (parent.width - radius ) : parent.width
+        x: F.centerRectX(moduleMouseArea, moduleMouseArea.parent)
+        y: F.centerRectY(moduleMouseArea, moduleMouseArea.parent)
         drag.target: parent
         drag.smoothed: true
         propagateComposedEvents: true

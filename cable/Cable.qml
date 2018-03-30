@@ -1,7 +1,7 @@
 import ".."
 
 Model {
-    objectName: "Edge"
+    objectName: "Cable"
 
     property OutJack fromOutJack
     property InJack toInJack

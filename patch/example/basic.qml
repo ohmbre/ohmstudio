@@ -10,8 +10,8 @@ Patch {
         ClockModule {},
         GateHwModule {}
     ]
-    edges: [
-        Edge {
+    cables: [
+        Cable {
             fromOutJack: modules[0].outJacks[0]
             toInJack: modules[1].inJacks[0]
         }

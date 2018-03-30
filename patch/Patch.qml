@@ -5,17 +5,15 @@ Model {
     objectName: "Patch"
     property string name
     property list<Module> modules
-    property list<Edge> edges
+    property list<Cable> cables
 
-    function getEdge(jack) {
-        console.log('checking edge');
-        for (var e = 0; e < edges.length; e++) {
-            if (edges[e].fromOutJack === jack)
-                return edges[e].toInJack;
-            if (edges[e].toInJack === jack)
-                return edges[e].fromOutJack;
+    function getCable(jack) {
+        for (var e = 0; e < cables.length; e++) {
+            if (cables[e].fromOutJack === jack)
+                return cables[e].toInJack;
+            if (cables[e].toInJack === jack)
+                return cables[e].fromOutJack;
         }
-        console.log('no edge found');
         return false;
     }
 

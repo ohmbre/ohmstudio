@@ -4,7 +4,7 @@ import ".."
 import "../Helpers.js" as F
 
 Shape {
-    id: edgeDragView
+    id: cableDragView
     property JackView startJackView: null
     property JackView endJackView: null
     property ModuleView startModuleView: startJackView ? startJackView.parent : null
@@ -39,73 +39,58 @@ Shape {
 
         PathCubic {
             id: dragCurve
-            Behavior on control2X { NumberAnimation { duration: 400 } }
-            Behavior on control2Y { NumberAnimation { duration: 400 } }
+            x: F.centerX(destination) - destination.dot.width/2
+            y: F.centerY(destination) - destination.dot.height/2
+            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity;
+            control2X: x; control2Y: y + gravityOn * Style.cableGravity;
+            Behavior on control2X { enabled: animationOn; id: springX; SpringAnimation { spring: 1; damping: 0.05} }
+            Behavior on control2Y { enabled: animationOn; id: springY; SpringAnimation { spring: 1; damping: 0.05} }
         }
+        property alias dragCurve: dragCurve
     }
+    property alias dragShape: dragShape
+    property bool animationOn: false
+    property real gravityOn: 0
+    Behavior on gravityOn { NumberAnimation { duration: 1 } }
 
     states: [
         State {
-            name: "noStartNoEnd"
-            PropertyChanges { target: dragShape; startX: 0; startY: 0; strokeColor: "transparent" }
-            PropertyChanges { target: dragCurve; x: startX; y: startY; control1X: startX; control1Y: startY; control2X: x; control2Y: y }
-            PropertyChanges { target: destination; visible: false; x: 0; y: 0 }
-        },
-        State {
-            name: "startNoEnd"
-            extend: "start"
+            name: "notdragging"
             PropertyChanges {
-                target: dragCurve
-                x: F.centerX(destination) - destination.dot.width/2; y: F.centerY(destination) - destination.dot.width/2
-                control2X: x; control2Y: y
+                target: cableDragView
+                dragShape.strokeColor: "transparent"
+                destination.visible: false
+                gravityOn: 0
             }
         },
         State {
-            name: "startAndEnd"
-            extend: "start"
+            name: "dragging"
             PropertyChanges {
-                target: dragCurve
-                x: F.centerX(endModuleView); y: F.centerY(endModuleView)
-                control2X: Style.edgeControlStiffness * endJackView.r * Math.cos(endJackView.theta) + x
-                control2Y: Style.edgeControlStiffness * endJackView.r * -Math.sin(endJackView.theta) + y
+                target: cableDragView
+                dragShape.strokeColor: Style.cableColor
+                dragShape.startX: F.centerX(startModuleView) + startJackView.r * 0.8 * Math.cos(startJackView.theta);
+                dragShape.startY: F.centerY(startModuleView) + startJackView.r * 0.8 * -Math.sin(startJackView.theta);
+                destination.visible: true
+                destination.x: cableDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).x;
+                destination.y: cableDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).y;
+                gravityOn: 1
             }
-        },
-        State {
-            name: "start"
-            changes: [
-                PropertyChanges {
-                    target: dragShape;
-                    strokeColor: Style.edgeColor
-                    startX: F.centerX(startModuleView);
-                    startY: F.centerY(startModuleView)
-                },
-                PropertyChanges {
-                    target: dragCurve;
-                    control1X: Style.edgeControlStiffness * startJackView.r * Math.cos(startJackView.theta) + dragShape.startX
-                    control1Y: Style.edgeControlStiffness * startJackView.r * -Math.sin(startJackView.theta) + dragShape.startY
-                },
-                PropertyChanges {
-                    target: destination
-                    visible: true
-                    x: edgeDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).x;
-                    y: edgeDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).y;
 
-                }
-            ]
         }
     ]
 
-    signal edgeStarted(JackView jv)
-    onEdgeStarted: function(jv) {
-        if (patchView.patch.getEdge(jv.jack)) return;
+    signal cableStarted(JackView jv)
+    onCableStarted: function(jv) {
+        if (patchView.patch.getCable(jv.jack)) return;
         startJackView = jv;
-        state = "startNoEnd";
-        jv.pad.positionChanged.connect(edgeDragView.edgeMoved);
-        jv.pad.released.connect(edgeDragView.edgeDropped);
+        state = "dragging";
+        jv.pad.positionChanged.connect(cableDragView.cableMoved);
+        jv.pad.released.connect(cableDragView.cableDropped);
+        animationOn = true;
     }
 
-    signal edgeMoved
-    onEdgeMoved: {
+    signal cableMoved
+    onCableMoved: {
         for (var m = 0; m < patchView.patch.modules.length; m++) {
             var mv = patchView.patch.modules[m].view;
             if (mv === startModuleView) continue;
@@ -121,19 +106,17 @@ Shape {
                     jacklist = mv.module.inJacks;
                 }
                 for (var j = 0; j < jacklist.length; j++) {
-                    if (patchView.patch.getEdge(jacklist[j])) continue;
+                    if (patchView.patch.getCable(jacklist[j])) continue;
                     var jv = jacklist[j].view;
                     var jRelPos = sjp.mapToItem(jv.shape, sjp.mouseX, sjp.mouseY);
                     if (jv.shape.contains(jRelPos)) {
                         if (!jv.dropTargeted) {
                             jv.dropTargeted = true;
                             endJackView = jv;
-                            state = "startAndEnd"
                         }
                     } else {
                         if (jv.dropTargeted) {
                             jv.dropTargeted = false;
-                            state = "startNoEnd"
                             endJackView = null;
                         }
                     }
@@ -143,21 +126,22 @@ Shape {
         }
     }
 
-    signal edgeDropped
-    onEdgeDropped: {
-        startJackView.pad.positionChanged.disconnect(edgeDragView.edgeMoved);
-        startJackView.pad.released.disconnect(edgeDragView.edgeDropped);
-        state = "NoStartNoEnd";
+    signal cableDropped
+    onCableDropped: {
+        startJackView.pad.positionChanged.disconnect(cableDragView.cableMoved);
+        startJackView.pad.released.disconnect(cableDragView.cableDropped);
+        state = "notdragging";
+        animationOn = false;
 
         if (endJackView != null) {
-            var ec = Qt.createComponent("Edge.qml");
+            var ec = Qt.createComponent("Cable.qml");
             if (ec.status === Component.Ready) {
                 var ed = {
                     "fromOutJack": ((startJackView.jack.jackDir === Constants.jack.dirOut) ? startJackView.jack : endJackView.jack),
                     "toInJack": ((startJackView.jack.jackDir === Constants.jack.dirIn) ? startJackView.jack : endJackView.jack)
                 }
                 var eo = ec.createObject(patchView.patch, ed);
-                patchView.patch.edges.push(eo);
+                patchView.patch.cables.push(eo);
                 startModuleView.state = "collapsed";
                 endModuleView.state = "collapsed";
             }
