@@ -15,13 +15,20 @@ Shape {
     antialiasing: true
     layer.samples: 4
 
-    Rectangle{
-        id: dest
-        width: 5; height: 5; radius: 2.5
+    Item{
+        id: destination
+        width: 5; height: 5;
         z: 3
         visible: false
+        Rectangle {
+            id: dot
+            width: 5; height: 5; radius: 2.5
+            visible: parent.visible
+            x: -width/2; y: -height/2
+        }
+        property alias dot: dot
     }
-    property alias destination: dest
+    property alias destination: destination
 
     ShapePath {
         id: dragShape
@@ -32,6 +39,8 @@ Shape {
 
         PathCubic {
             id: dragCurve
+            Behavior on control2X { NumberAnimation { duration: 400 } }
+            Behavior on control2Y { NumberAnimation { duration: 400 } }
         }
     }
 
@@ -39,15 +48,16 @@ Shape {
         State {
             name: "noStartNoEnd"
             PropertyChanges { target: dragShape; startX: 0; startY: 0; strokeColor: "transparent" }
-            PropertyChanges { target: dragCurve; x: 0; y: 0; control1X: 0; control1Y: 0; control2X: 0; control2Y: 0 }
+            PropertyChanges { target: dragCurve; x: startX; y: startY; control1X: startX; control1Y: startY; control2X: x; control2Y: y }
+            PropertyChanges { target: destination; visible: false; x: 0; y: 0 }
         },
         State {
             name: "startNoEnd"
             extend: "start"
             PropertyChanges {
                 target: dragCurve
-                x: F.centerX(destination); y: F.centerY(destination)
-                control2X: F.centerX(destination); control2Y: F.centerY(destination)
+                x: F.centerX(destination) - destination.dot.width/2; y: F.centerY(destination) - destination.dot.width/2
+                control2X: x; control2Y: y
             }
         },
         State {
@@ -73,6 +83,13 @@ Shape {
                     target: dragCurve;
                     control1X: Style.edgeControlStiffness * startJackView.r * Math.cos(startJackView.theta) + dragShape.startX
                     control1Y: Style.edgeControlStiffness * startJackView.r * -Math.sin(startJackView.theta) + dragShape.startY
+                },
+                PropertyChanges {
+                    target: destination
+                    visible: true
+                    x: edgeDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).x;
+                    y: edgeDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).y;
+
                 }
             ]
         }
@@ -80,17 +97,11 @@ Shape {
 
     signal edgeStarted(JackView jv)
     onEdgeStarted: function(jv) {
-        function relPos() {
-            return mapFromItem(jv.pad, jv.pad.mouseX, jv.pad.mouseY);
-        }
-        destination.x = Qt.binding(function() { return relPos().x - destination.width/2; });
-        destination.y = Qt.binding(function() { return relPos().y - destination.height/2; });
-        destination.visible = true;
+        if (patchView.patch.getEdge(jv.jack)) return;
         startJackView = jv;
         state = "startNoEnd";
         jv.pad.positionChanged.connect(edgeDragView.edgeMoved);
         jv.pad.released.connect(edgeDragView.edgeDropped);
-
     }
 
     signal edgeMoved
@@ -110,6 +121,7 @@ Shape {
                     jacklist = mv.module.inJacks;
                 }
                 for (var j = 0; j < jacklist.length; j++) {
+                    if (patchView.patch.getEdge(jacklist[j])) continue;
                     var jv = jacklist[j].view;
                     var jRelPos = sjp.mapToItem(jv.shape, sjp.mouseX, sjp.mouseY);
                     if (jv.shape.contains(jRelPos)) {
@@ -135,8 +147,6 @@ Shape {
     onEdgeDropped: {
         startJackView.pad.positionChanged.disconnect(edgeDragView.edgeMoved);
         startJackView.pad.released.disconnect(edgeDragView.edgeDropped);
-        destination.visible = false;
-        destination.x = 0; destination.y = 0;
         state = "NoStartNoEnd";
 
         if (endJackView != null) {

@@ -22,4 +22,5 @@ QtObject {
 
     property color edgeColor: "#FFCC5D4E"
     property double edgeControlStiffness: 5
+    property double edgeGravity: 5
 }
