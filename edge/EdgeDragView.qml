@@ -9,7 +9,6 @@ Shape {
     property JackView endJackView: null
     property ModuleView startModuleView: startJackView ? startJackView.parent : null
     property ModuleView endModuleView: endJackView ? endJackView.parent : null
-    property point dragCoords
 
     width: patchView.width
     height: patchView.height
@@ -17,22 +16,11 @@ Shape {
     layer.samples: 4
 
     Rectangle{
-        id: dragDot;
-        width: 5; height: 5; radius: 2.5;
-        x: dragCoords.x
-        y: dragCoords.y
-        z: 3;
+        id: dest
+        width: 5; height: 5; radius: 2.5
+        z: 3
     }
-    property alias target: dragDot
-
-    signal dragStarted(point mousePos, JackView jv)
-    onDragStarted: {
-        var relPos = edgeDragView.mapFromGlobal(mousePos.x, mousePos.y);
-        dragDot.x = relPos.x
-        dragDot.y = relPos.y
-        startJackView = jv
-        console.warn(dragDot.x + ',' + dragDot.y)
-    }
+    property alias destination: dest
 
     ShapePath {
         id: dragShape
@@ -48,22 +36,23 @@ Shape {
     states: [
         State {
             name: "normal"
-            when: startJackView == null
+            //when: startJackView == null
             PropertyChanges { target: dragShape; startX: 0; startY: 0; strokeColor: "transparent" }
             PropertyChanges { target: dragCurve; x: 0; y: 0; control1X: 0; control1Y: 0; control2X: 0; control2Y: 0 }
         },
         State {
+            name: "dragging_no_hover"
             extend: "dragging"
-            when: endJackView == null
+            //when: endJackView == null && startJackView != null
             PropertyChanges {
                 target: dragCurve;
-                x: F.centerX(dragDot); y: F.centerY(dragDot)
-                control2X: F.centerX(dragDot); control2Y: F.centerY(dragDot)
+                x: F.centerX(destination); y: F.centerY(destination)
+                control2X: F.centerX(destination); control2Y: F.centerY(destination)
             }
         },
         State {
             name: "dragging"
-            when: startJackView != null
+            //when: startJackView != null
             changes: [
                 PropertyChanges {
                     target: dragShape;

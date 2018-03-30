@@ -18,16 +18,17 @@ Item {
                                  Math.pow(moduleView.ryext*Math.sin(theta),2))
     property color bgColor
     property color bgColorLit
-    z: -2
+
     height: (Style.jackExtension + moduleView.radius) * 2 * Math.sin(sweepRad/2)
     width: r + Style.jackLabelGap + jackLabel.contentWidth
-
+    z: -1
     Shape {
         id: jackShape
         width: r
         height: jackView.height
         containsMode: Shape.FillContains
         layer.samples: 4
+        z: -2
         ShapePath {
             id: shapePath
             fillColor: bgColor
@@ -40,8 +41,8 @@ Item {
             }
             PathArc {
                 id: arcPath
-                radiusX: r
-                radiusY: r
+                radiusX: rxext
+                radiusY: ryext
                 x: r * Math.cos(sweepRad/2)
                 y: 0
                 direction: PathArc.Counterclockwise
@@ -56,7 +57,23 @@ Item {
             preventStealing: true
             hoverEnabled: true
             drag.threshold: 0
-            drag.target: patchView.edgeDragView.target
+            drag.target: patchView.edgeDragView.destination
+            drag.axis: Drag.XAndYAxis
+            drag.onActiveChanged: {
+                var edv = patchView.edgeDragView;
+                if (drag.active) {
+                    console.warn("drag started");
+                    edv.startJackView = jackView
+                    edv.state = "dragging_no_hover"
+                } else {
+                    console.warn("drag done");
+                    edv.state = "normal"
+                    edv.startJackView = null;
+                    edv.destination.x = 0;
+                    edv.destination.y = 0;
+                }
+            }
+
             /*states: [
                 State {
                     name: "lit"
@@ -67,8 +84,10 @@ Item {
 
             onPressed: function(event) {
                 if (jackShape.contains(Qt.point(event.x, event.y))) {
-                    var globPos = jackPad.mapToGlobal(event.x,event.y);
-                    patchView.edgeDragView.dragStarted(globPos,jackView);
+                    var dest = patchView.edgeDragView.destination;
+                    var relPos = mapToItem(dest, event.x, event.y);
+                    dest.x = relPos.x - dest.width/2;
+                    dest.y = relPos.y - dest.height/2;
                 }
             }
         }
@@ -104,6 +123,8 @@ Item {
 
     Component.onCompleted: {
         jack.view = jackView;
+        if (!Qt.jacks) Qt.jacks = [jackView];
+        else Qt.jacks.push(jackView);
         //F.dDump(jackView);
     }
 }

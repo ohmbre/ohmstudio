@@ -61,6 +61,7 @@ Rectangle {
                 nextState: initNextState
             }
         }
+
     ]
 
     transitions: [
@@ -85,6 +86,7 @@ Rectangle {
     }
 
     MouseArea { // around module label and rounded rect
+        id: moduleMouseArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
         drag.target: parent
@@ -97,12 +99,20 @@ Rectangle {
         }
     }
 
-    Rectangle { // around perimeter
-        width: rxext*2
-        height: ryext * 2
-        x: -Style.jackExtension
-        y: -Style.jackExtension
-        color: "#A0FFFFFF"
+    DropArea {
+        anchors.fill: parent
+        z: 3
+        onEntered: {
+            console.warn("drop area entered");
+            var sjv = patchView.edgeDragView.startJackView;
+            if (sjv instanceof InJackView)
+                moduleView.state = "outJacksExpanded"
+            else if (sjv instanceof OutJackView)
+                moduleView.state = "inJacksExpanded"
+        }
+        onExited: {
+            moduleView.state = "collapsed"
+        }
     }
 
     readonly property real minPadRadians: 0.1
