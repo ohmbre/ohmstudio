@@ -1,6 +1,8 @@
 import ".."
 import "../.."
 Module {
+    objectName: "ClockModule"
+
     label: "Clock"
     /*cvs: [
         CV {

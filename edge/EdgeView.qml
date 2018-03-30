@@ -44,6 +44,7 @@ Shape {
 
     Component.onCompleted: {
         edge.view = edgeView;
+        console.log("created edge");
     }
 }
 

@@ -21,5 +21,5 @@ QtObject {
     property real jackLabelGap: 2
 
     property color edgeColor: "#FFCC5D4E"
-    property double edgeControlStiffness: 3
+    property double edgeControlStiffness: 5
 }

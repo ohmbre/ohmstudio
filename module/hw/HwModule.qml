@@ -1,4 +1,5 @@
 import ".."
 Module {
+    objectName: "HwModule"
 
 }

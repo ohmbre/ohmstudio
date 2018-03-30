@@ -1,6 +1,7 @@
 StyledText 1.0 StyledText.qml
 Model 1.0 Model.qml
 singleton Style 1.0 Style.qml
+singleton Constants 1.0 Constants.qml
 Helpers 1.0 Helpers.js
 View 1.0 View.qml
 EdgeView 1.0 edge/EdgeView.qml

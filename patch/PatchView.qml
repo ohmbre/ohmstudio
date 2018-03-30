@@ -52,7 +52,7 @@ Flickable {
         }
     }
 
-    EdgeDragView {id: childEdgeDragView}
+    EdgeDragView {id: childEdgeDragView; }
     property alias edgeDragView: childEdgeDragView
 
 }

@@ -1,8 +1,8 @@
 import ".."
 Model {
-    readonly property int dirIn: 0
-    readonly property int dirOut: 1
+    objectName: "Jack"
 
     property string label
     property int jackDir // dirIn or dirOut
+
 }

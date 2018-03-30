@@ -2,6 +2,7 @@ import ".."
 import "../.."
 import "../../.."
 HwModule {
+    objectName: "GateHwModule"
     label: "Gate Out"
     inJacks: [
         GateInJack {

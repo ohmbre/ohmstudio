@@ -56,43 +56,15 @@ Item {
             propagateComposedEvents: true
             preventStealing: true
             hoverEnabled: true
-            drag.threshold: 0
-            drag.target: patchView.edgeDragView.destination
-            drag.axis: Drag.XAndYAxis
-            drag.onActiveChanged: {
-                var edv = patchView.edgeDragView;
-                if (drag.active) {
-                    console.warn("drag started");
-                    edv.startJackView = jackView
-                    edv.state = "dragging_no_hover"
-                } else {
-                    console.warn("drag done");
-                    edv.state = "normal"
-                    edv.startJackView = null;
-                    edv.destination.x = 0;
-                    edv.destination.y = 0;
-                }
-            }
-
-            /*states: [
-                State {
-                    name: "lit"
-                    when: jackPad.containsMouse && jackShape.contains(Qt.point(jackPad.mouseX, jackPad.mouseY))
-                    PropertyChanges { target: shapePath; fillColor: bgColorLit }
-                }
-            ]*/
-
             onPressed: function(event) {
-                if (jackShape.contains(Qt.point(event.x, event.y))) {
-                    var dest = patchView.edgeDragView.destination;
-                    var relPos = mapToItem(dest, event.x, event.y);
-                    dest.x = relPos.x - dest.width/2;
-                    dest.y = relPos.y - dest.height/2;
-                }
+                if (jackShape.contains(Qt.point(event.x, event.y)))
+                    patchView.edgeDragView.edgeStarted(jackView);
             }
         }
     }
-
+    property alias shape: jackShape
+    property alias path: shapePath
+    property alias pad: jackPad
     StyledText {
         id: jackLabel
         text: jack.label;
@@ -120,6 +92,12 @@ Item {
             angle: -theta*180/Math.PI
         }
     ]
+
+    property bool dropTargeted: false
+    onDropTargetedChanged: {
+        if (dropTargeted) shapePath.fillColor = bgColorLit;
+        else shapePath.fillColor = bgColor;
+    }
 
     Component.onCompleted: {
         jack.view = jackView;

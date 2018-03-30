@@ -26,23 +26,23 @@ Rectangle {
 
     Behavior on inJackExtend { SmoothedAnimation { velocity: 200 } }
     Behavior on outJackExtend { SmoothedAnimation { velocity: 200 } }
-    property string initNextState: (module.inJacks.length ? "inJacksExpanded" :
-                                                 (module.outJacks.length ? "outJacksExpanded" :
+    property string initNextState: (module.inJacks.length ? "inJacksExtended" :
+                                                 (module.outJacks.length ? "outJacksExtended" :
                                                                         "collapsed"))
     property string nextState: initNextState
 
     states: [
         State {
-            name: "inJacksExpanded"
+            name: "inJacksExtended"
             PropertyChanges {
                 target: moduleView
                 inJackExtend: 1
                 outJackExtend: 0
-                nextState: module.outJacks.length ? "outJacksExpanded" : "collapsed"
+                nextState: module.outJacks.length ? "outJacksExtended" : "collapsed"
             }
         },
         State {
-            name: "outJacksExpanded"
+            name: "outJacksExtended"
             PropertyChanges {
                 target: moduleView
                 inJackExtend: 0
@@ -88,9 +88,7 @@ Rectangle {
     MouseArea { // around module label and rounded rect
         id: moduleMouseArea
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
         drag.target: parent
-        drag.axis: Drag.XAndYAxis
         drag.smoothed: true
         propagateComposedEvents: true
         preventStealing: true
@@ -99,21 +97,16 @@ Rectangle {
         }
     }
 
-    DropArea {
-        anchors.fill: parent
-        z: 3
-        onEntered: {
-            console.warn("drop area entered");
-            var sjv = patchView.edgeDragView.startJackView;
-            if (sjv instanceof InJackView)
-                moduleView.state = "outJacksExpanded"
-            else if (sjv instanceof OutJackView)
-                moduleView.state = "inJacksExpanded"
-        }
-        onExited: {
-            moduleView.state = "collapsed"
-        }
+    Rectangle {
+        id: perimeter
+        property double extra: Style.jackExtension * Math.max(inJackExtend,outJackExtend)
+        width: parent.width + extra*2
+        height: parent.height + extra*2
+        x: -extra
+        y: -extra
+        visible: false
     }
+    property alias perimeter: perimeter
 
     readonly property real minPadRadians: 0.1
     readonly property real maxSweepRadians: 1

@@ -28,5 +28,6 @@
         <file>jack/gate/GateJack.qml</file>
         <file>cv/CV.qml</file>
         <file>fonts/Asap-Medium.ttf</file>
+        <file>Constants.qml</file>
     </qresource>
 </RCC>
