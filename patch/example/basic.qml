@@ -12,8 +12,8 @@ Patch {
     ]
     cables: [
         Cable {
-            fromOutJack: modules[0].outJacks[0]
-            toInJack: modules[1].inJacks[0]
+            out: modules[0].outJacks[0]
+            inp: modules[1].inJacks[0]
         }
     ]
 }

@@ -2,7 +2,6 @@ import ".."
 
 Model {
     objectName: "Cable"
-
-    property OutJack fromOutJack
-    property InJack toInJack
+    property Jack inp
+    property Jack out
 }

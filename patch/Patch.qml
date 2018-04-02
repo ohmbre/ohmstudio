@@ -7,15 +7,24 @@ Model {
     property list<Module> modules
     property list<Cable> cables
 
-    function getCable(jack) {
-        for (var e = 0; e < cables.length; e++) {
-            if (cables[e].fromOutJack === jack)
-                return cables[e].toInJack;
-            if (cables[e].toInJack === jack)
-                return cables[e].fromOutJack;
+    function lookupCableFor(jack) {
+        for (var c = 0; c < cables.length; c++) {
+            if (cables[c].out === jack)
+                return {index: c, cable: cables[c], dir: 'out', otherend: cables[c].inp};
+            if (cables[c].inp === jack)
+                return {index: c, cable: cables[c], dir: 'inp', otherend: cables[c].out};
         }
-        return false;
+        return {cable: false};
     }
+
+    function deleteCable(cable) {
+        var newCables = [];
+        for (var c = 0; c < cables.length; c++)
+            if (cables[c] !== cable)
+                newCables.push(cables[c]);
+        cables = newCables;
+    }
+
 
     Component.onCompleted: function() {
         Qt.patch = this;

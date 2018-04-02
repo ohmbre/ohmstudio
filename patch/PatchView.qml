@@ -11,7 +11,8 @@ Flickable {
     contentX: contentWidth/2 - width/2
     contentY: contentHeight/2 - height/2
     flickableDirection: Flickable.HorizontalAndVerticalFlick
-    antialiasing: true
+
+    scale: 2
 
 
     //maximumFlickVelocity: 10
@@ -36,9 +37,8 @@ Flickable {
         anchors.fill: parent
         pinch.target: patchView.contentItem
         pinch.minimumScale: 0.1
-        pinch.maximumScale: 10
+        pinch.maximumScale: 5
         pinch.dragAxis: Pinch.XAndYAxis
-    }
 
     MouseArea {
         anchors.fill: parent
@@ -50,7 +50,7 @@ Flickable {
             patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
 
         }
-    }
+    }}
 
     CableDragView {id: childCableDragView; }
     property alias cableDragView: childCableDragView

@@ -5,8 +5,8 @@ import QtQuick.Controls 2.2
 ApplicationWindow {
     id: window
     visible: true
-    width: 320
-    height: 240
+    width: 640
+    height: 480
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
 

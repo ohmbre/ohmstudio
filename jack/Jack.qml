@@ -3,6 +3,6 @@ Model {
     objectName: "Jack"
 
     property string label
-    property int jackDir // dirIn or dirOut
+    property string dir // "inp" or "out"
 
 }

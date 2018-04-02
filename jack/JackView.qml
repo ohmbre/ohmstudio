@@ -65,6 +65,7 @@ Item {
     property alias shape: jackShape
     property alias path: shapePath
     property alias pad: jackPad
+
     StyledText {
         id: jackLabel
         text: jack.label;

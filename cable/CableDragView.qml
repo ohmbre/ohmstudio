@@ -7,13 +7,13 @@ Shape {
     id: cableDragView
     property JackView startJackView: null
     property JackView endJackView: null
-    property ModuleView startModuleView: startJackView ? startJackView.parent : null
-    property ModuleView endModuleView: endJackView ? endJackView.parent : null
 
     width: patchView.width
     height: patchView.height
     antialiasing: true
     layer.samples: 4
+
+    property MouseArea dragPad;
 
     Item{
         id: destination
@@ -68,11 +68,11 @@ Shape {
             PropertyChanges {
                 target: cableDragView
                 dragShape.strokeColor: Style.cableColor
-                dragShape.startX: F.centerX(startModuleView) + startJackView.r * 0.8 * Math.cos(startJackView.theta);
-                dragShape.startY: F.centerY(startModuleView) + startJackView.r * 0.8 * -Math.sin(startJackView.theta);
+                dragShape.startX: F.centerX(startJackView.parent) + startJackView.r * 0.8 * Math.cos(startJackView.theta);
+                dragShape.startY: F.centerY(startJackView.parent) + startJackView.r * 0.8 * -Math.sin(startJackView.theta);
                 destination.visible: true
-                destination.x: cableDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).x;
-                destination.y: cableDragView.mapFromItem(startJackView.pad, startJackView.pad.mouseX, startJackView.pad.mouseY).y;
+                destination.x: cableDragView.mapFromItem(dragPad, dragPad.mouseX, dragPad.mouseY).x;
+                destination.y: cableDragView.mapFromItem(dragPad, dragPad.mouseX, dragPad.mouseY).y;
                 gravityOn: 1
             }
 
@@ -81,11 +81,18 @@ Shape {
 
     signal cableStarted(JackView jv)
     onCableStarted: function(jv) {
-        if (patchView.patch.getCable(jv.jack)) return;
-        startJackView = jv;
+        var cableResult = patchView.patch.lookupCableFor(jv.jack);
+        dragPad = jv.pad
+        if (cableResult.cable) {
+            patchView.patch.deleteCable(cableResult.cable);
+            startJackView = cableResult.otherend.view;
+            endJackView = jv;
+            jv.dropTargeted = true;
+        } else
+            startJackView = jv;
         state = "dragging";
-        jv.pad.positionChanged.connect(cableDragView.cableMoved);
-        jv.pad.released.connect(cableDragView.cableDropped);
+        dragPad.positionChanged.connect(cableDragView.cableMoved);
+        dragPad.released.connect(cableDragView.cableDropped);
         animationOn = true;
     }
 
@@ -93,22 +100,21 @@ Shape {
     onCableMoved: {
         for (var m = 0; m < patchView.patch.modules.length; m++) {
             var mv = patchView.patch.modules[m].view;
-            if (mv === startModuleView) continue;
-            var sjp = startJackView.pad;
-            var mRelPos = sjp.mapToItem(mv.perimeter, sjp.mouseX, sjp.mouseY);
+            if (mv === startJackView.parent) continue;
+            var mRelPos = dragPad.mapToItem(mv.perimeter, dragPad.mouseX, dragPad.mouseY);
             if (mv.perimeter.contains(mRelPos)) {
                 var jacklist = [];
-                if (startJackView.jack.jackDir === Constants.jack.dirIn) {
+                if (startJackView.jack.dir === "inp") {
                     mv.state = "outJacksExtended";
                     jacklist = mv.module.outJacks;
-                } else if (startJackView.jack.jackDir === Constants.jack.dirOut) {
+                } else if (startJackView.jack.dir === "out") {
                     mv.state = "inJacksExtended";
                     jacklist = mv.module.inJacks;
                 }
                 for (var j = 0; j < jacklist.length; j++) {
-                    if (patchView.patch.getCable(jacklist[j])) continue;
+                    if (patchView.patch.lookupCableFor(jacklist[j]).cable) continue;
                     var jv = jacklist[j].view;
-                    var jRelPos = sjp.mapToItem(jv.shape, sjp.mouseX, sjp.mouseY);
+                    var jRelPos = dragPad.mapToItem(jv.shape, dragPad.mouseX, dragPad.mouseY);
                     if (jv.shape.contains(jRelPos)) {
                         if (!jv.dropTargeted) {
                             jv.dropTargeted = true;
@@ -121,35 +127,38 @@ Shape {
                         }
                     }
                 }
-            } else
+            } else {
                 mv.state = "collapsed";
+                if (endJackView !== null && endJackView.parent === mv) {
+                    endJackView.dropTargeted = false;
+                    endJackView = null;
+                }
+            }
         }
     }
 
     signal cableDropped
     onCableDropped: {
-        startJackView.pad.positionChanged.disconnect(cableDragView.cableMoved);
-        startJackView.pad.released.disconnect(cableDragView.cableDropped);
+        dragPad.positionChanged.disconnect(cableDragView.cableMoved);
+        dragPad.released.disconnect(cableDragView.cableDropped);
         state = "notdragging";
         animationOn = false;
-
         if (endJackView != null) {
-            var ec = Qt.createComponent("Cable.qml");
-            if (ec.status === Component.Ready) {
-                var ed = {
-                    "fromOutJack": ((startJackView.jack.jackDir === Constants.jack.dirOut) ? startJackView.jack : endJackView.jack),
-                    "toInJack": ((startJackView.jack.jackDir === Constants.jack.dirIn) ? startJackView.jack : endJackView.jack)
-                }
-                var eo = ec.createObject(patchView.patch, ed);
-                patchView.patch.cables.push(eo);
-                startModuleView.state = "collapsed";
-                endModuleView.state = "collapsed";
+            var cComponent = Qt.createComponent("Cable.qml");
+            if (cComponent.status === Component.Ready) {
+                var cData = {};
+                cData[startJackView.jack.dir] = startJackView.jack;
+                cData[endJackView.jack.dir] = endJackView.jack;
+                var cObj = cComponent.createObject(patchView.patch, cData);
+                patchView.patch.cables.push(cObj);
+                startJackView.parent.state = "collapsed";
+                endJackView.parent.state = "collapsed";
             }
             endJackView.dropTargeted = false;
             endJackView = null;
         }
         startJackView = null;
-        console.log("dropped");
+        dragPad = null
     }
 
 

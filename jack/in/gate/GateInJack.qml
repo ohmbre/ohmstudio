@@ -4,5 +4,5 @@ import "../../.."
 InJack {
     objectName: "GateInJack"
 
-    property GateJack gate
+    property GateJack gate: null
 }

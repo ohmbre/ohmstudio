@@ -3,6 +3,6 @@ import "../.."
 Jack {
     objectName: "InJack"
 
-    jackDir: Constants.jack.dirIn
+    dir: "inp"
 
 }
