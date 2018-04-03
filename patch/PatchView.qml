@@ -11,17 +11,13 @@ Flickable {
     contentX: contentWidth/2 - width/2
     contentY: contentHeight/2 - height/2
     flickableDirection: Flickable.HorizontalAndVerticalFlick
-
     scale: 2
-
-
     //maximumFlickVelocity: 10
 
     Repeater {
         model: patch.modules
         ModuleView {
             module: modelData
-            coords: Qt.point(index * 40, -index * 40)
         }
     }
 

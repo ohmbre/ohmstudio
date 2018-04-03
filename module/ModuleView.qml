@@ -9,8 +9,8 @@ Rectangle {
     property double inJackExtend: 0
     property double outJackExtend: 0
 
-    x: F.centerRectX(moduleView,parent) + coords.x
-    y: F.centerRectY(moduleView,parent) + coords.y
+    x: F.centerRectX(moduleView,parent) + module.coords.x
+    y: F.centerRectY(moduleView,parent) + module.coords.y
     z: 1
     width: 50
     height: 50
@@ -54,7 +54,6 @@ Rectangle {
 
             name: "collapsed"
             PropertyChanges {
-                id: collapsed
                 target: moduleView
                 inJackExtend: 0
                 outJackExtend: 0

@@ -11,6 +11,12 @@
         <file>cable/CableDragView.qml</file>
         <file>module/ModuleView.qml</file>
         <file>module/Module.qml</file>
+	<file>module/cv/SlewLimitModule.qml</file>
+	<file>module/envelope/ADSRModule.qml</file>
+	<file>module/hw/audio/OutAudioHwModule.qml</file>
+	<file>module/osc/WavetableOscModule.qml</file>
+	<file>module/sequencer/SequencerModule.qml</file>
+	<file>module/vca/VCAModule.qml</file>
         <file>module/hw/HwModule.qml</file>
         <file>module/hw/gate/GateHwModule.qml</file>
         <file>module/clock/ClockModule.qml</file>

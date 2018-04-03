@@ -9,9 +9,15 @@ CableDragView 1.0 cable/CableDragView.qml
 Cable 1.0 cable/Cable.qml
 ModuleView 1.0 module/ModuleView.qml
 Module 1.0 module/Module.qml
+ClockModule 1.0 module/clock/ClockModule.qml
+SlewLimitModule 1.0 module/cv/SlewLimitModule.qml
+ADSRModule 1.0 module/envelope/ADSRModule.qml
+WavetableOscModule 1.0 module/osc/WavetableOscModule.qml
+SequencerModule 1.0 module/sequencer/SequencerModule.qml
+VCAModule 1.0 module/vca/VCAModule.qml
 HwModule 1.0 module/hw/HwModule.qml
 GateHwModule 1.0 module/hw/gate/GateHwModule.qml
-ClockModule 1.0 module/clock/ClockModule.qml
+OutAudioHwModule 1.0 module/hw/audio/OutAudioHwModule.qml
 PatchView 1.0 patch/PatchView.qml
 Patch 1.0 patch/Patch.qml
 Basic 1.0 patch/example/Basic.qml

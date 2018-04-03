@@ -6,9 +6,13 @@ Patch {
     name: "example"
 
     modules: [
-        ClockModule {},
-        ClockModule {},
-        GateHwModule {}
+        ClockModule {coords: "-130,-65"},
+        SequencerModule {coords: "-80,-10"},
+        SlewLimitModule {coords: "-5,-75"},
+        ADSRModule {coords: "-40,55"},
+        WavetableOscModule {coords: "70,-25"},
+        VCAModule {coords: "55,55"},
+        OutAudioHwModule {coords: "110,85"}
     ]
     cables: [
         Cable {
