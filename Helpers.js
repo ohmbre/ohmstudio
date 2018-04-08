@@ -22,6 +22,13 @@ function readFile(fileUrl) {
     return request.responseText;
 }
 
+function writeFile(fileUrl, contents) {
+    var request = new XMLHttpRequest();
+    request.open("PUT", fileUrl, false);
+    request.send(contents);
+}
+
+
 function dDump(obj) {
     console.warn(obj);
     for (var prop in obj)

@@ -6,9 +6,9 @@ import "../Helpers.js" as F
 Shape {
     property Cable cable
     property OutJackView ojv: cable.out.view
-    property ModuleView ojm: ojv.parent
+    property ModuleView ojm: ojv ? ojv.parent : null
     property InJackView ijv: cable.inp.view
-    property ModuleView ijm: ijv.parent
+    property ModuleView ijm: ijv ? ijv.parent : null
 
     width: patchView.width;
     height: patchView.height;

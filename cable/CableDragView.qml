@@ -150,7 +150,7 @@ Shape {
                 cData[startJackView.jack.dir] = startJackView.jack;
                 cData[endJackView.jack.dir] = endJackView.jack;
                 var cObj = cComponent.createObject(patchView.patch, cData);
-                patchView.patch.cables.push(cObj);
+                patchView.patch.addCable(cObj);
                 startJackView.parent.state = "collapsed";
                 endJackView.parent.state = "collapsed";
             }

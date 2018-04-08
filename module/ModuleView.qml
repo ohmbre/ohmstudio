@@ -5,12 +5,11 @@ import ".."
 Rectangle {
     id: moduleView
     property Module module
-    property point coords
     property double inJackExtend: 0
     property double outJackExtend: 0
 
-    x: F.centerRectX(moduleView,parent) + module.coords.x
-    y: F.centerRectY(moduleView,parent) + module.coords.y
+    x: F.centerRectX(moduleView,parent)
+    y: F.centerRectY(moduleView,parent)
     z: 1
     width: 50
     height: 50
@@ -135,10 +134,13 @@ Rectangle {
         }
     }
 
-
-
     Component.onCompleted: {
         module.view = moduleView;
+        x += module.coords.x
+        y += module.coords.y
+        xChanged.connect(function () { module.coords.x = Math.round(x - F.centerRectX(moduleView,parent))})
+        yChanged.connect(function () { module.coords.y = Math.round(y - F.centerRectY(moduleView,parent))})
+
     }
 
 }

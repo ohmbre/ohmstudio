@@ -1,5 +1,9 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.2
+import QtQuick.Controls.Styles 1.4
+import QtQuick.Dialogs 1.2
+
+import "Helpers.js" as F
 
 
 ApplicationWindow {
@@ -12,35 +16,76 @@ ApplicationWindow {
 
     FontLoader { id: asapFont; source: "fonts/Asap-Medium.ttf" }
 
-
     Drawer {
         id: setup
         width: 0.33 * parent.width
         height: parent.height
-        TextField {
-            id: patchUrl
-            text: "basic.qml"
-            width: parent.width * 0.9
-            height: 30
-        }
+
         Button {
-            y: 50
-            text: "Load Patch"
+            anchors.horizontalCenter: setup.contentItem.horizontalCenter
+            y: 100
+            text: "New Patch"
+            font.family: "Asap Medium"
             onClicked: {
-                var component = Qt.createComponent("patch/example/"+patchUrl.text);
-                if (component.status === Component.Error) {
-                    console.log(component.errorString());
-                    return;
-                }
-                console.log("loaded");
-                var data = component.createObject(window,{});
-                //var data = Qt.createQmlObject(F.readFile("patch/example/"+patchUrl.text), window, "");
-                activePatch.setSource("patch/PatchView.qml", {patch: data});
+                var c = Qt.createComponent("patch/Patch.qml");
+                var newPatch = c.createObject(window, {name: "new patch", modules: [], cables: []});
+                activePatch.setSource("patch/PatchView.qml", {patch: newPatch});
                 setup.close();
             }
         }
 
-        Component.onCompleted: open()
+        Button {
+            anchors.horizontalCenter: setup.contentItem.horizontalCenter
+            y: 200
+            text: "Load Patch"
+            font.family: "Asap Medium"
+            onClicked: {
+                loadFileDialog.visible = true;
+            }
+        }
+
+        Button {
+            anchors.horizontalCenter: setup.contentItem.horizontalCenter
+            y: 300
+            text: "Save Patch"
+            font.family: "Asap Medium"
+            onClicked: {
+                saveFileDialog.visible = true;
+            }
+        }
+
+        FileDialog {
+            id: loadFileDialog
+            modality: visible ? Qt.WindowModal : Qt.NonModal
+            folder: Constants.savedPatchDir
+            onAccepted: {
+                if (fileUrls.length === 0) return;
+                if (window.loadPatchQML(fileUrl))
+                    setup.close();
+            }
+        }
+
+        FileDialog {
+            id: saveFileDialog
+            modality: visible ? Qt.WindowModal : Qt.NonModal
+            folder: Constants.savedPatchDir
+            onAccepted: {
+                console.log(fileUrls);
+            }
+        }
+    }
+
+    property string importHeader: "import 'qrc:/'; import 'qrc:/module'; import 'qrc:/module/clock'; import 'qrc:/module/envelope'; import 'qrc:/module/sequencer'; import 'qrc:/module/hw/audio'; import 'qrc:/cable'; import 'qrc:/patch'; import 'qrc:/module/osc'; import 'qrc:/module/cv'; import 'qrc:/jack'; import 'qrc:/jack/in'; import 'qrc:/module/vca';  import 'qrc:/jack/out'; import 'qrc:/jack/out/gate'; "
+
+    function loadPatchQML(url) {
+        try {
+            var data = Qt.createQmlObject(importHeader + F.readFile(url), window, url);
+            activePatch.setSource("patch/PatchView.qml", {patch: data});
+        } catch(err) {
+            console.log(err);
+            return false;
+        }
+        return true;
     }
 
     Loader {
@@ -49,4 +94,8 @@ ApplicationWindow {
         onLoaded: console.log("active patch loaded")
     }
 
+    Component.onCompleted: {
+        if (!loadPatchQML(Constants.autoSavePath))
+            setup.open();
+    }
 }

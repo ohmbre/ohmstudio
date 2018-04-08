@@ -1,8 +1,4 @@
-import ".."
-import "../.."
-
 Patch {
-    id: basicPatch
     name: "example"
 
     modules: [
@@ -16,8 +12,8 @@ Patch {
     ]
     cables: [
         Cable {
-            out: modules[0].outJacks[0]
-            inp: modules[1].inJacks[0]
+            out: modules[0].jack("trig")
+            inp: modules[1].jack("clock")
         }
     ]
 }

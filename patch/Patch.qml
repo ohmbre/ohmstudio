@@ -17,6 +17,11 @@ Model {
         return {cable: false};
     }
 
+    function addCable(cable) {
+        cables.push(cable);
+        cable.parent = this;
+    }
+
     function deleteCable(cable) {
         var newCables = [];
         for (var c = 0; c < cables.length; c++)
@@ -25,10 +30,37 @@ Model {
         cables = newCables;
     }
 
+    property bool cueAutoSave: false
+    signal userChanges
+    onUserChanges: {
+        cueAutoSave = true
+    }
+
+    qmlExports: ["name","modules","cables"]
 
     Component.onCompleted: function() {
         Qt.patch = this;
+        modulesChanged.connect(userChanges);
+        cablesChanged.connect(userChanges);
+
+        for (var m in modules) {
+            modules[m].coordsChanged.connect(userChanges);
+        }
+
+        // assign all the 'parent' properties to children
+        for (m in modules) {
+            modules[m].parent = this;
+            for (var j in modules[m].inJacks)
+                modules[m].inJacks[j].parent = modules[m];
+            for (j in modules[m].outJacks)
+                modules[m].outJacks[j].parent = modules[m];
+        }
+
+        for (var c in cables) {
+            cables[c].parent = this;
+        }
     }
+
 }
 
 

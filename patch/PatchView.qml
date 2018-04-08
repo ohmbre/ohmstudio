@@ -1,6 +1,6 @@
 import QtQuick 2.10
-
 import ".."
+import "../Helpers.js" as F
 
 Flickable {
     id: patchView
@@ -36,17 +36,27 @@ Flickable {
         pinch.maximumScale: 5
         pinch.dragAxis: Pinch.XAndYAxis
 
-    MouseArea {
-        anchors.fill: parent
-        anchors.centerIn: parent
-        scrollGestureEnabled: false
-        propagateComposedEvents: true
-        //preventStealing: true
-        onWheel: {
-            patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
-
+        MouseArea {
+            anchors.fill: parent
+            anchors.centerIn: parent
+            scrollGestureEnabled: false
+            propagateComposedEvents: true
+            //preventStealing: true
+            onWheel: {
+                patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
+            }
         }
-    }}
+    }
+
+    Timer {
+        interval: 3000; running: true; repeat: true
+        onTriggered: {
+            if (patch.cueAutoSave) {
+                patch.cueAutoSave = false
+                F.writeFile(Constants.autoSavePath, patch.toQML())
+            }
+        }
+    }
 
     CableDragView {id: childCableDragView; }
     property alias cableDragView: childCableDragView
