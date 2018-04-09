@@ -9,6 +9,6 @@ int main(int argc, char *argv[]) {
   //QSurfaceFormat::setDefaultFormat(f);
 
   QGuiApplication app(argc, argv);
-  QQmlApplicationEngine engine("qrc:/View.qml");
+  QQmlApplicationEngine engine("View.qml");
   return app.exec();
 }

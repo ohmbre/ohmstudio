@@ -1,0 +1,7 @@
+module ohm
+Ohm 1.0 Ohm.qml
+Model 1.0 Model.qml
+StyledMenu 1.0 StyledMenu.qml
+StyledText 1.0 StyledText.qml
+singleton Style 1.0 Style.qml
+singleton Constants 1.0 Constants.qml

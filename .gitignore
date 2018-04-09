@@ -5,3 +5,4 @@ build
 *.qmlc
 *.jsc
 debug
+autosave.qml
