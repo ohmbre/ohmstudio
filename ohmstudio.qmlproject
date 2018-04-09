@@ -1,0 +1,27 @@
+import qbs
+import QmlProject 1.1
+
+Project {
+    mainFile: "main.qml"
+
+    QmlFiles {
+        directory: "ohm"
+        recursive: true
+        files: "main.qml"
+    }
+
+    JavaScriptFiles {
+        directory: "."
+        recursive: true
+    }
+
+    Files {
+        directory: "."
+        recursive: true
+        filter: "!*~;!debug;!__pycache__;!.git*"
+
+    }
+
+    importPaths: ["."]
+}
+

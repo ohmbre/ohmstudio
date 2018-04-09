@@ -1,6 +1,5 @@
-import QtQuick 2.10
-import ".."
-import "../../"
+import ohm 1.0
+import ohm.jack 1.0
 
 JackView {
     direction: -1

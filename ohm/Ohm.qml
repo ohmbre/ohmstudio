@@ -5,10 +5,6 @@ import QtQuick.Dialogs 1.2
 import Qt.labs.folderlistmodel 2.1
 
 import ohm.patch 1.0
-import ohm.module 1.0
-import ohm.cable 1.0
-import ohm.jack 1.0
-import ohm.cv 1.0
 import ohm.helpers 1.0
 
 ApplicationWindow {
@@ -59,13 +55,13 @@ ApplicationWindow {
             }
         }
 
-        ListView {
+        /*ListView {
             model: FolderListModel {
-                //nameFilters: ["*.qml"]
+                nameFilters: ["*.qml"]
                 folder: "modules"
             }
             delegate: Component { Text {text: fileName } }
-        }
+        }*/
 
         FileDialog {
             id: loadFileDialog
@@ -90,21 +86,21 @@ ApplicationWindow {
 
     function loadPatchQML(url) {
         try {
-	    var rawdata = Fn.readFile(url);
+        var rawdata = Fn.readFile(url);
             var obj = Qt.createQmlObject(rawdata, window, url);
         } catch(err) {
             console.log(err);
             return false;
         }
-	obj.importList = obj.parseImports(rawdata)
-	activePatch.setSource("patch/PatchView.qml", {patch: obj});
+    obj.importList = obj.parseImports(rawdata)
+    activePatch.setSource("patch/PatchView.qml", {patch: obj});
         return true;
     }
 
     Loader {
         id: activePatch
         anchors.fill: parent
-        onLoaded: console.log("active patch loaded")
+        onLoaded: console.log("patch loaded")
     }
 
     Patch {}

@@ -83,7 +83,7 @@ Item {
     transform: [
         Translate {
             x: moduleView.rx
-            y: Fn.centerRectY(jackView, moduleView)
+            y: Fn.centerInY(jackView, moduleView)
         },
         Rotation {
             origin.x: moduleView.rx

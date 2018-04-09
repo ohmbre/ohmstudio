@@ -6,15 +6,14 @@ import ohm.jack.in 1.0
 import ohm.jack.out 1.0
 import ohm.helpers 1.0
 
-
 Rectangle {
     id: moduleView
     property Module module
     property double inJackExtend: 0
     property double outJackExtend: 0
 
-    x: Fn.centerRectX(moduleView,parent)
-    y: Fn.centerRectY(moduleView,parent)
+    x: Fn.centerInX(moduleView,parent)
+    y: Fn.centerInY(moduleView,parent)
     z: 1
     width: 50
     height: 50
@@ -87,8 +86,8 @@ Rectangle {
         id: moduleMouseArea
         height: (parent.height > parent.width) ? (parent.height - radius ) : parent.height
         width: (parent.width > parent.height) ? (parent.width - radius ) : parent.width
-        x: Fn.centerRectX(moduleMouseArea, moduleMouseArea.parent)
-        y: Fn.centerRectY(moduleMouseArea, moduleMouseArea.parent)
+        x: Fn.centerInX(moduleMouseArea, moduleMouseArea.parent)
+        y: Fn.centerInY(moduleMouseArea, moduleMouseArea.parent)
         drag.target: parent
         drag.smoothed: true
         propagateComposedEvents: true
@@ -137,8 +136,8 @@ Rectangle {
         module.view = moduleView;
         x += module.coords.x
         y += module.coords.y
-        xChanged.connect(function () { module.coords.x = Math.round(x - Fn.centerRectX(moduleView,parent))})
-        yChanged.connect(function () { module.coords.y = Math.round(y - Fn.centerRectY(moduleView,parent))})
+        xChanged.connect(function () { module.coords.x = Math.round(x - Fn.centerInX(moduleView,parent))})
+        yChanged.connect(function () { module.coords.y = Math.round(y - Fn.centerInY(moduleView,parent))})
 
     }
 

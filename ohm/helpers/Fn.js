@@ -8,11 +8,11 @@ function centerY(rect) {
     return rect.y + rect.height/2
 }
 
-function centerRectX(insideRect, outsideRect) {
+function centerInX(insideRect, outsideRect) {
     return outsideRect.width/2 - insideRect.width/2;
 }
 
-function centerRectY(insideRect, outsideRect) {
+function centerInY(insideRect, outsideRect) {
     return outsideRect.height/2 - insideRect.height/2;
 }
 

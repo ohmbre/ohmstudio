@@ -6,6 +6,7 @@ import ohm.cable 1.0
 import ohm.helpers 1.0
 
 Model {
+
     objectName: "Patch"
     property string name
     property list<Module> modules
@@ -50,11 +51,11 @@ Model {
 
     property bool cueAutoSave: false
     function autosave() {
-	cueAutoSave = false;
-	var qml = ""
-	for (var i in importList)
-	    qml += "import " + importList[i] + '\n'
-	qml += '\n' + this.toQML();
+    cueAutoSave = false;
+    var qml = ""
+    for (var i in importList)
+        qml += "import " + importList[i] + '\n'
+    qml += '\n' + this.toQML();
         Fn.writeFile(Constants.autoSavePath, qml)
     }
     signal userChanges

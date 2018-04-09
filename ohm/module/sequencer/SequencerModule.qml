@@ -5,7 +5,6 @@ import ohm.jack.in 1.0
 
 Module {
     objectName: "SequencerModule"
-
     label: "Sequencer"
 
     outJacks: [

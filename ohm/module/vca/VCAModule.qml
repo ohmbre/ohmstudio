@@ -4,7 +4,6 @@ import ohm.jack.out.gate 1.0
 
 Module {
     objectName: "VCAModule"
-
     label: "VCA"
 
     outJacks: [

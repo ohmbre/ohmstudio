@@ -4,7 +4,6 @@ import ohm.jack.in 1.0
 
 Module {
     objectName: "WavetableOscModule"
-
     label: "Wavetable Osc"
 
     outJacks: [

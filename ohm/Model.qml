@@ -41,17 +41,17 @@ QtObject {
 
     // returns Array like ['QtQuick.Controls 2.3', 'ohm.jack.in 1.0', ...]
     function parseImports(qml) {
-	// clean comments (cant find it now, but I ripped it from a good-looking man on stackoverflow)
-	var lines = qml.trim().replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').split('\n');
-	var imports = [];
-	for (var l in lines) {
-	    var line = lines[l].trim();
-	    if (line.length == 0) continue;
-	    if (line.match(/^import[\s]+/))
-		imports.push(line.split(/\s/).slice(1).join(' '));
-	    else break;
-	}
-	return imports
+    // clean comments (cant find it now, but I ripped it from a good-looking man on stackoverflow)
+    var lines = qml.trim().replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').split('\n');
+    var imports = [];
+    for (var l in lines) {
+        var line = lines[l].trim();
+        if (line.length === 0) continue;
+        if (line.match(/^import[\s]+/))
+        imports.push(line.split(/\s/).slice(1).join(' '));
+        else break;
+    }
+    return imports
     }
 
 }

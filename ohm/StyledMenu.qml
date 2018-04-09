@@ -3,6 +3,7 @@ import QtQuick.Controls 2.3
 import QtQml 2.2
 
 Menu {
+
     id: menu
     width: 70
     topPadding: header.height
@@ -24,7 +25,10 @@ Menu {
                 height: parent.height
                 color: "white";
                 leftPadding: 4; rightPadding: 4; topPadding: 1;
-                background: Rectangle { color: "#000000"; radius: 4; height:parent.height+radius; border.color: "white"; border.width: 1}
+                background: Rectangle {
+                    color: "#000000"; border.color: "white";  border.width: 1
+                    radius: 4; height:parent.height+radius;
+                }
             }
         }
 

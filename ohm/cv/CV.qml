@@ -1,5 +1,6 @@
-import ".."
-model {
+import ohm 1.0
+
+Model {
     objectName: "CV"
 
     property string label
