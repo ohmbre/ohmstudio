@@ -6,7 +6,7 @@ Text {
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
     wrapMode: Text.WordWrap
-    color: "#ffffff"
+    color: "black"
     font.family: asapFont.name
     font.pixelSize: 9
     font.weight: Font.Medium

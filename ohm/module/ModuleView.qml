@@ -76,7 +76,7 @@ Rectangle {
         text: module.label
         padding: Style.moduleLabelPadding
         anchors.fill: parent
-
+        color: "white"
         Component.onCompleted: {
             moduleView.height = contentHeight + padding*2;
             moduleView.width = contentWidth + padding*2;
@@ -136,8 +136,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        //x = Fn.centerInX(moduleView, moduleView.parent) + module.x;
-        //y = Fn.centerInY(moduleView, moduleView.parent) + module.y;
         module.view = moduleView;
         module.x = Qt.binding(function() { return moduleView.x - Fn.centerInX(moduleView, moduleView.parent);});
         module.y = Qt.binding(function() { return moduleView.y - Fn.centerInY(moduleView, moduleView.parent);});

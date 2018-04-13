@@ -1,7 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.3
-
 import QtQml 2.2
+import QtQml.Models 2.2
 import Qt.labs.folderlistmodel 2.2
 
 import ohm 1.0
@@ -49,8 +49,10 @@ Flickable {
             anchors.fill: parent
             anchors.centerIn: parent
             scrollGestureEnabled: false
-            propagateComposedEvents: true
-            //preventStealing: true
+            propagateComposedEvents: false
+            onReleased: {
+                propagateComposedEvents = true;
+            }
             onWheel: {
                 patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
             }
@@ -95,17 +97,12 @@ Flickable {
                             if (fileName == "..") folderModel.folder = folderModel.parentFolder;
                             else folderModel.folder += "/" + fileName;
                         } else {
-                            var mObj = Qt.createQmlObject(Fn.readFile(fileURL), patchView.patch, fileURL);
                             var namespace = folderModel.folder.toString().replace(Qt.resolvedUrl('../..'),'');
                             while (namespace.indexOf("/") !== -1) namespace = namespace.replace('/','.');
-                            patchView.patch.addModule(mObj, namespace + " 1.0");
+                            var pos = moduleMenu.contentItem.mapToItem(patchView, 0, 0);
+                            pos.x -= patchView.width/2; pos.y -= patchView.height/2;
+                            patchView.patch.addModule(fileBaseName, namespace + " 1.0", pos.x, pos.y);
                             moduleMenu.close();
-
-
-                            //var pos = moduleMenu.contentItem.mapToItem(patchView.contentItem, 0,0);
-                            //mObj.x = pos.x - patchView.contentItem.width/2;
-                            //mObj.y = pos.y - patchView.contentItem.height/2;
-
                         }
                     }
                 }

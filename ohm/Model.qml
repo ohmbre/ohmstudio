@@ -55,12 +55,12 @@ QtObject {
     function parseImports(qml) {
         // clean comments (cant find it now, but ripped from stackoverflow)
         var lines = qml.trim().replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').split('\n');
-        var imports = [];
+        var imports = {};
         for (var l in lines) {
             var line = lines[l].trim();
             if (line.length === 0) continue;
             if (line.match(/^import[\s]+/))
-                imports.push(line.split(/\s/).slice(1).join(' '));
+                imports[line.split(/\s/).slice(1).join(' ')] = true;
             else break;
         }
         return imports

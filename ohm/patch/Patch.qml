@@ -11,7 +11,7 @@ Model {
     property string name
     property list<Module> modules
     property list<Cable> cables
-    property var importList: []
+    property var importList: ({})
 
     function lookupCableFor(jack) {
         for (var c = 0; c < cables.length; c++) {
@@ -49,24 +49,20 @@ Model {
         modules = newModules;
     }
 
-    function addModule(module, namespace) {
-        var namespaceFound = false
-        for (var i in importList)  {
-            if (importList[i] === namespace)
-                namespaceFound = true;
-        }
-        if (!namespaceFound)
-            importList.push(namespace);
-        modules.push(module);
-        modules.parent = this;
+    function addModule(classname, namespace, x, y) {
+        var qml = "import " + namespace + '; ' + classname + " {x: "+x+"; y: "+y+"}";
+        var mObj = Qt.createQmlObject(qml, this, "dynamic");
+        importList[namespace] = true;
+        modules.push(mObj);
+        mObj.parent = this;
     }
 
     property bool cueAutoSave: false
     function autosave() {
         cueAutoSave = false;
         var qml = ""
-        for (var i in importList)
-            qml += "import " + importList[i] + '\n'
+        for (var namespace in importList)
+            qml += "import " + namespace + '\n'
         qml += '\n' + this.toQML();
         Fn.writeFile(Constants.autoSavePath, qml)
     }
