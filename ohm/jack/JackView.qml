@@ -20,6 +20,7 @@ Item {
                                  Math.pow(moduleView.ryext*Math.sin(theta),2))
     property color bgColor
     property color bgColorLit
+    property string arrow
 
     height: (Style.jackExtension + moduleView.radius) * 2 * Math.sin(sweepRad/2)
     width: r + Style.jackLabelGap + jackLabel.contentWidth
@@ -70,7 +71,7 @@ Item {
 
     OhmText {
         id: jackLabel
-        text: jack.label;
+        text: jack.label
         property color blend: Style.jackLabelColor
         color: Qt.rgba(blend.r, blend.g, blend.b, blend.a * extend);
         height: parent.height
@@ -80,6 +81,16 @@ Item {
         transformOrigin: Item.Center
         x: r + Style.jackLabelGap
     }
+
+    OhmText {
+        text: arrow
+        color: jackLabel.color
+        height: jackLabel.height
+        horizontalAlignment: Text.AlignRight
+        font.pixelSize: 10
+        x: jackLabel.x - 9
+    }
+
 
     transform: [
         Translate {
