@@ -30,8 +30,8 @@ Project {
             prefix: "examples/"
             files: ["*.qml"]
             qbs.install: true
-            qbs.installDir: "examples"
-            qbs.installSourceBase: "examples"
+            qbs.installDir: "patches/examples"
+            qbs.installSourceBase: "patches/examples"
         }
 
         Group {

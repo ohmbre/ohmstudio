@@ -1,7 +1,7 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Styles 1.4
-import QtQuick.Dialogs 1.2
+import QtQuick.Dialogs 1.3
 import Qt.labs.folderlistmodel 2.1
 
 import ohm.patch 1.0
@@ -67,6 +67,7 @@ ApplicationWindow {
 
         OhmButton {
             y: 150; x: parent.width - width + radius - 3
+            visible: activePatch.status === Loader.Ready
             text: "Save Patch"
             onClicked: {
                 saveFileDialog.visible = true;
@@ -77,6 +78,10 @@ ApplicationWindow {
             id: loadFileDialog
             modality: visible ? Qt.WindowModal : Qt.NonModal
             folder: Constants.savedPatchDir
+            nameFilters: ["Patch files (*.qml)"]
+            selectExisting: true
+            sidebarVisible: false
+            title: "Load Patch"
             onAccepted: {
                 if (fileUrls.length === 0) return;
                 if (window.loadPatchQML(fileUrl))
@@ -88,8 +93,15 @@ ApplicationWindow {
             id: saveFileDialog
             modality: visible ? Qt.WindowModal : Qt.NonModal
             folder: Constants.savedPatchDir
+            nameFilters: ["Patch files (*.qml)"]
+            selectExisting: false
+            sidebarVisible: false
+            title: "Save Patch"
             onAccepted: {
-                console.log(fileUrls);
+                if (fileUrls.length === 0) return;
+                var fileName = fileUrl;
+                activePatch.item.patch.saveTo(fileName);
+                setup.close();
             }
         }
     }
@@ -112,8 +124,6 @@ ApplicationWindow {
         anchors.fill: parent
         onLoaded: console.log("patch loaded")
     }
-
-    Patch {}
 
     Component.onCompleted: {
         if (!loadPatchQML(Constants.autoSavePath))

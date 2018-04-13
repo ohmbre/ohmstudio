@@ -57,15 +57,21 @@ Model {
         mObj.parent = this;
     }
 
-    property bool cueAutoSave: false
-    function autosave() {
-        cueAutoSave = false;
+    function saveTo(fileName) {
         var qml = ""
         for (var namespace in importList)
             qml += "import " + namespace + '\n'
         qml += '\n' + this.toQML();
-        Fn.writeFile(Constants.autoSavePath, qml)
+        Fn.writeFile(fileName, qml)
     }
+
+    function autosave() {
+        cueAutoSave = false;
+        this.saveTo(Constants.autoSavePath);
+    }
+
+    property bool cueAutoSave: false
+
     signal userChanges
     onUserChanges: {
         cueAutoSave = true

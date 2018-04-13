@@ -88,7 +88,7 @@ Item {
         height: jackLabel.height
         horizontalAlignment: Text.AlignRight
         font.pixelSize: 10
-        x: jackLabel.x - 9
+        x: jackLabel.x - 11
     }
 
 
