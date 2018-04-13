@@ -3,29 +3,26 @@ import QtQuick 2.9
 
 RoundButton {
     id: control
-    text: "button"
-    radius: 8
-    implicitHeight: 20
-    implicitWidth: 20
-    padding: 0
-    property url imageUrl
+    radius: implicitHeight/2
+    //implicitHeight: imageUrl ? image.width/2 : label.height
+    //implicitWidth: imageUrl ? image.height/2 : label.width
+    padding: 10
+    property string imageUrl: null
     property Image image: Image {
-        height: control.implicitHeight
-        width: control.implicitWidth
-        autoTransform: false
         source: imageUrl
-        fillMode: Image.Stretch
     }
     property OhmText label: OhmText {
-        height: 14
-        width: 20
-        text: "hello?" //control.text
-        color: "black"
+        text: control.text
+        color: Style.buttonTextColor
+        font.bold: true
+        font.pixelSize: 11
     }
-    contentItem: image ? image : label
+    contentItem: imageUrl ? image : label
     background: Rectangle {
         radius: control.radius
         anchors.fill: control
         color: control.imageUrl ? "#00000000" : (control.down ? Style.buttonOverColor : Style.buttonColor)
+        border.width: 4
+        border.color: '#'+Style.paletteDim.medium
     }
 }

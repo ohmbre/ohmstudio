@@ -15,7 +15,7 @@ class CodeThread(threading.Thread):
             return window.findChildren(QObject, name)
         
         readline.parse_and_bind("tab: complete")
-        code.interact(local=dict(globals(), **locals())) 
+        code.interact(local=dict(globals(), **locals()),banner="") 
         os.kill(os.getpid(),signal.SIGINT)
 
 

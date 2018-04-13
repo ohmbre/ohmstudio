@@ -76,7 +76,7 @@ Rectangle {
         text: module.label
         padding: Style.moduleLabelPadding
         anchors.fill: parent
-        color: "white"
+        color: Style.moduleLabelColor
         Component.onCompleted: {
             moduleView.height = contentHeight + padding*2;
             moduleView.width = contentWidth + padding*2;

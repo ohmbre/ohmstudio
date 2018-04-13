@@ -22,8 +22,32 @@ ApplicationWindow {
         id: setup
         width: 0.33 * parent.width
         height: parent.height
-        RoundButton {
-            y: 50; x: 30
+        background: Rectangle {
+            implicitHeight: setup.height + border.width * 2
+            implicitWidth: setup.width + border.width * 2
+            x: -border.width
+            y: -border.width
+
+            color: Style.drawerColor
+            border.width: 4
+            border.color: Style.buttonBorderColor
+        }
+
+        Rectangle {
+            width: parent.width + 1;
+            height: 20
+            color: Style.buttonBorderColor
+            OhmText {
+                anchors.fill: parent
+                text: "Ω"
+                color: Style.buttonTextColor
+                font.weight: Font.Bold
+                font.pixelSize: 18
+            }
+        }
+
+        OhmButton {
+            y: 50; x: parent.width - width + radius - 3
             text: "New Patch"
             onClicked: {
                 var c = Qt.createComponent("patch/Patch.qml");
@@ -33,16 +57,16 @@ ApplicationWindow {
             }
         }
 
-        RoundButton {
-            y: 100; x: 30
+        OhmButton {
+            y: 100; x: parent.width - width + radius - 3
             text: "Load Patch"
             onClicked: {
                 loadFileDialog.visible = true;
             }
         }
 
-        RoundButton {
-            y: 150; x: 30
+        OhmButton {
+            y: 150; x: parent.width - width + radius - 3
             text: "Save Patch"
             onClicked: {
                 saveFileDialog.visible = true;
