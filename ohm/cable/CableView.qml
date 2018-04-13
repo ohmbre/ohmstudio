@@ -6,6 +6,7 @@ import ohm.module 1.0
 import ohm.jack.in 1.0
 import ohm.jack.out 1.0
 import ohm.helpers 1.0
+import ohm.ui 1.0
 
 Shape {
     property Cable cable

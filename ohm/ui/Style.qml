@@ -23,4 +23,9 @@ QtObject {
     property color cableColor: "#FFCC5D4E"
     property double cableControlStiffness: 5
     property double cableGravity: 100
+
+    property color buttonColor: "#21BE2B"
+    property color buttonOverColor: "#17A81A"
+
+    property color menuLitColor: "lightsteelblue"
 }

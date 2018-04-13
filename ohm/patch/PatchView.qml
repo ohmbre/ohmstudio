@@ -1,10 +1,14 @@
-import QtQuick 2.10
+import QtQuick 2.9
 import QtQuick.Controls 2.3
-import Qt.labs.folderlistmodel 2.1
+
+import QtQml 2.2
+import Qt.labs.folderlistmodel 2.2
 
 import ohm 1.0
 import ohm.module 1.0
 import ohm.cable 1.0
+import ohm.ui 1.0
+import ohm.helpers 1.0
 
 Flickable {
     id: patchView
@@ -24,6 +28,7 @@ Flickable {
             module: modelData
         }
     }
+
 
 
     Repeater {
@@ -49,25 +54,85 @@ Flickable {
             onWheel: {
                 patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
             }
-            onPressAndHold: addModuleMenu.popup()
+            onPressAndHold: moduleMenu.popup()
         }
     }
 
 
-    StyledMenu {
-        id: addModuleMenu
+    OhmPopup {
+        id: moduleMenu
         title: "Add Module"
-        Component.onCompleted: {
+        width: 95
+        contents:  ListView {
+            id: moduleList
+            width: moduleMenu.width
+            height: (count-1) * 14
+            keyNavigationEnabled: true
+            model: FolderListModel {
+                id: folderModel
+                folder: '../module'
+                rootFolder: '../module'
+                nameFilters: ["*?Module.qml",".."]
+                showDirs: true
+                showDirsFirst: true
+                showHidden: true
+                showDotAndDotDot: true
+                showFiles: true
+            }
+            delegate: OhmText {
+                width: moduleMenu.width
+                height: fileName == "." ? 0 : 14
+                visible: fileName != "."
+                text: fileName.replace(/\.qml$/,'') + (fileIsDir ? " ▶" : "  ")
+                color: "black"
+                horizontalAlignment: Text.AlignRight
+                padding: 2
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        if (fileIsDir) {
+                            if (fileName == "..") folderModel.folder = folderModel.parentFolder;
+                            else folderModel.folder += "/" + fileName;
+                        } else {
+                            var mObj = Qt.createQmlObject(Fn.readFile(fileURL), patchView.patch, fileURL);
+                            var namespace = folderModel.folder.toString().replace(Qt.resolvedUrl('../..'),'');
+                            while (namespace.indexOf("/") !== -1) namespace = namespace.replace('/','.');
+                            patchView.patch.addModule(mObj, namespace + " 1.0");
+                            moduleMenu.close();
 
+
+                            //var pos = moduleMenu.contentItem.mapToItem(patchView.contentItem, 0,0);
+                            //mObj.x = pos.x - patchView.contentItem.width/2;
+                            //mObj.y = pos.y - patchView.contentItem.height/2;
+
+                        }
+                    }
+                }
+            }
+            highlight: Rectangle {
+                color: Style.menuLitColor
+            }
+            clip: true
+            onCountChanged: moduleMenu.height = (count-1) * 14 + 13
         }
 
     }
 
-    StyledMenu {
+    OhmPopup {
         id: delModuleMenu
-        title: "Delete Module?"; width: 85;
-        Action { text: 'No!' }
-        Action { text: 'Yes.'; onTriggered: patch.deleteModule(delModuleMenu.candidate); }
+        title: "Delete?"
+        height: 45
+        width: 39
+        contents: OhmButton {
+            x: Fn.centerInX(this,delModuleMenu)
+            y: Fn.centerInY(this,delModuleMenu.body)
+            imageUrl: "../ui/icons/delete.svg"
+            onClicked: {
+                patch.deleteModule(delModuleMenu.candidate);
+                delModuleMenu.close();
+            }
+        }
         property Module candidate
     }
 
@@ -80,13 +145,16 @@ Flickable {
         interval: 3000; running: true; repeat: true
         onTriggered: {
             if (patch.cueAutoSave)
-		patch.autosave();
+                patch.autosave();
         }
     }
 
     CableDragView {id: childCableDragView; }
     property alias cableDragView: childCableDragView
 
+    Component.onCompleted: {
+        patch.view = patchView;
+    }
 }
 
 

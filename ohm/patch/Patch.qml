@@ -49,13 +49,25 @@ Model {
         modules = newModules;
     }
 
+    function addModule(module, namespace) {
+        var namespaceFound = false
+        for (var i in importList)  {
+            if (importList[i] === namespace)
+                namespaceFound = true;
+        }
+        if (!namespaceFound)
+            importList.push(namespace);
+        modules.push(module);
+        modules.parent = this;
+    }
+
     property bool cueAutoSave: false
     function autosave() {
-    cueAutoSave = false;
-    var qml = ""
-    for (var i in importList)
-        qml += "import " + importList[i] + '\n'
-    qml += '\n' + this.toQML();
+        cueAutoSave = false;
+        var qml = ""
+        for (var i in importList)
+            qml += "import " + importList[i] + '\n'
+        qml += '\n' + this.toQML();
         Fn.writeFile(Constants.autoSavePath, qml)
     }
     signal userChanges
@@ -70,7 +82,8 @@ Model {
         cablesChanged.connect(userChanges);
         modulesChanged.connect(userChanges);
         for (var m in modules) {
-            modules[m].coordsChanged.connect(userChanges);
+            modules[m].xChanged.connect(userChanges);
+            modules[m].yChanged.connect(userChanges);
         }
 
         // assign all the 'parent' properties to children

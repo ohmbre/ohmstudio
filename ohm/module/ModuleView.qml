@@ -5,6 +5,7 @@ import ohm 1.0
 import ohm.jack.in 1.0
 import ohm.jack.out 1.0
 import ohm.helpers 1.0
+import ohm.ui 1.0
 
 Rectangle {
     id: moduleView
@@ -12,8 +13,8 @@ Rectangle {
     property double inJackExtend: 0
     property double outJackExtend: 0
 
-    x: Fn.centerInX(moduleView,parent)
-    y: Fn.centerInY(moduleView,parent)
+    x: Fn.centerInX(this, this.parent) + module.x
+    y: Fn.centerInY(this, this.parent) + module.y;
     z: 1
     width: 50
     height: 50
@@ -70,7 +71,7 @@ Rectangle {
     signal forceOutputExtend
     signal forceCollapse
 
-    StyledText {
+    OhmText {
         id: moduleLabel
         text: module.label
         padding: Style.moduleLabelPadding
@@ -95,6 +96,8 @@ Rectangle {
         onPressAndHold: patchView.confirmDeleteModule(module);
         pressAndHoldInterval: 800
     }
+    property alias mouseX: moduleMouseArea.mouseX
+    property alias mouseY: moduleMouseArea.mouseY
 
     Rectangle {
         id: perimeter
@@ -133,12 +136,11 @@ Rectangle {
     }
 
     Component.onCompleted: {
+        //x = Fn.centerInX(moduleView, moduleView.parent) + module.x;
+        //y = Fn.centerInY(moduleView, moduleView.parent) + module.y;
         module.view = moduleView;
-        x += module.coords.x
-        y += module.coords.y
-        xChanged.connect(function () { module.coords.x = Math.round(x - Fn.centerInX(moduleView,parent))})
-        yChanged.connect(function () { module.coords.y = Math.round(y - Fn.centerInY(moduleView,parent))})
-
+        module.x = Qt.binding(function() { return moduleView.x - Fn.centerInX(moduleView, moduleView.parent);});
+        module.y = Qt.binding(function() { return moduleView.y - Fn.centerInY(moduleView, moduleView.parent);});
     }
 
 }

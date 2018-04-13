@@ -13,13 +13,13 @@ Patch {
     name: "example"
 
     modules: [
-        ClockModule {coords: "-130,-65"},
-        SequencerModule {coords: "-80,-10"},
-        SlewLimitModule {coords: "-5,-75"},
-        ADSRModule {coords: "-40,55"},
-        WavetableOscModule {coords: "70,-25"},
-        VCAModule {coords: "55,55"},
-        OutAudioHwModule {coords: "110,85"}
+        ClockModule {x: -130; y: -65},
+        SequencerModule {x: -80; y: -10},
+        SlewLimitModule {x: -5; y: -75},
+        ADSRModule {x: -40; y: 55},
+        WavetableOscModule {x: 70; y: -25},
+        VCAModule {x: 55; y:55},
+        OutAudioHwModule {x: 110; y: 85}
     ]
     cables: [
         Cable {

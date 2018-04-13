@@ -4,6 +4,7 @@ import QtQuick.Shapes 1.11
 import ohm 1.0
 import ohm.jack 1.0
 import ohm.helpers 1.0
+import ohm.ui 1.0
 
 Shape {
     id: cableDragView
@@ -162,7 +163,6 @@ Shape {
         startJackView = null;
         dragPad = null
     }
-
 
 }
 

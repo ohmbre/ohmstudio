@@ -8,32 +8,44 @@ QtObject {
 
     function toQML(indent) {
         if (!indent) indent = 0
+
         function objToQML(someObj,indent) {
             if (someObj.toQML) return someObj.toQML(indent)
-            else if (someObj.toString().indexOf("QPoint") === 0)
-                return '"' + someObj.x + ',' + someObj.y + '"'
-            else return JSON.stringify(someObj);
+            else if (typeof someObj == "string" || typeof someObj == "number")
+                return JSON.stringify(someObj);
+            else {
+                console.log("couldn't serialize "+someObj);
+                return "";
+            }
         }
 
         var qml = objectName + ' {';
         for (var q in qmlExports) {
             var prop = qmlExports[q];
             var obj = this[prop];
-            qml += '\n' + '\t'.repeat(indent+1) + prop + ': ';
+            var propQml = '\n' + '\t'.repeat(indent+1) + prop + ': ';
             if (obj.push) {
-                qml += '['
-                if (obj.length > 0) qml += '\n' + '\t'.repeat(indent+2);
+                var listQml = '['
+                if (obj.length > 0) listQml += '\n' + '\t'.repeat(indent+2);
                 for (var i in obj) {
-                    qml += objToQML(obj[i], indent+2);
-                    if (i < obj.length - 1) {
-                        qml += ',';
-                        if (obj.length > 0) qml += '\n' + '\t'.repeat(indent+2);
+                    var objQml = objToQML(obj[i], indent+2);
+                    if (objQml) {
+                        listQml += objQml;
+                        if (i < obj.length - 1) {
+                            listQml += ',';
+                            if (obj.length > 0)
+                                listQml += '\n' + '\t'.repeat(indent+2);
+                        }
                     }
                 }
-                if (obj.length > 0) qml += '\n' + '\t'.repeat(indent+1)
-                qml += ']'
-            } else
-                qml += objToQML(obj, indent+1);
+                if (obj.length > 0) listQml += '\n' + '\t'.repeat(indent+1)
+                listQml += ']'
+                qml += propQml + listQml;
+            } else {
+                var subQml = objToQML(obj, indent+1);
+                if (subQml)
+                    qml += propQml + subQml;
+            }
         }
         if (qmlExports.length) qml += '\n' + '\t'.repeat(indent)
         return qml + '}';
@@ -41,17 +53,17 @@ QtObject {
 
     // returns Array like ['QtQuick.Controls 2.3', 'ohm.jack.in 1.0', ...]
     function parseImports(qml) {
-    // clean comments (cant find it now, but I ripped it from a good-looking man on stackoverflow)
-    var lines = qml.trim().replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').split('\n');
-    var imports = [];
-    for (var l in lines) {
-        var line = lines[l].trim();
-        if (line.length === 0) continue;
-        if (line.match(/^import[\s]+/))
-        imports.push(line.split(/\s/).slice(1).join(' '));
-        else break;
-    }
-    return imports
+        // clean comments (cant find it now, but ripped from stackoverflow)
+        var lines = qml.trim().replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').split('\n');
+        var imports = [];
+        for (var l in lines) {
+            var line = lines[l].trim();
+            if (line.length === 0) continue;
+            if (line.match(/^import[\s]+/))
+                imports.push(line.split(/\s/).slice(1).join(' '));
+            else break;
+        }
+        return imports
     }
 
 }

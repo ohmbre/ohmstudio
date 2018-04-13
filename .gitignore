@@ -1,7 +1,7 @@
 *~
 __pycache__
-*.qbs.user
-*.qmlproject.user
+*.qbs.user*
+*.qmlproject.user*
 build
 *.qmlc
 *.jsc

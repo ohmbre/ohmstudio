@@ -6,6 +6,7 @@ import Qt.labs.folderlistmodel 2.1
 
 import ohm.patch 1.0
 import ohm.helpers 1.0
+import ohm.ui 1.0
 
 ApplicationWindow {
     id: window
@@ -15,18 +16,15 @@ ApplicationWindow {
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
 
-    FontLoader { id: asapFont; source: "fonts/Asap-Medium.ttf" }
+    FontLoader { id: asapFont; source: "ui/fonts/Asap-Medium.ttf" }
 
     Drawer {
         id: setup
         width: 0.33 * parent.width
         height: parent.height
-
-        Button {
-            anchors.horizontalCenter: setup.contentItem.horizontalCenter
-            y: 50
+        RoundButton {
+            y: 50; x: 30
             text: "New Patch"
-            font.family: "Asap Medium"
             onClicked: {
                 var c = Qt.createComponent("patch/Patch.qml");
                 var newPatch = c.createObject(window, {name: "new patch", modules: [], cables: []});
@@ -35,33 +33,21 @@ ApplicationWindow {
             }
         }
 
-        Button {
-            anchors.horizontalCenter: setup.contentItem.horizontalCenter
-            y: 100
+        RoundButton {
+            y: 100; x: 30
             text: "Load Patch"
-            font.family: "Asap Medium"
             onClicked: {
                 loadFileDialog.visible = true;
             }
         }
 
-        Button {
-            anchors.horizontalCenter: setup.contentItem.horizontalCenter
-            y: 150
+        RoundButton {
+            y: 150; x: 30
             text: "Save Patch"
-            font.family: "Asap Medium"
             onClicked: {
                 saveFileDialog.visible = true;
             }
         }
-
-        /*ListView {
-            model: FolderListModel {
-                nameFilters: ["*.qml"]
-                folder: "modules"
-            }
-            delegate: Component { Text {text: fileName } }
-        }*/
 
         FileDialog {
             id: loadFileDialog
@@ -89,11 +75,11 @@ ApplicationWindow {
         var rawdata = Fn.readFile(url);
             var obj = Qt.createQmlObject(rawdata, window, url);
         } catch(err) {
-            console.log(err);
+            console.log("could not load " + url);
             return false;
         }
-    obj.importList = obj.parseImports(rawdata)
-    activePatch.setSource("patch/PatchView.qml", {patch: obj});
+        obj.importList = obj.parseImports(rawdata)
+        activePatch.setSource("patch/PatchView.qml", {patch: obj});
         return true;
     }
 

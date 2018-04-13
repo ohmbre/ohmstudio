@@ -1,6 +1,7 @@
 import ohm 1.0
 import ohm.jack.out 1.0
 import ohm.jack.in 1.0
+import ohm.helpers 1.0
 
 Model {
     objectName: "Module"
@@ -9,7 +10,8 @@ Model {
     //property list<CV> cvs
     property list<InJack> inJacks
     property list<OutJack> outJacks
-    property point coords
+    property real x;
+    property real y;
 
     function jack(index) {
         if (typeof index == "number")
@@ -23,7 +25,6 @@ Model {
 
     property int nJacks: inJacks.length + outJacks.length
 
-    qmlExports: ["coords"]
-
+    qmlExports: ["x", "y"]
 
 }

@@ -3,6 +3,7 @@ import QtQuick.Shapes 1.11
 
 import ohm 1.0
 import ohm.helpers 1.0
+import ohm.ui 1.0
 
 Item {
     id: jackView
@@ -67,7 +68,7 @@ Item {
     property alias path: shapePath
     property alias pad: jackPad
 
-    StyledText {
+    OhmText {
         id: jackLabel
         text: jack.label;
         property color blend: Style.jackLabelColor
