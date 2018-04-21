@@ -5,5 +5,6 @@ Model {
 
     property string label
     property string dir // "inp" or "out"
-
+    property real volts: 0
+    
 }

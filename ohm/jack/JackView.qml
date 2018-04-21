@@ -20,7 +20,7 @@ Item {
                                  Math.pow(moduleView.ryext*Math.sin(theta),2))
     property color bgColor
     property color bgColorLit
-    property string arrow
+    property int arrowRotation
 
     height: (Style.jackExtension + moduleView.radius) * 2 * Math.sin(sweepRad/2)
     width: r + Style.jackLabelGap + jackLabel.contentWidth
@@ -82,14 +82,17 @@ Item {
         x: r + Style.jackLabelGap
     }
 
-    OhmText {
-        text: arrow
-        color: jackLabel.color
-        height: jackLabel.height
-        horizontalAlignment: Text.AlignRight
-        font.pixelSize: 10
-        x: jackLabel.x - 11
+    Image {
+        source: "../ui/icons/squiggle.svg"
+        x: jackLabel.x - width - 2
+        y: Fn.centerInY(this,this.parent);
+        rotation: arrowRotation
+        width: 10
+        height: 4
+        smooth: true
     }
+
+
 
 
     transform: [

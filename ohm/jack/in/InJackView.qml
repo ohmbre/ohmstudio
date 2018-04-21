@@ -6,5 +6,5 @@ JackView {
     direction: 1
     bgColor: Style.inJackColor
     bgColorLit: Style.inJackLitColor
-    arrow: "⇜"
+    arrowRotation: 180
 }

@@ -111,7 +111,7 @@ ApplicationWindow {
         var rawdata = Fn.readFile(url);
             var obj = Qt.createQmlObject(rawdata, window, url);
         } catch(err) {
-            console.log("could not load " + url);
+            console.log("could not load " + url + "\n" + err);
             return false;
         }
         obj.importList = obj.parseImports(rawdata)
@@ -121,8 +121,8 @@ ApplicationWindow {
 
     Loader {
         id: activePatch
+        objectName: "patchLoader"
         anchors.fill: parent
-        onLoaded: console.log("patch loaded")
     }
 
     Component.onCompleted: {

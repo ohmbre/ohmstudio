@@ -44,7 +44,7 @@ QtObject {
     property real maxJackSweep: 1 // (radians)
 
     property color jackLabelColor: "#FF"+palette.light
-    property real jackLabelGap: 2
+    property real jackLabelGap: 3
 
     property color cableColor: '#'+palette.strong
     property double cableControlStiffness: 5

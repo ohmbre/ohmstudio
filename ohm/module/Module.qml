@@ -27,4 +27,7 @@ Model {
 
     qmlExports: ["x", "y"]
 
+    property var pyLoops: []
+    property string pySetup: ""
+
 }

@@ -26,6 +26,7 @@ Model {
     function addCable(cable) {
         cables.push(cable);
         cable.parent = this;
+        cable.inp.cableAdded(cable.out)
     }
 
     function deleteCable(cable) {
@@ -34,6 +35,7 @@ Model {
             if (cables[c] !== cable)
                 newCables.push(cables[c]);
         cables = newCables;
+        cable.inp.cableRemoved(cable.out);
     }
 
     function deleteModule(module) {
@@ -106,6 +108,3 @@ Model {
     }
 
 }
-
-
-
