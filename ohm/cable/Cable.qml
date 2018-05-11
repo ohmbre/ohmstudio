@@ -1,3 +1,4 @@
+import QtQuick 2.10
 import ohm 1.0
 import ohm.jack 1.0
 
@@ -7,6 +8,7 @@ Model {
     property Jack out
 
     function toQML(indent) {
+	if (!(inp && out)) return ""; 
         var qml = "Cable {\n";
         for (var m in parent.modules) {
             if (parent.modules[m] === inp.parent)
@@ -17,4 +19,7 @@ Model {
         qml += '\t'.repeat(indent) + '}'
         return qml;
     }
+
+    Component.onCompleted: inp.cableAdded(out)
+
 }

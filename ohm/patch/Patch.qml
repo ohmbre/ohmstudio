@@ -26,7 +26,7 @@ Model {
     function addCable(cable) {
         cables.push(cable);
         cable.parent = this;
-        cable.inp.cableAdded(cable.out)
+        //cable.inp.cableAdded(cable.out) <- done in cable oncomplete
     }
 
     function deleteCable(cable) {
@@ -55,8 +55,13 @@ Model {
         var qml = "import " + namespace + '; ' + classname + " {x: "+x+"; y: "+y+"}";
         var mObj = Qt.createQmlObject(qml, this, "dynamic");
         importList[namespace] = true;
-        modules.push(mObj);
+
+	for (var j in mObj.inJacks)
+            mObj.inJacks[j].parent = mObj;
+        for (j in mObj.outJacks)
+            mObj.outJacks[j].parent = mObj;
         mObj.parent = this;
+        modules.push(mObj);
     }
 
     function saveTo(fileName) {

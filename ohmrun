@@ -2,4 +2,4 @@
 cd "$(dirname "$0")"
 source config.env
 killall python3
-python3 -i ./main.py
+python3 -i ./run.py

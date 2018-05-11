@@ -1,24 +1,18 @@
 import ohm.jack 1.0
 import ohm.jack.out 1.0
+import ohm.dsp 1.0
 
 Jack {
     objectName: "InJack"
     dir: "inp"
-    property real volts: 0
 
-    signal updateVolts(real newVolts)
-    onUpdateVolts: {
-      volts = newVolts;
-    }
-
+    property var defaultStream: with(DSP) repeat(0);
+    stream: defaultStream
+    
     signal cableRemoved(OutJack outJack)
-    onCableRemoved: {
-      outJack.voltsChanged.disconnect(updateVolts);
-    }
-
+    onCableRemoved: with(DSP) stream = defaultStream
+  
     signal cableAdded(OutJack outJack)
-    onCableAdded: {
-      outJack.voltsChanged.connect(updateVolts);
-    }
+    onCableAdded: stream = Qt.binding(function() {return outJack.stream});
 
 }

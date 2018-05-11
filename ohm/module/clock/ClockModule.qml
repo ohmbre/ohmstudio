@@ -1,6 +1,8 @@
 import ohm.module 1.0
 import ohm.jack.out.gate 1.0
 import ohm.jack.in 1.0
+import ohm.dsp 1.0
+import ohm.cv 1.0
 
 Module {
     objectName: "ClockModule"
@@ -8,10 +10,21 @@ Module {
     label: "Clock"
 
     outJacks: [
-        GateOutJack {label: "trig"}
+        GateOutJack {
+	    label: "trig"
+	    stream: with(DSP) cycle(1, 30*ms, add(cv('tempo'),-30*ms))
+	}
     ]
 
     inJacks: [
         InJack {label: "tempo"}
+    ]
+
+    cvs: [
+	LogScaleCV {
+	    label: "tempo"
+	    voltage: jack('tempo').stream
+	    from: "200*ms"
+	}
     ]
 }

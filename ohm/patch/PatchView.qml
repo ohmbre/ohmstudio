@@ -1,4 +1,4 @@
-import QtQuick 2.9
+import QtQuick 2.10
 import QtQuick.Controls 2.3
 import QtQml 2.2
 import QtQml.Models 2.2
@@ -29,8 +29,6 @@ Flickable {
         }
     }
 
-
-
     Repeater {
         model: patch.cables
         CableView {
@@ -45,21 +43,49 @@ Flickable {
         pinch.maximumScale: 5
         pinch.dragAxis: Pinch.XAndYAxis
 
+	function handlePinch(pinch) {
+	    if (pinch.scale < pinch.previousScale) return;
+	    var vp = patchView.contentItem.mapFromItem(patchView, 0, 0);
+	    var vport = Qt.rect(vp.x, vp.y, patchView.width/pinch.scale, patchView.height/pinch.scale);
+	    var visibleModules = [];
+	    for (var i = 0; i < patch.modules.length; i++) {
+		var mv = patch.modules[i].view;
+		if (Fn.aContainsB(vport, Qt.rect(mv.x,mv.y,mv.width,mv.height)))
+		    visibleModules.push(patch.modules[i]);
+	    }
+	    if (visibleModules.length == 1) {
+		/*var module = visibleModules[0];
+		var zoom = 160/module.view.radius;
+		patchView.contentItem.scale = zoom;
+		patchView.contentX = module.view.x/zoom;
+		patchView.contentY = module.view.y/zoom;
+		console.log(module.label);*/
+	    }
+	}
+
+	onPinchFinished: handlePinch(pinch)
+
         MouseArea {
             anchors.fill: parent
+	    id: pvArea
+	    hoverEnabled: true
             anchors.centerIn: parent
             scrollGestureEnabled: false
             propagateComposedEvents: false
-            onReleased: {
-                propagateComposedEvents = true;
-            }
+            onReleased: propagateComposedEvents = true
+
             onWheel: {
-                patchView.contentItem.scale += patchView.contentItem.scale * wheel.angleDelta.y / 120 / 10;
+		var mp = pvArea.mapToItem(patchView, pvArea.mouseX, pvArea.mouseY);
+		var oldZoom = patchView.contentItem.scale;
+		var newZoom = oldZoom * (1 + wheel.angleDelta.y / 1200);
+		//patchView.contentX += (mp.x - 160) * (newZoom - oldZoom);
+		//patchView.contentY += (mp.y - 120) * (newZoom - oldZoom);
+                patchView.contentItem.scale = newZoom;
+		parent.handlePinch({scale: newZoom, previousScale: oldZoom});
             }
             onPressAndHold: moduleMenu.popup()
         }
     }
-
 
     OhmPopup {
         id: moduleMenu
@@ -153,6 +179,3 @@ Flickable {
         patch.view = patchView;
     }
 }
-
-
-

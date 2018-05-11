@@ -1,10 +1,10 @@
 import ohm 1.0
+import ohm.dsp 1.0
 
 Model {
     objectName: "Jack"
 
     property string label
     property string dir // "inp" or "out"
-    property real volts: 0
-    
+    property var stream
 }

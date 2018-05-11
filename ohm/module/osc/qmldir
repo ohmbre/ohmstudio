@@ -1,2 +1,2 @@
-WavetableOscModule 1.0 WavetableOscModule.qml
-FunctionOscModule 1.0 FunctionOscModule.qml
+SineOscModule 1.0 SineOscModule.qml
+SawOscModule 1.0 SawOscModule.qml
