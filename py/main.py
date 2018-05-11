@@ -6,7 +6,6 @@ from PySide2.QtCore import QObject,QUrl,QCoreApplication,Signal,Slot
 from PySide2.QtQuick import QQuickView
 from PySide2.QtQml import QQmlApplicationEngine
 
-from . import alsa
 from . import dsp
 
 class Main(QObject):
@@ -14,9 +13,7 @@ class Main(QObject):
         self.app = QGuiApplication(sys.argv)
         signal.signal(signal.SIGINT,signal.SIG_DFL)
         self.engine = QQmlApplicationEngine()
-        alsa.Alsa.register(self.engine)
         dsp.AudioThread.register(self.engine)
-        self.engine.rootContext().setContextProperty('alsa',alsa.Alsa())
         self.engine.addImportPath(".")
         self.engine.loadData("import ohm 1.0; Ohm{}")
         self.window = self.engine.rootObjects()[0]
