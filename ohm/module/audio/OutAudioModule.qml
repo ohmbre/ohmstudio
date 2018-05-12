@@ -3,7 +3,7 @@ import QtQuick 2.10
 import ohm.module 1.0
 import ohm.jack.in 1.0
 import ohm.jack.out 1.0
-import ohm.dsp 1.0
+import Brig.AudioThread 1.0
 
 Module {
     objectName: "OutAudioModule"
@@ -19,10 +19,7 @@ Module {
     ]  
 
     property AudioThread audioThread: AudioThread {
-	property var streamStr: jack('signal').stream
+	streamRep: jack('signal').stream
     }
-
-    Component.onCompleted: audioThread.start()
-
     
 }

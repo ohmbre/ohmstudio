@@ -30,12 +30,10 @@ Model {
     function cv(index) {
         if (typeof index == "number")
             return cvs[index].cv;
-        for (var c = 0; c < cvs.length; c++) {
-            var obj = cvs[c];
-            if (cvs[c].label === index)
-		return cvs[c].cv;
-        }
-        return undefined;
+	return Fn.forEach(cvs, function(cv) {
+            if (cv.label === index)
+		return cv.cv;
+        });
     }
 
     

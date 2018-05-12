@@ -12,17 +12,13 @@ import ohm.module.multiple 1.0
 Patch {
 	name: "example"
 	modules: [
-		OutAudioModule {
-			x: -27.486137900018775
-			y: 77.5799299717504
-		},
 		SawOscModule {
-			x: 8.851677703983569
-			y: -7.763613396037272
+			x: 9.15271317227689
+			y: 8.943855094243077
 		},
 		VCAModule {
-			x: -0.5
-			y: 39
+			x: -9.194162403008704
+			y: 44.89961020204112
 		},
 		ADSRModule {
 			x: -60.5
@@ -59,40 +55,40 @@ Patch {
 	]
 	cables: [
 		Cable {
-			inp: modules[2].jack("gain")
-			out: modules[3].jack("envelope")
+			inp: modules[1].jack("gain")
+			out: modules[2].jack("envelope")
 		},
 		Cable {
-			out: modules[4].jack("trig")
-			inp: modules[6].jack("in")
+			out: modules[3].jack("trig")
+			inp: modules[5].jack("in")
 		},
 		Cable {
-			inp: modules[3].jack("gate")
-			out: modules[6].jack("out2")
+			inp: modules[2].jack("gate")
+			out: modules[5].jack("out2")
 		},
 		Cable {
-			out: modules[1].jack("signal")
-			inp: modules[2].jack("in")
+			out: modules[0].jack("signal")
+			inp: modules[1].jack("in")
 		},
 		Cable {
-			inp: modules[0].jack("signal")
-			out: modules[2].jack("out")
+			inp: modules[7].jack("v/oct")
+			out: modules[9].jack("v/oct")
 		},
 		Cable {
-			inp: modules[8].jack("v/oct")
-			out: modules[10].jack("v/oct")
+			out: modules[6].jack("trig")
+			inp: modules[9].jack("clock")
 		},
 		Cable {
-			out: modules[7].jack("trig")
-			inp: modules[10].jack("clock")
+			inp: modules[0].jack("v/oct")
+			out: modules[4].jack("v/oct")
 		},
 		Cable {
-			inp: modules[1].jack("v/oct")
-			out: modules[5].jack("v/oct")
+			inp: modules[4].jack("clock")
+			out: modules[5].jack("out1")
 		},
 		Cable {
-			inp: modules[5].jack("clock")
-			out: modules[6].jack("out1")
+			out: modules[1].jack("out")
+			inp: modules[8].jack("signal")
 		}
 	]
 }

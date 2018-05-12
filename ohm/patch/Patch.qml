@@ -14,13 +14,14 @@ Model {
     property var importList: ({})
 
     function lookupCableFor(jack) {
-        for (var c = 0; c < cables.length; c++) {
-            if (cables[c].out === jack)
-                return {index: c, cable: cables[c], dir: 'out', otherend: cables[c].inp};
-            if (cables[c].inp === jack)
-                return {index: c, cable: cables[c], dir: 'inp', otherend: cables[c].out};
-        }
-        return {cable: false};
+	var ret = Fn.forEach(cables, function(cable, c) {
+            if (cable.out === jack)
+                return {index: c, cable: cable, dir: 'out', otherend: cable.inp};
+            if (cable.inp === jack)
+                return {index: c, cable: cable, dir: 'inp', otherend: cable.out};
+        });
+	if (ret === undefined) return {cable: false};
+	return ret;
     }
 
     function addCable(cable) {
@@ -29,25 +30,27 @@ Model {
         //cable.inp.cableAdded(cable.out) <- done in cable oncomplete
     }
 
-    function deleteCable(cable) {
+    function deleteCable(dCable) {
         var newCables = [];
-        for (var c in cables)
-            if (cables[c] !== cable)
-                newCables.push(cables[c]);
+        Fn.forEach(cables, function(cable) {
+            if (cable !== dCable)
+                newCables.push(cable);
+	});
         cables = newCables;
-        cable.inp.cableRemoved(cable.out);
+        dCable.inp.cableRemoved(dCable.out);
     }
 
-    function deleteModule(module) {
-        for (var j = 0; j < module.nJacks; j++) {
-            var cableResult = lookupCableFor(module.jack(j));
+    function deleteModule(dModule) {
+        for (var j = 0; j < dModule.nJacks; j++) {
+            var cableResult = lookupCableFor(dModule.jack(j));
             if (cableResult.cable)
                 deleteCable(cableResult.cable, true)
         }
         var newModules = [];
-        for (var m in modules)
-            if (modules[m] !== module)
-                newModules.push(modules[m]);
+	Fn.forEach(modules, function(module) {
+            if (module !== dModule)
+                newModules.push(module);
+	});
         modules = newModules;
     }
 
@@ -55,11 +58,8 @@ Model {
         var qml = "import " + namespace + '; ' + classname + " {x: "+x+"; y: "+y+"}";
         var mObj = Qt.createQmlObject(qml, this, "dynamic");
         importList[namespace] = true;
-
-	for (var j in mObj.inJacks)
-            mObj.inJacks[j].parent = mObj;
-        for (j in mObj.outJacks)
-            mObj.outJacks[j].parent = mObj;
+	Fn.forEach(mObj.inJacks, function(jack) { jack.parent = mObj });
+	Fn.forEach(mObj.outJacks, function(jack) { jack.parent = mObj });
         mObj.parent = this;
         modules.push(mObj);
     }
@@ -90,26 +90,19 @@ Model {
         Qt.patch = this;
         cablesChanged.connect(userChanges);
         modulesChanged.connect(userChanges);
-        for (var m in modules) {
-            modules[m].xChanged.connect(userChanges);
-            modules[m].yChanged.connect(userChanges);
-        }
-
-        // assign all the 'parent' properties to children
-        for (m in modules) {
-            modules[m].parent = this;
-            for (var j in modules[m].inJacks)
-                modules[m].inJacks[j].parent = modules[m];
-            for (j in modules[m].outJacks)
-                modules[m].outJacks[j].parent = modules[m];
-        }
-
-        for (var c in cables) {
-            cables[c].parent = this;
+	Fn.forEach(modules, function(module) {
+            module.xChanged.connect(userChanges);
+            module.yChanged.connect(userChanges);
+	    module.parent = Qt.patch;
+	    Fn.forEach(module.inJacks, function(jack) { jack.parent = module });
+	    Fn.forEach(module.outJacks, function(jack) { jack.parent = module });
+        });
+	Fn.forEach(cables, function(cable) {
+            cable.parent = Qt.patch;
             // de-bind from module array indices so we can add/remove modules
-            cables[c].inp = cables[c].inp;
-            cables[c].out = cables[c].out;
-        }
+            cable.inp = cable.inp;
+            cable.out = cable.out;
+        });
     }
 
 }

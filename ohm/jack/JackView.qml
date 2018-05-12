@@ -61,7 +61,7 @@ Item {
             hoverEnabled: true
             onPressed: function(event) {
                 if (jackShape.contains(Qt.point(event.x, event.y)))
-                    patchView.cableDragView.cableStarted(jackView);
+                    pView.cableDragView.cableStarted(jackView);
             }
         }
     }

@@ -42,7 +42,7 @@ Rectangle {
                                  || collapsed
 
     SM.StateMachine {
-        id: stateMachine
+        id: ioState
         initialState: collapsed
         running: true
         SM.State {
@@ -77,6 +77,7 @@ Rectangle {
         padding: Style.moduleLabelPadding
         anchors.fill: parent
         color: Style.moduleLabelColor
+	Behavior on opacity { NumberAnimation { duration: 300 } }
         Component.onCompleted: {
             moduleView.height = contentHeight + padding*2;
             moduleView.width = contentWidth + padding*2;
@@ -93,7 +94,7 @@ Rectangle {
         drag.smoothed: true
         propagateComposedEvents: true
         preventStealing: true
-        onPressAndHold: patchView.confirmDeleteModule(module);
+        onPressAndHold: pView.contentItem.confirmDeleteModule(module);
         pressAndHoldInterval: 800
     }
     property alias mouseX: moduleMouseArea.mouseX
@@ -135,6 +136,38 @@ Rectangle {
         }
     }
 
+    property real storedWidth
+    property real storedHeight
+    Behavior on width { NumberAnimation { duration: 300 } }
+    Behavior on height { NumberAnimation { duration: 300 } }
+    function controlMode() {
+	forceCollapse();
+	moduleLabel.opacity = 0;
+	controller.opacity = 1;
+	moduleMouseArea.enabled = false;
+	storedWidth = width;
+	storedHeight = height;
+	width = pView.width/scaler.max;
+	height = pView.height/scaler.max;
+	console.log(width+','+height);
+    }
+
+    Item {
+	id: controller
+	anchors.fill: parent
+	Behavior on opacity { NumberAnimation { duration: 400 } }
+	opacity: 0
+
+	OhmText {
+            text: module.label
+            anchors.centerIn: parent
+            color: Style.moduleLabelColor
+	    font.pixelSize: 3
+	}
+    }
+
+	
+    
     Component.onCompleted: {
         module.view = moduleView;
         module.x = Qt.binding(function() { return moduleView.x - Fn.centerInX(moduleView, moduleView.parent);});

@@ -11,7 +11,7 @@ import ohm.ui 1.0
 import ohm.helpers 1.0
 
 Item {
-    id: patchView
+    id: pView
     property Patch patch
     width: 320
     height: 240
@@ -22,29 +22,56 @@ Item {
 	height: 1200
 	x: (parent.width-width)/2
 	y: (parent.height-height)/2
+	ParallelAnimation {
+	    id: zoomPanAnim
+	    running: false
+	    NumberAnimation {id: xAnim; property: 'x'; target: content; duration: 300}
+	    NumberAnimation {id: yAnim; property: 'y'; target: content; duration: 300}
+	    NumberAnimation {property: 'zoom'; target: scaler; duration: 300; to: scaler.max}
+	}
+	onXChanged: {
+	    var topleft = content.mapFromItem(pView,0,0);
+	    var bottright = content.mapFromItem(pView,pView.width,pView.height);
+	    if (topleft.x < 0) content.x += topleft.x*scaler.zoom;
+	    else if (bottright.x > content.width) content.x -= (content.width-bottright.x)*scaler.zoom;
+	}
+	onYChanged: {
+	    var topleft = content.mapFromItem(pView,0,0);
+	    var bottright = content.mapFromItem(pView,pView.width,pView.height);
+	    if (topleft.y < 0) content.y += topleft.y*scaler.zoom;           
+            else if (bottright.y > content.height) content.y -= (content.height-bottright.y)*scaler.zoom;
+	}
+
 	transform: Scale {
 	    id: scaler
-	    origin.x: width/2
-	    origin.y: height/2
+	    origin.x: 0
+	    origin.y: 0
 	    xScale: zoom
 	    yScale: zoom
 	    property real zoom: 1.0
 	    property real max: 10
 	    property real min: 0.2
-	    function zoomContent(zoomDelta, centerX, centerY) {
+	    function zoomContent(zoomDelta, center) {
+		if (zoomPanAnim.running) return;
 		var oldZoom = zoom;
-		zoom = Math.min(Math.max(zoom*(1+zoomDelta),min),max);
-                content.x += (patchView.width/2-centerX)*(zoom-oldZoom);
-                content.y += (patchView.height/2-centerY)*(zoom-oldZoom);
-                var topleft = content.mapFromItem(patchView,0,0);
-                if (topleft.x < 0) content.x += topleft.x*zoom;
-                if (topleft.y < 0) content.y += topleft.y*zoom;
-                var bottright = content.mapFromItem(patchView,patchView.width,patchView.height);
-                if (bottright.x > content.width) content.x -= (content.width-bottright.x)*zoom;
-                if (bottright.y > content.height) content.y -= (content.height-bottright.y)*zoom;
+		var newZoom = zoom * (1 + zoomDelta);
+		if (newZoom < min || newZoom > max) return;
+		zoom = newZoom;
+                content.x += center.x*(oldZoom-zoom);
+                content.y += center.y*(oldZoom-zoom);
+		if (zoom > 3.5 && zoomDelta > 0) Fn.forEach(patch.modules, function(m) {
+		    if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
+			scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
+			xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
+			yAnim.to = -(m.view.y + m.view.height/2)*scaler.max + pView.height/2
+			zoomPanAnim.start();
+			m.view.controlMode();
+			return -1; // break
+		    }
+		});
 	    }
 	}
-
+	
 	Repeater {
             model: patch.modules
             ModuleView {
@@ -61,54 +88,22 @@ Item {
 
 	PinchArea {
             anchors.fill: parent
-
-	    function handlePinch(pinch) {
-		if (pinch.scale < pinch.previousScale) return;
-		var vp = patchView.contentItem.mapFromItem(patchView, 0, 0);
-		var vport = Qt.rect(vp.x, vp.y, patchView.width/pinch.scale, patchView.height/pinch.scale);
-		var visibleModules = [];
-		for (var i = 0; i < patch.modules.length; i++) {
-		    var mv = patch.modules[i].view;
-		    if (Fn.aContainsB(vport, Qt.rect(mv.x,mv.y,mv.width,mv.height)))
-			visibleModules.push(patch.modules[i]);
-		}
-		if (visibleModules.length == 1) {
-		    /*var module = visibleModules[0];
-		      var zoom = 160/module.view.radius;
-		      patchView.contentItem.scale = zoom;
-		      patchView.contentX = module.view.x/zoom;
-		      patchView.contentY = module.view.y/zoom;
-		      console.log(module.label);*/
-		}
-	    }
-	    
-	    onPinchUpdated: {
-                var dz = pinch.scale-pinch.previousScale;
-		scaler.zoomContent(dz, pinch.startCenter.x, pinch.startCenter.y);
-            }
-
-	    onPinchFinished: handlePinch(pinch)
-
+	    onPinchUpdated: scaler.zoomContent(pinch.scale-pinch.previousScale,
+					       Qt.point(pinch.startCenter.x, pinch.startCenter.y))
             MouseArea {
-		id: dragArea
+		id: mousePinch
 		hoverEnabled: true
 		anchors.fill: parent
 		drag.target: content
 		drag.filterChildren: true
-		drag.maximumX: patchView.width * (scaler.zoom-1) / (2*scaler.min)
-                drag.maximumY: patchView.height * (scaler.zoom-1) / (2*scaler.min)
-                drag.minimumX: -patchView.width * (scaler.zoom+0.6) / (2*scaler.min)
-                drag.minimumY: -patchView.height * (scaler.zoom+0.6) / (2*scaler.min)
 		propagateComposedEvents: false
 		onReleased: propagateComposedEvents = true
-
-		onWheel: {
-		    scaler.zoomContent(wheel.angleDelta.y / 2400, mouseX, mouseY);
-		    //parent.handlePinch({scale: newZoom, previousScale: oldZoom});
-		}
+		onWheel: scaler.zoomContent(wheel.angleDelta.y / 2400, Qt.point(mouseX, mouseY));
 		onPressAndHold: moduleMenu.popup()
             }
 	}
+
+
 
 	OhmPopup {
             id: moduleMenu
@@ -149,9 +144,9 @@ Item {
 				var ns = folderModel.folder.toString();
 				ns = ns.replace(Qt.resolvedUrl('../..'), '');
 				while (ns.indexOf("/") !== -1) ns = ns.replace('/','.');
-				var pos = moduleMenu.contentItem.mapToItem(patchView, 0, 0);
-				pos.x -= patchView.width/2; pos.y -= patchView.height/2;
-				patchView.patch.addModule(fileBaseName, ns + " 1.0", pos.x, pos.y);
+				var pos = moduleMenu.contentItem.mapToItem(pView, 0, 0);
+				pos.x -= pView.width/2; pos.y -= pView.height/2;
+				pView.patch.addModule(fileBaseName, ns + " 1.0", pos.x, pos.y);
 				moduleMenu.close();
                             }
 			}
@@ -203,7 +198,8 @@ Item {
     property alias cableDragView: childCableDragView
 
     Component.onCompleted: {
-        patch.view = patchView;
+        patch.view = pView;
+
     }
 
 }

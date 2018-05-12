@@ -1,4 +1,3 @@
-.pragma library
 
 
 
@@ -36,41 +35,40 @@ function oneshot(trig,tstep,attack,decay) {
 
 // xmap(fn, generator1, generator2, ...) => fn(generator1, generator2, ...)
 function xmap() {
-    var fn = arguments[0];
-    var generators = Array(arguments.length-1);
-    for (var i = 1; i < arguments.length; i++)
-	generators[i-1] = arguments[i];
-    var vals = Array(generators.length);
+    var gens = Array.apply(null, arguments);
+    var fn = gens.shift()
+    var ngens = gens.length;
+    var vals = new Array(gens.length);
     return function() {
-	for (var g = 0; g < generators.length; g++) {
-	    var gen = generators[g];
-	    vals[g] = genval(gen);
-	}
+	for (var g = 0; g < ngens; g++)
+	    vals[g] = genval(gens[g]);
 	return fn.apply(null, vals)
     }
 }
 
 function repeat() {
-    var iarg = 0;
-    var args = Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++)
-	args[i] = arguments[i];
+    var iarg = -1;
+    var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments);
+    var nargs = args.length;
     return function() {
-	var ret = args[iarg];
-	iarg = (iarg+1) % args.length;
-	return ret;
+	iarg = (iarg+1) % nargs;
+	return args[iarg];
     }
 }
 
-function repeatArray(arr) {
-    var iarg = 0;
+function flatten() {
+    var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments)
+    var nargs = args.lenth;
+    var iarg = 0,nsub = args[0].length,isub = 0;
     return function() {
-	var ret = arr[iarg];
-	iarg = (iarg + 1) % arr.length;
-	return ret;
+	if (isub < nsub)
+	    return args[iarg][isub++];
+	iarg = (iarg+1) % nargs;
+	isub = 0;
+	nsub = args[iarg].length;
     }
 }
-
+	
 function cycle(tstep, hi_time, lo_time) {
     var t = 0;
     return function() {
@@ -83,18 +81,14 @@ function cycle(tstep, hi_time, lo_time) {
 }
 
 function add() {
-    var args = Array(arguments.length+1);
-    args[0] = function (a,b) { return a+b; };
-    for (var i = 0; i < arguments.length; i++)
-	args[i+1] = arguments[i];
+    var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments);
+    args.unshift(function (a,b) { return a+b });
     return xmap.apply(null, args)
 }
 
 function mul() {
-    var args = Array(arguments.length+1);
-    args[0] = function (a,b) { return a*b; };
-    for (var i = 0; i < arguments.length; i++)
-	args[i+1] = arguments[i];
+    var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments);
+    args.unshift(function (a,b) { return a*b })
     return xmap.apply(null, args)
 }
 
@@ -103,7 +97,9 @@ function sinusoid(freq) {
 }
 
 function saw(freq) {
-    return xmap(function (m) { return 5*v*(m/pi-1) }, modulo(2*pi,freq))
+    var slope = 5*v/pi;
+    var intercept = 5*v;
+    return xmap(function (m) { return slope*m - intercept }, modulo(2*pi,freq))
 }
 
 function pow2(x) {
@@ -115,6 +111,22 @@ function sample(lst,k) {
     for (var i = 0; i < k; i++)
 	subsample.push(lst[Math.floor(Math.random() * lst.length)]);
     return subsample;
+}
+
+function clockSeq(trig,tstep,seqrepeat) {
+    var seq = repeat.apply(null,seqrepeat);
+    var gate = false;
+    var val = seq();
+    return function() {
+        var t = genval(trig)
+        if (!gate && t > 3) {
+            gate = true;
+            val = seq();
+        } else if (gate && t < 1) {
+            gate = false;
+	}
+	return val;
+    }
 }
 
 var C=-9,Cs=-8,Db=Cs,D=-7,Ds=-6,Eb=Ds,E=-5,F=-4,Fs=-3,Gb=Fs,G=-2,Gs=-1,Ab=Gs,A=0,As=1,Bb=As,B=2;
@@ -144,26 +156,12 @@ function scaleToVoct(scale) {
     return voltages;
 }
 
-function clockSeq(trig,tstep,seqrepeat) {
-    var seq = repeatArray(seqrepeat);
-    var gate = false;
-    var val = seq();
-    return function() {
-        var t = genval(trig)
-        if (!gate && t > 3) {
-            gate = true;
-            val = seq();
-        } else if (gate && t < 1) {
-            gate = false;
-	}
-	return val;
-    }
-}
+
 
 var lastStreamStr = null;
 var stream = repeat(0);
-var buf = ArrayBuffer(SAMPLE_BLOCK * SAMPLE_BYTES);
-var samples = Float32Array(buf);
+//var buf = ArrayBuffer(SAMPLE_BLOCK * SAMPLE_BYTES);
+var samples = new Float32Array(SAMPLE_BLOCK); //buf);
 
 while (true) {
     if (audio.streamStr != lastStreamStr) {

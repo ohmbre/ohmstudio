@@ -4,6 +4,7 @@ from collections import Iterator
 
 from PySide2.QtCore import QObject, Property, Slot, QThread
 from PySide2.QtQml import qmlRegisterType,QJSValue,QJSEngine
+from PySide2.QtScript import  QScriptEngine
 from PySide2.QtMultimedia import QAudioOutput
 
 import alsaaudio
@@ -22,6 +23,8 @@ v = (SAMPLE_MAX-SAMPLE_MIN)/(VOLTS_MAX-VOLTS_MIN)
 s = SAMPLE_RATE
 ms = s/1000.0  
 
+ENGINE = QScriptEngine
+
 class AudioThread(QThread):
    
     def __init__(self):
@@ -35,13 +38,18 @@ class AudioThread(QThread):
         self.pcm.setperiodsize(512)
         self.pcm.setformat(alsaaudio.PCM_FORMAT_FLOAT_LE)
 
-        self.jsEngine = QJSEngine()
+        if ENGINE == QScriptEngine:
+            self.jsEngine = QScriptEngine()
+            print(self.jsEngine.availableExtensions())
+        else:
+            self.jsEngine = QJSEngine()
+            self.jsEngine.installExtensions(QJSEngine.ConsoleExtension)
         self.jsEngine.moveToThread(self.thread())
         self.jsEngine.setParent(self)
         self.jsEngine.globalObject().setProperty('audio',self.jsEngine.newQObject(self))
         AudioThread.setglobals(self.jsEngine.globalObject().setProperty)
         #self.jsEngine.globalObject().setProperty('newStream',newStream)
-        self.jsEngine.installExtensions(QJSEngine.ConsoleExtension)
+
         self.code = open('ohm/dsp/impl.js').read()
         ret = self.jsEngine.evaluate(self.code)
         if ret.isError():

@@ -15,8 +15,8 @@ Shape {
     property InJackView ijv: cable.inp.view
     property ModuleView ijm: ijv ? ijv.parent : null
 
-    width: patchView.width;
-    height: patchView.height;
+    width: pView.width;
+    height: pView.height;
     antialiasing: true
     layer.samples: 8
 

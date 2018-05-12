@@ -11,8 +11,8 @@ Shape {
     property JackView startJackView: null
     property JackView endJackView: null
 
-    width: patchView.width
-    height: patchView.height
+    width: pView.width
+    height: pView.height
     antialiasing: true
     layer.samples: 4
 
@@ -84,10 +84,10 @@ Shape {
 
     signal cableStarted(JackView jv)
     onCableStarted: function(jv) {
-        var cableResult = patchView.patch.lookupCableFor(jv.jack);
+        var cableResult = pView.patch.lookupCableFor(jv.jack);
         dragPad = jv.pad
         if (cableResult.cable) {
-            patchView.patch.deleteCable(cableResult.cable);
+            pView.patch.deleteCable(cableResult.cable);
             startJackView = cableResult.otherend.view;
             endJackView = jv;
             jv.dropTargeted = true;
@@ -101,9 +101,9 @@ Shape {
 
     signal cableMoved
     onCableMoved: {
-        for (var m = 0; m < patchView.patch.modules.length; m++) {
-            var mv = patchView.patch.modules[m].view;
-            if (mv === startJackView.parent) continue;
+        Fn.forEach(pView.patch.modules, function(module) {
+            var mv = module.view;
+            if (mv === startJackView.parent) return;
             var mRelPos = dragPad.mapToItem(mv.perimeter, dragPad.mouseX, dragPad.mouseY);
             if (mv.perimeter.contains(mRelPos)) {
                 var jacklist = [];
@@ -114,9 +114,9 @@ Shape {
                     mv.forceInputExtend();
                     jacklist = mv.module.inJacks;
                 }
-                for (var j = 0; j < jacklist.length; j++) {
-                    if (patchView.patch.lookupCableFor(jacklist[j]).cable) continue;
-                    var jv = jacklist[j].view;
+		Fn.forEach(jacklist, function(jack) {
+                    if (pView.patch.lookupCableFor(jack).cable) return;
+                    var jv = jack.view;
                     var jRelPos = dragPad.mapToItem(jv.shape, dragPad.mouseX, dragPad.mouseY);
                     if (jv.shape.contains(jRelPos)) {
                         if (!jv.dropTargeted) {
@@ -129,7 +129,7 @@ Shape {
                             endJackView = null;
                         }
                     }
-                }
+                });
             } else {
                 mv.forceCollapse();
                 if (endJackView !== null && endJackView.parent === mv) {
@@ -137,7 +137,7 @@ Shape {
                     endJackView = null;
                 }
             }
-        }
+        });
     }
 
     signal cableDropped
@@ -152,8 +152,8 @@ Shape {
                 var cData = {};
                 cData[startJackView.jack.dir] = startJackView.jack;
                 cData[endJackView.jack.dir] = endJackView.jack;
-                var cObj = cComponent.createObject(patchView.patch, cData);
-                patchView.patch.addCable(cObj);
+                var cObj = cComponent.createObject(pView.patch, cData);
+                pView.patch.addCable(cObj);
                 startJackView.parent.forceCollapse();
                 endJackView.parent.forceCollapse();
             }
