@@ -1,7 +1,6 @@
 import ohm.module 1.0
 import ohm.jack.in 1.0
 import ohm.jack.out 1.0
-import ohm.dsp 1.0
 import ohm.cv 1.0
 
 Module {
@@ -12,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: "envelope"
-	    stream: with(DSP) mul(8*v,oneshot(jack('gate').stream,1,cv('attack'),cv('decay')))
+	    stream: mul(8*v,oneshot(jack('gate').stream,1,cv('attack'),cv('decay')))
 	}
 	
     ]
@@ -27,12 +26,12 @@ Module {
 	LogScaleCV {
 	    label: "attack"
 	    voltage: jack('attack').stream
-	    from: 100*ms
+	    from: '100*ms'
 	},
 	LogScaleCV {
 	    label: "decay"
 	    voltage: jack('decay').stream
-	    from: 300*ms
+	    from: '300*ms'
 	}
     ]
 }

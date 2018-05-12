@@ -1,7 +1,6 @@
 import ohm.module 1.0
 import ohm.jack.out 1.0
 import ohm.jack.in 1.0
-import ohm.dsp 1.0
 import ohm.cv 1.0
 
 Module {
@@ -11,7 +10,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: "signal"
-	    stream: with(DSP) mul(10*v, sinusoid(cv('freq')))
+	    stream: mul(10*v, sinusoid(cv('freq')))
 	}
     ]
 
@@ -25,7 +24,7 @@ Module {
 	LogScaleCV {
 	    label: "freq"
 	    voltage: jack('v/oct').stream
-	    from: with(DSP) noteToHz('C',4)
+	    from: noteToHz('C',4)
 	}
     ]
     

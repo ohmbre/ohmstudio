@@ -1,24 +1,27 @@
 module.exports = (function() {
+   
+    var prop = {}
+    prop.sampleRate = 48000;
+    prop.sampleBlock = 8192;
+    prop.sampleBytes = 2;
+    prop.sampleMin = -32767
+    prop.sampleMax = 32767
+    prop.voltsMin = -10
+    prop.voltsMax = 10
+
+    prop.pi = Math.PI
+    prop.hz = 2*prop.pi/prop.sampleRate
+    prop.v = (prop.sampleMax-prop.sampleMin)/(prop.voltsMax-prop.voltsMin)
+    prop.s = prop.sampleRate
+    prop.ms = prop.s/1000.0  
+
+    var func = {};
     
-    this.sampleRate = 48000;
-    this.sampleBlock = 8192;
-    this.sampleBytes = 2;
-    this.sampleMin = -32767
-    this.sampleMax = 32767
-    this.voltsMin = -10
-    this.voltsMax = 10
-
-    this.pi = Math.PI
-    this.hz = 2*pi/sampleRate
-    this.v = (sampleMax-sampleMin)/(voltsMax-voltsMin)
-    this.s = sampleRate
-    this.ms = s/1000.0  
-
-    this.genval = function (gv) {
+    func.genval = function (gv) {
 	return (gv instanceof Function) ? gv() : gv;
     }
 
-    this.modulo = function (modulus, step) {
+    func.modulo = function (modulus, step) {
 	var c = 0;
 	return function() {
 	    var ret = c;
@@ -27,7 +30,7 @@ module.exports = (function() {
 	}
     }
     
-    this.oneshot = function(trig,tstep,attack,decay) {
+    func.oneshot = function(trig,tstep,attack,decay) {
 	var pos = 0, gate = false, slope = 0;
 	return function() {
 	    var t = genval(trig);
@@ -47,7 +50,7 @@ module.exports = (function() {
     }
     
     // xmap(fn, generator1, generator2, ...) => fn(generator1, generator2, ...)
-    this.xmap = function() {
+    func.xmap = function() {
 	var gens = Array.apply(null, arguments);
 	var fn = gens.shift()
 	var ngens = gens.length;
@@ -59,7 +62,7 @@ module.exports = (function() {
 	}
     }
     
-    this.repeat = function() {
+    func.repeat = function() {
 	var iarg = -1;
 	var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments);
 	var nargs = args.length;
@@ -69,7 +72,7 @@ module.exports = (function() {
 	}
     }
 
-    this.flatten = function() {
+    func.flatten = function() {
 	var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments)
 	var nargs = args.lenth;
 	var iarg = 0,nsub = args[0].length,isub = 0;
@@ -82,7 +85,7 @@ module.exports = (function() {
 	}
     }
 	
-    this.cycle = function(tstep, hi_time, lo_time) {
+    func.cycle = function(tstep, hi_time, lo_time) {
 	var t = 0;
 	return function() {
 	    var ht = genval(hi_time);
@@ -93,40 +96,38 @@ module.exports = (function() {
 	}
     }
 
-    this.add = function() {
+    func.add = function() {
 	var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments);
 	args.unshift(function (a,b) { return a+b });
 	return xmap.apply(null, args)
     }
     
-    this.mul = function() {
+    func.mul = function() {
 	var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null,arguments);
 	args.unshift(function (a,b) { return a*b })
 	return xmap.apply(null, args)
     }
     
-    this.sinusoid = function(freq) {
+    func.sinusoid = function(freq) {
 	return xmap(Math.sin, modulo(2*pi, freq));
     }
 		
-    this.saw = function(freq) {
-	var slope = 5*v/pi;
-	var intercept = 5*v;
-	return xmap(function (m) { return slope*m - intercept }, modulo(2*pi,freq))
+    func.saw = function(freq) {
+	return xmap(function (m) { return m - 1 }, modulo(2,freq))
     }
     
-    this.pow2 = function(x) {
+    func.pow2 = function(x) {
 	return xmap(function (a) { return Math.pow(2, a) }, x);
     }
     
-    this.sample = function(lst,k) {
+    func.sample = function(lst,k) {
 	var subsample = [];
 	for (var i = 0; i < k; i++)
 	    subsample.push(lst[Math.floor(Math.random() * lst.length)]);
 	return subsample;
     }
     
-    this.clockSeq = function(trig,tstep,seqrepeat) {
+    func.clockSeq = function(trig,tstep,seqrepeat) {
 	var seq = repeat.apply(null,seqrepeat);
 	var gate = false;
 	var val = seq();
@@ -143,34 +144,50 @@ module.exports = (function() {
     }
 
     this.notes = {C:-9,Cs:-8,Db:-8,D:-7,Ds:-6,Eb:-6,E:-5,F:-4,Fs:-3,Gb:-3,G:-2,Gs:-1,Ab:-1,A:0,As:1,Bb:1,B:2};
-    for (var note in notes)
-	this[note] = notes[note];
+    for (var note in this.notes)
+	prop[note] = this.notes[note];
 
-    this.scaleStep = Math.pow(2,1.0/12)
-    this.noteToHz = function(note, octave) {
+    func.scaleStep = Math.pow(2,1.0/12)
+    func.noteToHz = function(note, octave) {
 	return 440*hz*Math.pow(scaleStep, (octave-4)*12 + note);
     }
     
-    this.minor = [1,9/8,6/5,27/20,3/2,8/5,9/5];
-    this.locrian = [1,16/15,6/5,4/3,64/45,8/5,16/9];
-    this.major = [1,9/8,5/4,4/3,3/2,5/3,15/8];
-    this.dorian = [1,10/9,32/27,4/3,40/27,5/3,16/9];
-    this.phrygian = [1,16/15,6/5,4/3,3/2,8/5,9/5];
-    this.lydian = [1,9/8,5/4,45/32,3/2,27/16,15/8];
-    this.mixolydian = [1,10/9,5/4,4/3,3/2,5/3,16/9];
-    this.minorPentatonic = [1,6/5,27/20,3/2,9/5];
-    this.majorPentatonic = [1,9/8,5/4,3/2,5/3];
-    this.egyptian = [1,10/9,4/3,40/27,16/9];
-    this.minorBlues = [1,6/5,4/3,8/5,9/5];
-    this.majorBlues = [1,10/9,4/3,3/2,5/3];
+    func.minor = [1,9/8,6/5,27/20,3/2,8/5,9/5];
+    func.locrian = [1,16/15,6/5,4/3,64/45,8/5,16/9];
+    func.major = [1,9/8,5/4,4/3,3/2,5/3,15/8];
+    func.dorian = [1,10/9,32/27,4/3,40/27,5/3,16/9];
+    func.phrygian = [1,16/15,6/5,4/3,3/2,8/5,9/5];
+    func.lydian = [1,9/8,5/4,45/32,3/2,27/16,15/8];
+    func.mixolydian = [1,10/9,5/4,4/3,3/2,5/3,16/9];
+    func.minorPentatonic = [1,6/5,27/20,3/2,9/5];
+    func.majorPentatonic = [1,9/8,5/4,3/2,5/3];
+    func.egyptian = [1,10/9,4/3,40/27,16/9];
+    func.minorBlues = [1,6/5,4/3,8/5,9/5];
+    func.majorBlues = [1,10/9,4/3,3/2,5/3];
     
-    this.scaleToVoct = function(scale) {
+    func.scaleToVoct = function(scale) {
 	var voltages = [];
 	for (var i = 0; i < scale.length; i++)
 	    voltages.push(Math.log(scale[i])/Math.log(2))
 	return voltages;
     }
 
+    var wraps = {}
+    for (var fn in func)
+	(function(fnLocal) {
+	    wraps[fnLocal] = function() {
+		var ret = fnLocal + "(";
+		if (arguments.length) {
+		    ret += arguments[0];
+		    for (var i = 1; i < arguments.length; i++)
+			ret += ','+arguments[i];
+		}
+		ret += ')';
+		return ret;
+	    }
+	})(fn);
+    this.wraps = wraps;
+    
     this.audioThread = function(message) {
 	var local = this;
 	if (message.streamRep) local.streamRep = message.streamRep;
@@ -209,6 +226,10 @@ module.exports = (function() {
 	output.pipe(speaker);	
     }
 
+    for (var property in func) this[property] = func[property];
+    for (var property in prop) this[property] = prop[property];
+    this.props = prop;
+    
     return this;
 
 })();
