@@ -4,7 +4,7 @@ Work-in-progress virtual modular synthesizer for audio and video.  Custom design
 
 ### Build and Runtime Dependencies
 
-* [Qt 5.11 Libraries](https://www.qt.io/download-qt-installer)
+* [Qt 5.11 Libraries](https://www.qt.io/download-qt-installer) (need at least Core, Gui, Quick, Multimedia, Network, Qml, QuickControls2, QuickTemplates2, and Widgets)
 * [Node.js](https://nodejs.org/en/)
 * [Brig](https://github.com/BrigJS/brig)
 * [node-speaker](https://github.com/TooTallNate/node-speaker)
