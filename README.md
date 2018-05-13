@@ -8,6 +8,7 @@ Work-in-progress virtual modular synthesizer for audio and video.  Custom design
 * [Node.js](https://nodejs.org/en/)
 * [Brig](https://github.com/BrigJS/brig)
 * [node-speaker](https://github.com/TooTallNate/node-speaker)
+* [threads.js](https://github.com/andywer/threads.js)
 
 ### Goals
 

@@ -26,12 +26,12 @@ Module {
 	LogScaleCV {
 	    label: "attack"
 	    voltage: jack('attack').stream
-	    from: '100*ms'
+	    from: 100*ms
 	},
 	LogScaleCV {
 	    label: "decay"
 	    voltage: jack('decay').stream
-	    from: '300*ms'
+	    from: 300*ms
 	}
     ]
 }
