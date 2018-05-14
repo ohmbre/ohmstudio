@@ -1,5 +1,6 @@
 import QtQuick 2.10
 import QtQml.StateMachine 1.0 as SM
+import QtQuick.Controls 2.3
 
 import ohm 1.0
 import ohm.jack.in 1.0
@@ -98,7 +99,7 @@ Rectangle {
 		PropertyChanges { target: mousePinch; drag.target: null }
 		PropertyChanges { target: moduleView; radius: 5 
 				  width: pView.width/scaler.max; height: pView.height/scaler.max }
-		PropertyChanges { target: controller; opacity: 1.0 }
+		PropertyChanges { target: controller; opacity: 1.0; visible: true }
 	    },
 	    State {
 		name: "patchMode"
@@ -135,14 +136,26 @@ Rectangle {
 			source: "../ui/icons/knob.png"
 			mipmap: true
 			smooth: true
-			Rectangle {
-			    height: 1.65;
-			    width: .4;
-			    x: 2.55
-			    color: '#3b3b3b';
-			    radius: .2
-			    rotation: 140*control/5
-			    transformOrigin: Item.Bottom
+			Dial {
+			    id: cvDial
+			    width: 3.3; height: 3.3;
+			    from: -5; to: 5; value: control
+			    onValueChanged: control = value;
+			    background: Rectangle {
+				width: 3.3; height: 3.3;
+				color: 'transparent'
+				radius: 1.65
+				x: 1.1
+			    }
+			    handle: Rectangle {
+				height: 1.65;
+				width: .4;
+				x: 2.55
+				color: '#3b3b3b';
+				radius: .2
+				rotation: cvDial.angle
+				transformOrigin: Item.Bottom
+			    }
 			}
 		    }
 		    OhmText {
