@@ -22,7 +22,7 @@ Module {
     cvs: [
 	LogScaleCV {
 	    label: "tempo"
-	    voltage: jack('tempo').stream
+	    voltage: inStream('tempo')
 	    from: 200*ms
 	}
     ]

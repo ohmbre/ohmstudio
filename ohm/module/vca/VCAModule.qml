@@ -9,7 +9,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: "out"
-	    stream: mul(1./(8*v),mul(jack('gain').stream,jack('in').stream))
+	    stream: mul(1./(8*v),mul(inStream('gain'),inStream('in')))
 	}
     ]
 

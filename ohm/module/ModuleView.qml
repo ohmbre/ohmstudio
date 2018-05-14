@@ -27,6 +27,7 @@ Rectangle {
     border.color: Style.moduleBorderColor
     border.width: Style.moduleBorderWidth
     antialiasing: true
+    smooth: true
 
     NumberAnimation {
         id: extendAnim; target: moduleView; from: 0; to: 1;
@@ -71,20 +72,105 @@ Rectangle {
     signal forceOutputExtend
     signal forceCollapse
 
-    OhmText {
-        id: moduleLabel
-        text: module.label
-        padding: Style.moduleLabelPadding
-        anchors.fill: parent
-        color: Style.moduleLabelColor
-	Behavior on opacity { NumberAnimation { duration: 300 } }
-        Component.onCompleted: {
-            moduleView.height = contentHeight + padding*2;
-            moduleView.width = contentWidth + padding*2;
-        }
-    }
+    Item {
+	id: innerModule
+	anchors.fill: parent
+	
+	OhmText {
+            id: moduleLabel
+            text: module.label
+            padding: Style.moduleLabelPadding
+            anchors.fill: parent
+            color: Style.moduleLabelColor
+            Component.onCompleted: {
+		moduleView.height = contentHeight + padding*2;
+		moduleView.width = contentWidth + padding*2;
+            }
+	}
 
-    MouseArea { // around module label and rounded rect
+	property point storedSize
+	states: [
+	    State {
+		name: "controlMode"
+		StateChangeScript { script: { forceCollapse(); }}
+		PropertyChanges { target: moduleLabel; scale: 0.35*controller.scale; topPadding:-60 }
+		PropertyChanges { target: moduleMouseArea; enabled: false }
+		PropertyChanges { target: mousePinch; drag.target: null }
+		PropertyChanges { target: moduleView; radius: 5 
+				  width: pView.width/scaler.max; height: pView.height/scaler.max }
+		PropertyChanges { target: controller; opacity: 1.0 }
+	    },
+	    State {
+		name: "patchMode"
+	    }
+	]
+	
+	transitions: Transition {
+	    ParallelAnimation {
+		NumberAnimation { target: moduleView; properties: "width,height,radius";
+				  duration: 300; easing.type: Easing.InOutQuad }
+		NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
+				  duration: 300; easing.type: Easing.InOutQuad }
+		NumberAnimation { target: controller; properties: "opacity";
+				  duration: 300; easing.type: Easing.InOutQuad }
+		
+	    }
+	}
+
+	PathView {
+	    id: controller
+	    width: parent.width / scale; height: parent.height / scale
+	    anchors.centerIn: parent
+	    opacity: 0
+	    interactive: false
+	    scale: 6.75/scaler.max
+	    model: module.cvs
+	    delegate: Component {
+		id: knobView
+		Column {
+		    Image {
+			id: knobIcon
+			anchors.horizontalCenter: labelText.horizontalCenter
+			width: 6; height: 1.14*width;
+			source: "../ui/icons/knob.png"
+			mipmap: true
+			smooth: true
+			Rectangle {
+			    height: 1.65;
+			    width: .4;
+			    x: 2.55
+			    color: '#3b3b3b';
+			    radius: .2
+			    rotation: 140*control/5
+			    transformOrigin: Item.Bottom
+			}
+		    }
+		    OhmText {
+			id: labelText
+			width: knobIcon.width
+			text: label
+			color: Style.moduleLabelColor
+			font.pixelSize: 1
+			scale: 1.5
+		    }
+		}
+	    }
+	    pathItemCount: undefined
+	    offset: .5
+	    path: Path {
+		startX: .15*controller.width; startY: .2*controller.height
+		PathLine { x: .15*controller.width; y: .78*controller.height }
+		PathPercent { value: .333 }
+		PathLine { x: .85*controller.width; y: .78*controller.height }
+		PathPercent { value: .667 }
+		PathLine { x: .85*controller.width; y: .2*controller.height }
+		PathPercent { value: 1 }
+	    }
+	}
+    }
+    property alias innerModule: innerModule
+
+    MouseArea { // around innerModule and perimeter
         id: moduleMouseArea
         height: (parent.height > parent.width) ? (parent.height - radius ) : parent.height
         width: (parent.width > parent.height) ? (parent.width - radius ) : parent.width
@@ -97,8 +183,7 @@ Rectangle {
         onPressAndHold: pView.contentItem.confirmDeleteModule(module);
         pressAndHoldInterval: 800
     }
-    property alias mouseX: moduleMouseArea.mouseX
-    property alias mouseY: moduleMouseArea.mouseY
+
 
     Rectangle {
         id: perimeter
@@ -134,39 +219,7 @@ Rectangle {
             siblings: module.outJacks.length
             extend: outJackExtend
         }
-    }
-
-    property real storedWidth
-    property real storedHeight
-    Behavior on width { NumberAnimation { duration: 300 } }
-    Behavior on height { NumberAnimation { duration: 300 } }
-    function controlMode() {
-	forceCollapse();
-	moduleLabel.opacity = 0;
-	controller.opacity = 1;
-	moduleMouseArea.enabled = false;
-	storedWidth = width;
-	storedHeight = height;
-	width = pView.width/scaler.max;
-	height = pView.height/scaler.max;
-	console.log(width+','+height);
-    }
-
-    Item {
-	id: controller
-	anchors.fill: parent
-	Behavior on opacity { NumberAnimation { duration: 400 } }
-	opacity: 0
-
-	OhmText {
-            text: module.label
-            anchors.centerIn: parent
-            color: Style.moduleLabelColor
-	    font.pixelSize: 3
-	}
-    }
-
-	
+    }	
     
     Component.onCompleted: {
         module.view = moduleView;

@@ -11,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: "envelope"
-	    stream: mul(8*v,oneshot(jack('gate').stream,1,cv('attack'),cv('decay')))
+	    stream: mul(8*v,oneshot(inStream('gate'),1,cv('attack'),cv('decay')))
 	}
 	
     ]
@@ -25,12 +25,12 @@ Module {
     cvs: [
 	LogScaleCV {
 	    label: "attack"
-	    voltage: jack('attack').stream
+	    voltage: inStream('attack')
 	    from: 100*ms
 	},
 	LogScaleCV {
 	    label: "decay"
-	    voltage: jack('decay').stream
+	    voltage: inStream('decay')
 	    from: 300*ms
 	}
     ]

@@ -19,7 +19,7 @@ Module {
     ]  
 
     property AudioThread audioThread: AudioThread {
-	streamRep: jack('signal').stream
+	streamRep: inStream('signal')
     }
     
 }

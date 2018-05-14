@@ -23,7 +23,7 @@ Module {
     cvs: [
 	LogScaleCV {
 	    label: "freq"
-	    voltage: jack('v/oct').stream
+	    voltage: inStream('v/oct')
 	    from: noteToHz('C',4)
 	}
     ]

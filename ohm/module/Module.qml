@@ -27,6 +27,13 @@ Model {
         return undefined;
     }
 
+    function inStream(label) {
+	return Fn.forEach(inJacks, function(inJack) {
+	    if (inJack.label == label)
+		return inJack.stream
+	});
+    }
+
     function cv(index) {
         if (typeof index == "number")
             return cvs[index].cv;

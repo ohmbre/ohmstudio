@@ -10,11 +10,11 @@ Module {
     outJacks: [
         OutJack {
 	    label: "out1"
-	    stream: jack('in').stream
+	    stream: inStream('in')
 	},
 	OutJack {
 	    label: "out2"
-	    stream: jack('in').stream
+	    stream: inStream('in')
 	}
     ]
 

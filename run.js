@@ -25,7 +25,8 @@ brig.on('ready', function(brig) {
 	    dspMethods[wrap+'('+Array(i).fill('_').join(',')+')'] = dsp.wraps[wrap];
     for (var prop in dsp.props)
 	brig.app.context.setContextProperty(prop,dsp.props[prop]);
-    
+    for (var prop in dsp.literals) 
+	brig.app.context.setContextProperty(prop,prop);
     
     var Stream = brig.createType('DSP', {
 	property: {},
@@ -34,7 +35,8 @@ brig.on('ready', function(brig) {
     
     var root = brig.createComponent();
     root.setData("import ohm 1.0; import Brig.DSP 1.0; DSP { property Ohm ohm: Ohm{} }");
-    console.log(root.native.errors());
+    var errors = root.native.errors();
+    if (errors.length) console.log(errors);
     var dspInstance = root.create();
 
 });

@@ -59,16 +59,24 @@ Item {
 		zoom = newZoom;
                 content.x += center.x*(oldZoom-zoom);
                 content.y += center.y*(oldZoom-zoom);
-		if (zoom > 3.5 && zoomDelta > 0) Fn.forEach(patch.modules, function(m) {
-		    if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
-			scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
-			xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
-			yAnim.to = -(m.view.y + m.view.height/2)*scaler.max + pView.height/2
-			zoomPanAnim.start();
-			m.view.controlMode();
-			return -1; // break
-		    }
-		});
+		if (zoom > 3.5 && zoomDelta > 0)
+		    Fn.forEach(patch.modules, function(m) {
+			if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
+			    scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
+			    xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
+			    yAnim.to = -(m.view.y + m.view.height/2)*scaler.max + pView.height/2
+			    zoomPanAnim.start();
+			    m.view.innerModule.state = "controlMode";
+			    return -1; // break
+			}
+		    });
+		else if (zoomDelta <= 0.05)
+		    Fn.forEach(patch.modules, function(m) {
+			if (m.view.innerModule.state == "controlMode") {
+			    m.view.innerModule.state = "patchMode";
+			    return -1;
+			}
+		    });
 	    }
 	}
 	

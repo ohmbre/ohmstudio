@@ -16,15 +16,13 @@ Module {
     ]
 
     inJacks: [
-        InJack {
-	    label: "v/oct";
-	}
+        InJack { label: "v/oct" }
     ]
 
     cvs: [
 	LogScaleCV {
 	    label: "freq"
-	    voltage: jack('v/oct').stream
+	    voltage: inStream('v/oct')
 	    from: noteToHz('D',1)
 	}
     ]
