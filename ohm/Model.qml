@@ -23,6 +23,8 @@ QtObject {
         for (var q in qmlExports) {
             var prop = qmlExports[q];
             var obj = this[prop];
+	    if (typeof q != 'number') prop = q;
+	    if (typeof obj == 'undefined') continue
             var propQml = '\n' + '\t'.repeat(indent+1) + prop + ': ';
             if (obj.push) {
                 var listQml = '['

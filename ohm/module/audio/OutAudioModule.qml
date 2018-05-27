@@ -6,20 +6,20 @@ import ohm.jack.out 1.0
 import Brig.AudioThread 1.0
 
 Module {
-    objectName: "OutAudioModule"
+    objectName: 'OutAudioModule'
     id: audioOut
-    label: "Audio Out"
+    label: 'Audio Out'
 
     outJacks: []
 
     inJacks: [
-        InJack {
-	    label: "signal"
-	}
+        InJack { label: 'L' },
+	InJack { label: 'R' }
     ]  
 
     property AudioThread audioThread: AudioThread {
-	streamRep: inStream('signal')
+	eqnL: inStream('L')
+	eqnR: inStream('R')
     }
     
 }

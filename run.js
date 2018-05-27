@@ -1,46 +1,33 @@
 const Brig = require('brig');
-const brig = new Brig();
+brig = new Brig();
 
 
 brig.on('ready', function(brig) {
 
-    const spawn = require('threads').spawn;
-    const dsp = require('./dsp');
+    const cp = require('child_process');
     
     var AudioThread = brig.createType('AudioThread', {
-	property: { streamRep: "0" },
+	property: { eqnL: '0' , eqnR: '0'}
     });
 
     AudioThread.on('instance-created', function(instance) {
-	instance.thread = spawn(function () {}).run(dsp.audioThread);
-	instance.thread.send({ start: true, pwd: process.env.PWD });
-	instance.on('streamRepChanged', function() {
-	    instance.thread.send({streamRep: instance.getProperty('streamRep')});
+	instance.subproc = cp.fork('./audio.js');
+
+	instance.on('eqnLChanged', function() {
+	    instance.subproc.send('streams[0]='+instance.getProperty('eqnL'));
+	});
+	instance.on('eqnRChanged', function() {
+	    instance.subproc.send('streams[1]='+instance.getProperty('eqnR'));
 	});
     });
 
-    var dspMethods = {};
-    for (var wrap in dsp.wraps)
-	for (var i = 0; i < 10; i++)
-	    dspMethods[wrap+'('+Array(i).fill('_').join(',')+')'] = dsp.wraps[wrap];
-    for (var prop in dsp.props)
-	brig.app.context.setContextProperty(prop,dsp.props[prop]);
-    for (var prop in dsp.literals) 
-	brig.app.context.setContextProperty(prop,prop);
-    
-    var Stream = brig.createType('DSP', {
-	property: {},
-    	method: dspMethods
-    });
-    
     var root = brig.createComponent();
-    root.setData("import ohm 1.0; import Brig.DSP 1.0; DSP { property Ohm ohm: Ohm{} }");
+    root.setData("import ohm 1.0; Ohm{}");
     var errors = root.native.errors();
     if (errors.length) console.log(errors);
-    var dspInstance = root.create();
+    var ohm = root.create();
 
 });
-
 
 
     

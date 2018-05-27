@@ -11,7 +11,7 @@ Model {
     property string name
     property list<Module> modules
     property list<Cable> cables
-    property var importList: ({})
+    property var importList: ({'ohm.patch 1.0': true, 'ohm.cable 1.0': true})
 
     function lookupCableFor(jack) {
 	var ret = Fn.forEach(cables, function(cable, c) {
@@ -84,7 +84,7 @@ Model {
         cueAutoSave = true
     }
 
-    qmlExports: ["name","modules","cables"]
+    qmlExports: ({name:'name', modules:'modules', cables:'cables'})
 
     Component.onCompleted: function() {
         Qt.patch = this;

@@ -4,26 +4,26 @@ import ohm.jack.in 1.0
 import ohm.cv 1.0
 
 Module {
-    objectName: "ClockModule"
+    objectName: 'ClockModule'
 
-    label: "Clock"
+    label: 'Clock'
 
     outJacks: [
         GateOutJack {
-	    label: "trig"
-	    stream: cycle(1, 30*ms, add(cv('tempo'),-30*ms))
+	    label: 'trig'
+	    stream: 'test(mod(t,1/@tempo)<30ms,10v,0v)'
 	}
     ]
 
     inJacks: [
-        InJack {label: "tempo"}
+        InJack {label: 'tempo'}
     ]
 
     cvs: [
 	LogScaleCV {
-	    label: "tempo"
-	    voltage: inStream('tempo')
-	    from: 200*ms
+	    label: 'tempo'
+	    inVolts: inStream('tempo')
+	    from: '120/m'
 	}
     ]
 }

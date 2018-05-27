@@ -25,9 +25,9 @@ Item {
 	ParallelAnimation {
 	    id: zoomPanAnim
 	    running: false
-	    NumberAnimation {id: xAnim; property: 'x'; target: content; duration: 300}
-	    NumberAnimation {id: yAnim; property: 'y'; target: content; duration: 300}
-	    NumberAnimation {property: 'zoom'; target: scaler; duration: 300; to: scaler.max}
+	    NumberAnimation {id: xAnim; property: 'x'; target: content; duration: 400}
+	    NumberAnimation {id: yAnim; property: 'y'; target: content; duration: 400}
+	    NumberAnimation {property: 'zoom'; target: scaler; duration: 400; to: scaler.max}
 	}
 	onXChanged: {
 	    var topleft = content.mapFromItem(pView,0,0);
@@ -51,6 +51,7 @@ Item {
 	    property real zoom: 1.0
 	    property real max: 10
 	    property real min: 0.2
+
 	    function zoomContent(zoomDelta, center) {
 		if (zoomPanAnim.running) return;
 		var oldZoom = zoom;
@@ -70,9 +71,9 @@ Item {
 			    return -1; // break
 			}
 		    });
-		else if (zoomDelta <= 0.05)
+		else if (zoomDelta <= -0.015)
 		    Fn.forEach(patch.modules, function(m) {
-			if (m.view.innerModule.state == "controlMode") {
+			if (m.view.innerModule.state == "controlMode" && !m.view.innerModule.controlAnim.running) {
 			    m.view.innerModule.state = "patchMode";
 			    return -1;
 			}
@@ -106,7 +107,7 @@ Item {
 		drag.filterChildren: true
 		propagateComposedEvents: false
 		onReleased: propagateComposedEvents = true
-		onWheel: scaler.zoomContent(wheel.angleDelta.y / 2400, Qt.point(mouseX, mouseY));
+		onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(mouseX, mouseY));
 		onPressAndHold: moduleMenu.popup()
             }
 	}

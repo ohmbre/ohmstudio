@@ -21,21 +21,21 @@ Module {
 
     cvs: [
 	QuantCV {
-	    streams: scales
+	    voltsToValue: function(volts) {return 'scales['+(controlVolts+8)+']'}
 	    label: 'scale'
 	},
 	LogScaleCV {
 	    label: 'seed'
-	    voltage: inStream('seed')
+	    inVolts: inStream('seed')
 	    from: '666'
 	},
 	QuantCV {
 	    label: 'notes'
-	    streams: '[0,1,2,3,4,5,6,7,8,9]'
+	    voltTicks: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 	},
 	LogScaleCV {
 	    label: 'test1'
-	    control: 5
+	    controlVolts: 5
 	},
 	LogScaleCV {
 	    label: 'test2'

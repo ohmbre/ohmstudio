@@ -16,6 +16,13 @@ Model {
     property list<CV> cvs
     property real x
     property real y
+    
+    property var savedControlVolts
+    onSavedControlVoltsChanged: {
+	Fn.forEach(cvs, function(cv,i) {
+	    cv.controlVolts = savedControlVolts[i];
+	});
+    }
 
     function jack(index) {
         if (typeof index == "number")
@@ -34,20 +41,16 @@ Model {
 	});
     }
 
-    function cv(index) {
+    function cvStream(index) {
         if (typeof index == "number")
             return cvs[index].cv;
 	return Fn.forEach(cvs, function(cv) {
             if (cv.label === index)
-		return cv.cv;
+		return cv.stream;
         });
     }
 
-    
-    
-    signal inStreamsChanged(string jackLabel, var Stream)
-
     property int nJacks: inJacks.length + outJacks.length
-    qmlExports: ["x", "y"]
+    qmlExports: ({x:'x', y:'y', savedControlVolts:'cvs'})
 
 }

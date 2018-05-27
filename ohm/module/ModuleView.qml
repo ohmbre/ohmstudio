@@ -1,6 +1,7 @@
+
 import QtQuick 2.10
 import QtQml.StateMachine 1.0 as SM
-import QtQuick.Controls 2.3
+import QtQuick.Controls 2.4
 
 import ohm 1.0
 import ohm.jack.in 1.0
@@ -89,14 +90,13 @@ Rectangle {
             }
 	}
 
-	property point storedSize
 	states: [
 	    State {
 		name: "controlMode"
 		StateChangeScript { script: { forceCollapse(); }}
-		PropertyChanges { target: moduleLabel; scale: 0.35*controller.scale; topPadding:-60 }
+		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale; topPadding:-92 }
 		PropertyChanges { target: moduleMouseArea; enabled: false }
-		PropertyChanges { target: mousePinch; drag.target: null }
+		PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
 		PropertyChanges { target: moduleView; radius: 5 
 				  width: pView.width/scaler.max; height: pView.height/scaler.max }
 		PropertyChanges { target: controller; opacity: 1.0; visible: true }
@@ -108,16 +108,18 @@ Rectangle {
 	
 	transitions: Transition {
 	    ParallelAnimation {
+		id: controlAnim
 		NumberAnimation { target: moduleView; properties: "width,height,radius";
-				  duration: 300; easing.type: Easing.InOutQuad }
+				  duration: 500; easing.type: Easing.InOutQuad }
 		NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
-				  duration: 300; easing.type: Easing.InOutQuad }
+				  duration: 500; easing.type: Easing.InOutQuad }
 		NumberAnimation { target: controller; properties: "opacity";
-				  duration: 300; easing.type: Easing.InOutQuad }
+				  duration: 500; easing.type: Easing.InOutQuad }
 		
 	    }
 	}
-
+	property alias controlAnim: controlAnim
+	
 	PathView {
 	    id: controller
 	    width: parent.width / scale; height: parent.height / scale
@@ -127,8 +129,8 @@ Rectangle {
 	    scale: 6.75/scaler.max
 	    model: module.cvs
 	    delegate: Component {
-		id: knobView
 		Column {
+		    id: knobView
 		    Image {
 			id: knobIcon
 			anchors.horizontalCenter: labelText.horizontalCenter
@@ -136,27 +138,45 @@ Rectangle {
 			source: "../ui/icons/knob.png"
 			mipmap: true
 			smooth: true
-			Dial {
-			    id: cvDial
-			    width: 3.3; height: 3.3;
-			    from: -5; to: 5; value: control
-			    onValueChanged: control = value;
-			    background: Rectangle {
-				width: 3.3; height: 3.3;
-				color: 'transparent'
-				radius: 1.65
-				x: 1.1
-			    }
-			    handle: Rectangle {
-				height: 1.65;
-				width: .4;
-				x: 2.55
-				color: '#3b3b3b';
-				radius: .2
-				rotation: cvDial.angle
-				transformOrigin: Item.Bottom
-			    }
+			Rectangle {
+			    height: 1.65;
+			    width: .4;
+			    x: 2.55
+			    color: '#3b3b3b';
+			    radius: .2
+			    rotation: 14*controlVolts
+			    transformOrigin: Item.Bottom
 			}
+			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
+			    
+			Popup {
+			    id: knobControl
+			    modal: true
+			    focus: true
+			    padding: 0
+			    topMargin: 60
+			    leftMargin: 76
+			    x: -knobView.x
+			    y: -knobView.y
+			    width: 168
+			    height: 94
+			    background: Rectangle {
+				anchors.fill: parent
+				color: 'white'
+				radius: 10
+			    }
+			
+			    Slider {
+				rotation: -26
+				value: controlVolts;
+				from: -8; to: 8
+				onValueChanged: controlVolts = value
+				anchors.fill: parent
+
+			    }
+			    
+			}
+			
 		    }
 		    OhmText {
 			id: labelText
@@ -172,9 +192,9 @@ Rectangle {
 	    offset: .5
 	    path: Path {
 		startX: .15*controller.width; startY: .2*controller.height
-		PathLine { x: .15*controller.width; y: .78*controller.height }
+		PathLine { x: .15*controller.width; y: .8*controller.height }
 		PathPercent { value: .333 }
-		PathLine { x: .85*controller.width; y: .78*controller.height }
+		PathLine { x: .85*controller.width; y: .8*controller.height }
 		PathPercent { value: .667 }
 		PathLine { x: .85*controller.width; y: .2*controller.height }
 		PathPercent { value: 1 }

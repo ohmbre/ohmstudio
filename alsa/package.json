@@ -1,0 +1,12 @@
+{
+  "name": "alsa",
+  "version": "1.0.0",
+  "description": "alsa bindings",
+  "author": "Matt Gattis",
+  "license": "MIT",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild && cp build/Release/alsa.node ."
+  },
+  "main": "alsa.node"
+}

@@ -5,5 +5,5 @@ Model {
 
     property string label
     property string dir // "inp" or "out"
-    property var stream
+    property string stream
 }

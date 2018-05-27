@@ -17,8 +17,12 @@ Shape {
 
     width: pView.width;
     height: pView.height;
-    antialiasing: true
-    layer.samples: 8
+    //antialiasing: true
+    //layer.samples: 16
+    //smooth: true    
+    //layer.smooth: true
+    //layer.mipmap: true
+    //layer.enabled: true
 
     ShapePath {
         id: cableView

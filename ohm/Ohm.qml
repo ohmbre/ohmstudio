@@ -111,7 +111,7 @@ ApplicationWindow {
         var rawdata = Fn.readFile(url);
             var obj = Qt.createQmlObject(rawdata, window, url);
         } catch(err) {
-            console.log("could not load " + url + "\n" + err);
+            console.error("could not load " + url + "\n" + err);
             return false;
         }
         obj.importList = obj.parseImports(rawdata)
@@ -129,4 +129,5 @@ ApplicationWindow {
         if (!loadPatchQML(Constants.autoSavePath))
             setup.open();
     }
+
 }

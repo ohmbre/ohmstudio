@@ -50,9 +50,9 @@ function writeFile(fileUrl, contents) {
 
 
 function dDump(obj) {
-    console.warn(obj);
+    console.error(obj);
     for (var prop in obj)
-        console.warn("      "+prop+": "+obj[prop]);
+        console.error("      "+prop+": "+obj[prop]);
 }
 
 
