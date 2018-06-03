@@ -86,7 +86,7 @@ class Sinusoid extends Genny{
     }
 }
 
-math.typed.addType({
+math.typed.types.splice(1,0,{
     name: 'Ohmutable',
     test: (x) => x instanceof Ohmutable
 })
@@ -162,6 +162,7 @@ function handler(msg) {
 }
 
 process.on('message', handler)
+
 setInterval(writeOut, 0);
 
 
