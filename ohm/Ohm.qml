@@ -1,7 +1,8 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.2
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Dialogs 1.3
+//import QtQuick.Controls.Styles 1.4
+//import QtQuick.Dialogs 1.3
+import Qt.labs.platform 1.0
 import Qt.labs.folderlistmodel 2.1
 
 import ohm.patch 1.0
@@ -79,8 +80,6 @@ ApplicationWindow {
             modality: visible ? Qt.WindowModal : Qt.NonModal
             folder: Constants.savedPatchDir
             nameFilters: ["Patch files (*.qml)"]
-            selectExisting: true
-            sidebarVisible: false
             title: "Load Patch"
             onAccepted: {
                 if (fileUrls.length === 0) return;
@@ -94,8 +93,6 @@ ApplicationWindow {
             modality: visible ? Qt.WindowModal : Qt.NonModal
             folder: Constants.savedPatchDir
             nameFilters: ["Patch files (*.qml)"]
-            selectExisting: false
-            sidebarVisible: false
             title: "Save Patch"
             onAccepted: {
                 if (fileUrls.length === 0) return;

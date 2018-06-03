@@ -8,16 +8,12 @@
 #include <alsa/asoundlib.h>
 #include <sys/time.h>
 
-#define ErrorCheckExtra(STMT,EXTRA)			\
-  if ((err = (STMT)) < 0) {				\
-    EXTRA						\
+#define ErrorCheck(STMT)					\
+  if ((err = (STMT)) < 0) {					\
     printf(#STMT " error %d: %s\n", err, snd_strerror(err));	\
-    args.GetReturnValue().Set(Undefined(isolate));	\
-    return;						\
+    args.GetReturnValue().Set(Undefined(isolate));		\
+    return;							\
   }
-
-#define ErrorCheck(STMT) ErrorCheckExtra(STMT,;)
-#define ContinueCheck(STMT) ErrorCheckExtra(STMT, if (err == -EAGAIN) continue;)
 
 namespace alsa {
 
@@ -33,6 +29,7 @@ namespace alsa {
   using v8::Number;
   using v8::Context;
   using v8::ArrayBuffer;
+  using v8::Int32Array;
   
   class Sound : public node::ObjectWrap {
   public:
@@ -40,10 +37,14 @@ namespace alsa {
     explicit Sound(snd_pcm_t *handle, snd_output_t *output);
     snd_pcm_t *handle;
     snd_output_t *output;
+    int started;
+    snd_pcm_uframes_t viewOffset;
+    snd_pcm_uframes_t viewFrames;
   private:
     ~Sound();
     static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void Write(const v8::FunctionCallbackInfo<v8::Value>& args);
+    static void WriteBuffer(const v8::FunctionCallbackInfo<v8::Value>& args);
+    static void Commit(const v8::FunctionCallbackInfo<v8::Value>& args);
     static v8::Persistent<v8::Function> constructor;    
   };
 
@@ -62,7 +63,8 @@ namespace alsa {
     Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
     tpl->SetClassName(String::NewFromUtf8(isolate, "Sound"));
     tpl->InstanceTemplate()->SetInternalFieldCount(4);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "write", Write);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "writeBuffer", WriteBuffer);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "commit", Commit);
     constructor.Reset(isolate, tpl->GetFunction());
     exports->Set(String::NewFromUtf8(isolate, "Sound"),
 		 tpl->GetFunction());
@@ -114,34 +116,66 @@ namespace alsa {
     ErrorCheck(snd_pcm_sw_params_set_start_threshold(handle, swparams, thresh));
     ErrorCheck(snd_pcm_sw_params_set_avail_min(handle, swparams, period_size));
     ErrorCheck(snd_pcm_sw_params(handle, swparams));
-    
+
     snd_pcm_dump(handle, output);
     Sound *obj = new Sound(handle,output);
-  
+    obj->started = 1;
     obj->Wrap(args.This());
     args.GetReturnValue().Set(args.This());
-
   }
 
-  void Sound::Write(const FunctionCallbackInfo<Value>& args) {
+
+    
+  void Sound::WriteBuffer(const FunctionCallbackInfo<Value>& args) {
     Isolate *isolate = args.GetIsolate();
     Sound* obj = ObjectWrap::Unwrap<Sound>(args.Holder());
-
-    Local<ArrayBuffer> arrayBuf = Local<ArrayBuffer>::Cast(args[0]);
-    int32_t *samples = (int32_t*)arrayBuf->GetContents().Data();
-    int left = arrayBuf->GetContents().ByteLength() / 8;
-    
     int err;
-    while (left > 0) {
-      ContinueCheck(snd_pcm_mmap_writei(obj->handle, samples, left));
-      samples += err * 2;
-      left -= err;
+    const snd_pcm_channel_area_t *areas;
+    snd_pcm_uframes_t offset, frames, period_size, buffer_size;
+    snd_pcm_sframes_t avail, target;
+    ErrorCheck(snd_pcm_get_params(obj->handle, &buffer_size, &period_size));
+    target = period_size;
+    snd_pcm_state_t state = snd_pcm_state(obj->handle);
+    if (state == SND_PCM_STATE_XRUN) {
+      printf("UNDERRUN\n");
+      ErrorCheck(snd_pcm_prepare(obj->handle));
+      obj->started=1;
+    } else if (state == SND_PCM_STATE_SUSPENDED) {
+      printf("SUSPENDED???\n");
+      exit(0);
     }
-
-    args.GetReturnValue().Set(Undefined(isolate));    
+    avail = snd_pcm_avail_update(obj->handle);
+    while (avail < target) {
+      ErrorCheck(avail);
+      if (obj->started) {
+	obj->started=0;
+	ErrorCheck(snd_pcm_start(obj->handle));
+      } else {
+	ErrorCheck(snd_pcm_wait(obj->handle,1));
+      }
+      avail = snd_pcm_avail_update(obj->handle);
+    }
+    frames = (avail / period_size) * period_size;
+    ErrorCheck(snd_pcm_mmap_begin(obj->handle, &areas, &offset, &frames));
+    Local<ArrayBuffer> locbuf = ArrayBuffer::New(isolate, areas[0].addr, frames*4*2);
+    obj->viewOffset = offset;
+    obj->viewFrames = frames;
+    args.GetReturnValue().Set(Int32Array::New(locbuf, offset*4*2, frames*2));
   }
 
-  void InitAll(Local<Object> exports) {
+  void Sound::Commit(const FunctionCallbackInfo<Value>& args) {
+    Isolate *isolate = args.GetIsolate();
+    Sound* obj = ObjectWrap::Unwrap<Sound>(args.Holder());
+    int err;
+    snd_pcm_uframes_t frames = obj->viewFrames, offset = obj->viewOffset;
+    snd_pcm_sframes_t ncommit = snd_pcm_mmap_commit(obj->handle, offset, frames);
+    ErrorCheck(ncommit);
+    if ((snd_pcm_uframes_t) ncommit != obj->viewFrames)
+      printf("ERROR! committed %ld / %lu frames\n", ncommit, obj->viewFrames);
+    args.GetReturnValue().Set(Undefined(isolate));     
+  }
+
+  void InitAll(Local<Object> exports, Local<Value> exportVal, void *exportData) {
     Sound::Init(exports);
   }
   

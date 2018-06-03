@@ -11,7 +11,7 @@ Jack {
 	re = /\$[a-zA-z][a-zA-Z0-9]*/g
 	while (match = re.exec(parsed))
 	    parsed = parsed.replace(match,'('+inStream(match[0].slice(1))+')');
-	console.log(parsed);
+	//console.log(parsed);
 	return '('+parsed+')'
     }
 }

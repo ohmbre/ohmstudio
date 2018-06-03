@@ -10,7 +10,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: "signal"
-	    stream: '10v*sinusoid(t,@freq)'
+	    stream: '10v*sinusoid(@freq)'
 	}
     ]
 
@@ -25,10 +25,6 @@ Module {
 	    label: "freq"
 	    inVolts: inStream('v/oct')
 	    from: 'notehz(C,5)'
-	},
-
-	LogScaleCV {
-	    controlVolts: 3
 	}
     ]
     
