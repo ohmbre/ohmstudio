@@ -1,9 +1,6 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.2
-//import QtQuick.Controls.Styles 1.4
-//import QtQuick.Dialogs 1.3
-import Qt.labs.platform 1.0
-import Qt.labs.folderlistmodel 2.1
+import Qt.labs.folderlistmodel 2.2
 
 import ohm.patch 1.0
 import ohm.helpers 1.0
@@ -22,6 +19,7 @@ ApplicationWindow {
     Drawer {
         id: setup
         width: 0.33 * parent.width
+	Behavior on width { SmoothedAnimation { velocity: 300 } }
         height: parent.height
         background: Rectangle {
             implicitHeight: setup.height + border.width * 2
@@ -35,6 +33,7 @@ ApplicationWindow {
         }
 
         Rectangle {
+	    id: header
             width: parent.width + 1;
             height: 20
             color: Style.buttonBorderColor
@@ -62,7 +61,7 @@ ApplicationWindow {
             y: 100; x: parent.width - width + radius - 3
             text: "Load Patch"
             onClicked: {
-                loadFileDialog.visible = true;
+		loadFileDialog.open();
             }
         }
 
@@ -75,23 +74,86 @@ ApplicationWindow {
             }
         }
 
-        FileDialog {
+        Rectangle {
             id: loadFileDialog
-            modality: visible ? Qt.WindowModal : Qt.NonModal
-            folder: Constants.savedPatchDir
+            visible: false
+	    opacity: 0
+	    width: setup.width*0.65;
+	    Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
+	    height: window.height*0.8;
+	    color: Style.fileChooseBgColor
+	    x:15
+	    y: header.height+13
+	    ListView {
+		id: fileChoose
+		anchors.fill: parent
+		keyNavigationEnabled: true
+		highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
+		model: FolderListModel {
+		    folder: '../patches'
+		    rootFolder: '../patches'
+		    nameFilters: ["*.qml",".."]
+		    showDirs: true
+		    showDirsFirst: true
+		    showHidden: false
+		    showDotAndDotDot: true
+		    showFiles: true
+		}
+		delegate: OhmText {
+		    leftPadding: 5
+		    rightPadding:5
+		    topPadding: 2
+		    bottomPadding: 2
+		    text: fileName
+		    color: Style.fileChooseTextColor
+		    width: parent.width
+		    horizontalAlignment: Text.AlignLeft
+		}
+		header: Rectangle {
+		    width: parent.width
+		    height:17
+		    OhmText {
+			text: "Patch File"
+			color: Style.fileChooseTextColor
+			font.pixelSize: 11
+			font.weight: Font.Bold
+			padding: 2
+			leftPadding: 4
+			horizontalAlignment: Text.AlignLeft
+		    }
+		    OhmText {
+			width: parent.width
+			text: "Saved"
+			color: Style.fileChooseTextColor
+			font.weight: Font.Bold
+			padding: 2
+			rightPadding: 4
+			font.pixelSize: 11
+			horizontalAlignment: Text.AlignRight
+		    }
+		    color: Style.buttonBorderColor
+		}
+	    }
+		
+	    function open() {
+		setup.width = 0.8*window.width;
+                loadFileDialog.visible = true;
+		loadFileDialog.opacity = 1.0;
+	    }
+            /*folder: Constants.savedPatchDir
             nameFilters: ["Patch files (*.qml)"]
             title: "Load Patch"
             onAccepted: {
                 if (fileUrls.length === 0) return;
                 if (window.loadPatchQML(fileUrl))
                     setup.close();
-            }
+            }*/
         }
 
-        FileDialog {
+        Rectangle {
             id: saveFileDialog
-            modality: visible ? Qt.WindowModal : Qt.NonModal
-            folder: Constants.savedPatchDir
+	    visible: false
+            /*folder: Constants.savedPatchDir
             nameFilters: ["Patch files (*.qml)"]
             title: "Save Patch"
             onAccepted: {
@@ -99,7 +161,7 @@ ApplicationWindow {
                 var fileName = fileUrl;
                 activePatch.item.patch.saveTo(fileName);
                 setup.close();
-            }
+            }*/
         }
     }
 

@@ -56,4 +56,9 @@ QtObject {
     property color buttonTextColor: '#'+paletteLit.light
     property color drawerColor: '#'+paletteLit.accent
     property color menuLitColor: '#'+paletteLit.medium
+    property color fileChooseBgColor: '#'+palette.medium
+    property color fileChooseLitColor: '#'+paletteLit.strong
+    property color fileChooseTextColor: '#'+paletteLit.light
+    
+    
 }
