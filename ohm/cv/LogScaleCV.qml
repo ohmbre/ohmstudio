@@ -5,5 +5,5 @@ CV {
     
     property double logBase: 2
     property string from
-    stream: from+' * ('+logBase+')^(('+inVolts+')+#'+controlVolts+')';
+    stream: from+' * ('+logBase+')^(('+inVolts+')+('+controlVolts+'))';
 }

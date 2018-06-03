@@ -41,18 +41,6 @@ class Ohmutable {
     }
 }
 
-class Control extends Ohmutable {
-    constructor(channel,index,vinitial) {
-	super(vinitial)
-	this.val = vinitial
-	controls[channel][index] = this
-    }
-    update() {}
-    toString() {
-	return `Control(val=${this.val})`
-    }
-}
-
 class Composite extends Ohmutable{
     constructor(fn,...args) {
 	super(0)
@@ -104,14 +92,11 @@ math.typed.addType({
 })
 
 const streams = [math.compile(0),math.compile(0)];
-const prevEqns = ['','']
 const audioCard = alsa.Sound(device, sampleRate, samplePeriod, sampleBuffer);
 
-const controls = [[],[]]
 const globaltime = new Ohmutable(0)
 const ohmutables = {
     'sinusoid': function(freq){ return new Sinusoid(freq) },
-    'control': function(channel,index,vinitial){ return new Control(channel,index,vinitial) },
     'composite': function(a,b,fn) { return new Composite(a, b, fn) }
 }
 math.import(ohmutables, {wrap:false});
@@ -123,6 +108,9 @@ math.forEach(Object.keys(math),function(func){
 	    'Ohmutable,any': (...args)=> math.composite(math[func],...args),
 	    'any,Ohmutable': (...args)=> math.composite(math[func],...args),
 	});
+});
+ohmsigs['unaryMinus'] = math.typed('unaryMinus',{
+    'Ohmutable': (negated) => math.composite(math.multiply, -1, negated)
 });
 math.import(ohmsigs,{wrap:false});
 
@@ -143,7 +131,6 @@ function writeOut() {
 	console.log(sampcnt/sampn);
 	sampcnt = sampn = 0;
     }
-    setTimeout(writeOut, 0);
 }
 
 function mapConstants(node, path, parent) {
@@ -169,28 +156,12 @@ function handler(msg) {
     const assignee = mparts.shift();
     const channel = parseInt(assignee.slice(8,9))
     var eqn = mparts.join('=')
-    const rex = /#[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/g
-    const knobFree = eqn.replace(rex, '#')
-    var match,i;
-    if (knobFree == prevEqns[channel]) {
-	for (i = 0; match = rex.exec(eqn); i++)
-	    controls[channel][i].val = parseFloat(match[0].slice(1))
-    } else {
-	controls[channel].pop(controls[channel].length);
-	for (i = 0; match = (/#[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/g).exec(eqn); i++) {
-	    eqn = eqn.replace(match[0],`control(${channel},${i},${parseFloat(match[0].slice(1))})`);
-	}
-	const parsed = math.parse(eqn).transform(mapConstants)
-	const simpler = math.simplify(parsed).transform(mapOhmutables)
-	streams[channel] = simpler.compile()
-	prevEqns[channel] = knobFree;
-    }
+    const parsed = math.parse(eqn).transform(mapConstants)
+    const simpler = math.simplify(parsed).transform(mapOhmutables)
+    streams[channel] = simpler.compile()
 }
 
 process.on('message', handler)
-
-
-setTimeout(writeOut, 0);
-//require('repl').start()
+setInterval(writeOut, 0);
 
 
