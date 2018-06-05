@@ -144,7 +144,7 @@ Rectangle {
 			    x: 2.55
 			    color: '#3b3b3b';
 			    radius: .2
-			    rotation: 14*controlVolts
+			    rotation: 28*controlVolts
 			    transformOrigin: Item.Bottom
 			}
 			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
@@ -169,7 +169,7 @@ Rectangle {
 			    Slider {
 				rotation: -26
 				value: controlVolts;
-				from: -8; to: 8
+				from: -5; to: 5
 				onValueChanged: controlVolts = value
 				anchors.fill: parent
 

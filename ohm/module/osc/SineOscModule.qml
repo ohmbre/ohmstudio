@@ -4,27 +4,32 @@ import ohm.jack.in 1.0
 import ohm.cv 1.0
 
 Module {
-    objectName: "SineOscModule"
-    label: "Sine Osc"
+    objectName: 'SineOscModule'
+    label: 'Sine Osc'
 
     outJacks: [
         OutJack {
-	    label: "signal"
-	    stream: '10v*sinusoid(@freq)'
+	    label: 'signal'
+	    stream: '@volume*sinusoid(@freq)'
 	}
     ]
 
     inJacks: [
         InJack {
-	    label: "v/oct";
+	    label: 'v/oct'
 	}
     ]
 
     cvs: [
 	LogScaleCV {
-	    label: "freq"
+	    label: 'freq'
 	    inVolts: inStream('v/oct')
 	    from: 'notehz(C,5)'
+	},
+	LinearCV {
+	    label: 'volume'
+	    inVolts: '0'
+	    from: '5v'
 	}
     ]
     

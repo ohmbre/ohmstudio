@@ -19,6 +19,7 @@ Model {
     
     property var savedControlVolts
     onSavedControlVoltsChanged: {
+	if (cvs.length != savedControlVolts.length) return;
 	Fn.forEach(cvs, function(cv,i) {
 	    cv.controlVolts = savedControlVolts[i];
 	});

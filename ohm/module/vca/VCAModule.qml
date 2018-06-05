@@ -10,7 +10,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'out'
-	    stream: '@gain/(5v) * $in'
+	    stream: '@gain/(10v) * $in'
 	}
     ]
 
@@ -18,7 +18,7 @@ Module {
         InJack { label: 'in' },
         InJack {
 	    label: 'gain'
-	    defaultStream: '5v'
+	    defaultStream: '0v'
 	}
     ]
 
@@ -26,7 +26,7 @@ Module {
 	LinearCV {
 	    label: 'gain'
 	    inVolts: inStream('gain')
-	    from: '0v'
+	    from: '5v'
 	}
     ]
 }

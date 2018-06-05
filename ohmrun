@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-cd "$(dirname "$0")"
-source config.env
-killall -q node
-node run.js

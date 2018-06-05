@@ -1,17 +1,35 @@
+#!/usr/bin/env node
+
+env = process.env
+env.QML2_IMPORT_PATH='.'
+env.QSG_RENDER_LOOP='threaded'
+env.QT_SCALE_FACTOR='2'
+
 const Brig = require('brig');
 brig = new Brig();
-
 
 brig.on('ready', function(brig) {
 
     const cp = require('child_process');
-    
+
+    const osigs = {}
+    //const o = require('./ohm');
+    //for (var meth in o.ohms)
+    //osigs[meth+'(...args)'] = o.ohms[meth]
+
+    var Ohm = brig.createType('Ohm', {
+	method: osigs, property: {'main':null}
+    });
+
+    //for (var con in o.consts)
+    //brig.app.context.setContextProperty(con,o.consts[con]);
+			      
     var AudioThread = brig.createType('AudioThread', {
 	property: { eqnL: '0' , eqnR: '0'}
     });
 
     AudioThread.on('instance-created', function(instance) {
-	instance.subproc = cp.fork('./audio.js');
+	instance.subproc = cp.fork('./ohm.js');
 
 	instance.on('eqnLChanged', function() {
 	    instance.subproc.send('streams[0]='+instance.getProperty('eqnL'));
@@ -22,10 +40,10 @@ brig.on('ready', function(brig) {
     });
 
     var root = brig.createComponent();
-    root.setData("import ohm 1.0; Ohm{}");
+    root.setData("import ohm 1.0; import Brig.Ohm 1.0; Ohm { main: OhmStudio {} }");
     var errors = root.native.errors();
     if (errors.length) console.log(errors);
-    var ohm = root.create();
+    var view = root.create();
 
 });
 

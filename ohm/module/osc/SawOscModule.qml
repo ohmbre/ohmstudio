@@ -5,25 +5,25 @@ import ohm.helpers 1.0
 import ohm.cv 1.0
 
 Module {
-    objectName: "SawOscModule"
-    label: "Saw Osc"
+    objectName: 'SawOscModule'
+    label: 'Saw Osc'
 
     outJacks: [
         OutJack {
-	    label: "signal"
-	    stream: mul(10*v, saw(cv('freq')))
+	    label: 'signal'
+	    stream: '10v * sawtooth(@freq)'
 	}
     ]
 
     inJacks: [
-        InJack { label: "v/oct" }
+        InJack { label: 'v/oct' }
     ]
 
     cvs: [
 	LogScaleCV {
-	    label: "freq"
+	    label: 'freq'
 	    inVolts: inStream('v/oct')
-	    from: noteToHz('D',1)
+	    from: 'notehz(C,5)'
 	}
     ]
     

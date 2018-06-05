@@ -4,5 +4,5 @@ CV {
     objectName: 'LinearCV'
     
     property string from
-    stream:  '(('+from+') + ('+inVolts+') + ('+controlVolts+'))'
+    stream: '(('+from+') + ('+inVolts+') + ('+controlVolts+'v))'
 }
