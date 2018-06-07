@@ -28,6 +28,6 @@
   "dependencies": {
     "alsa": "file:alsa",
     "brig": "file:brig",
-    "mathjs": "^4.3.0"
+    "mathjs": "^4.4.2"
   }
 }

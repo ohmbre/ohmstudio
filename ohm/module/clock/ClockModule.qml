@@ -11,7 +11,7 @@ Module {
     outJacks: [
         GateOutJack {
 	    label: 'trig'
-	    stream: 'smaller(mod(t,(1/@tempo)),30ms) ? 10v : 0v'
+	    stream: 'smaller(mod(t,(1/@tempo)),30ms) ? (10v) : 0'
 	}
     ]
 

@@ -12,11 +12,12 @@ Module {
         OutJack {
 	    label: 'envelope'
 	    stream: {
-		var sincetrig = 't-triggered($gate)';
-		var attackcurve = '((%1) / @attack) ^ @atkshape'.arg(sincetrig);
-		var decaycurve = '(1 - (((%1)-@attack) / @decay)) ^ @decshape'.arg(sincetrig);
-		return '10v * (smaller(%1, @attack) ? (%2) : (smaller(%1, @attack + @decay) ? (%3) : 0))'
-		    .arg(sincetrig).arg(attackcurve).arg(decaycurve)
+		var sincetrig = '(t-triggered($gate))';
+		var attackcurve = '((%1 / @attack) ^ @atkshape)'.arg(sincetrig);
+		var decaycurve = '((1 - ((%1-@attack) / @decay)) ^ @decshape)'.arg(sincetrig);
+		var atkcond = '(smaller(%1, @attack))'.arg(sincetrig)
+		var deccond = '(smaller(%1, @attack + @decay))'.arg(sincetrig)
+		return '10v * (%1 ? %2 : (%3 ? %4 : 0))'.arg(atkcond).arg(attackcurve).arg(deccond).arg(decaycurve)
 	    }
 	}
 	
@@ -41,15 +42,17 @@ Module {
 	    inVolts: inStream('decay')
 	    from: '300ms'
 	},
-	LinearCV {
+	LogScaleCV {
 	    label: 'atkshape'
+	    logBase: 4
 	    inVolts: inStream('atkshape')
-	    from: '1'
+	    from: 1
 	},
-	LinearCV {
+	LogScaleCV {
 	    label: 'decshape'
+	    logBase: '4'
 	    inVolts: inStream('decshape')
-	    from: '1'
+	    from: 1
 	}	
     ]
 }

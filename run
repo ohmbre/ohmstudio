@@ -12,40 +12,46 @@ brig.on('ready', function(brig) {
 
     const cp = require('child_process');
 
-    const osigs = {}
-    //const o = require('./ohm');
-    //for (var meth in o.ohms)
-    //osigs[meth+'(...args)'] = o.ohms[meth]
-
+    let audioThreads = []
+    const controlsCache = {}
     var Ohm = brig.createType('Ohm', {
-	method: osigs, property: {'main':null}
+	property: {'main':null},
+	method: {
+	    'updateControl(id,val)': function(id,val) {
+		for (let i = 0; i < audioThreads.length; i++) {
+		    audioThreads[i].subproc.send(`controls[${id}]=${val}`)
+		    controlsCache[id] = val
+		}
+	    }
+	}
     });
-
-    //for (var con in o.consts)
-    //brig.app.context.setContextProperty(con,o.consts[con]);
-			      
+    
     var AudioThread = brig.createType('AudioThread', {
-	property: { eqnL: '0' , eqnR: '0'}
+	property: { eqnL: '0', eqnR: '0' }, signal: ['kill()']
     });
-
+    
     AudioThread.on('instance-created', function(instance) {
+	audioThreads.push(instance)
 	instance.subproc = cp.fork('./ohm.js');
-
+	for (let id in controlsCache)
+	    instance.subproc.send(`controls[${id}]=${controlsCache[id]}`);
 	instance.on('eqnLChanged', function() {
 	    instance.subproc.send('streams[0]='+instance.getProperty('eqnL'));
 	});
 	instance.on('eqnRChanged', function() {
 	    instance.subproc.send('streams[1]='+instance.getProperty('eqnR'));
 	});
+	instance.on('kill', function() {
+	    instance.subproc.kill('SIGHUP');
+	    audioThreads = audioThreads.filter(thread=>thread != instance)
+	    console.error('sent kill signal to audio thread');
+	});
     });
 
     var root = brig.createComponent();
-    root.setData("import ohm 1.0; import Brig.Ohm 1.0; Ohm { main: OhmStudio {} }");
+    root.setData("import ohm 1.0; import Brig.Ohm 1.0; Ohm {main: OhmStudio {}}");
     var errors = root.native.errors();
     if (errors.length) console.log(errors);
     var view = root.create();
 
 });
-
-
-    

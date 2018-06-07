@@ -15,11 +15,12 @@ Module {
     inJacks: [
         InJack { label: 'L' },
 	InJack { label: 'R' }
-    ]  
+    ]
 
     property AudioThread audioThread: AudioThread {
 	eqnL: inStream('L')
 	eqnR: inStream('R')
+	Component.onDestruction: kill()
     }
     
 }

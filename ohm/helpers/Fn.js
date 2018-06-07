@@ -55,5 +55,9 @@ function dDump(obj) {
         console.error("      "+prop+": "+obj[prop]);
 }
 
-
-
+var uniqCnt=1
+function uniqId() {
+    var ret = uniqCnt.toString()
+    uniqCnt++;
+    return ret;
+}

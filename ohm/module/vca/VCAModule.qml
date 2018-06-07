@@ -10,23 +10,32 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'out'
-	    stream: '@gain/(10v) * $in'
+
+	    stream: '(@gain+@gainshift)/10 * $in'
 	}
     ]
 
     inJacks: [
-        InJack { label: 'in' },
+        InJack {
+	    label: 'in'
+	    defaultStream: '5'
+	},
         InJack {
 	    label: 'gain'
-	    defaultStream: '0v'
 	}
     ]
 
     cvs: [
-	LinearCV {
+	LogScaleCV {
 	    label: 'gain'
 	    inVolts: inStream('gain')
-	    from: '5v'
+	    from: 1
+	    logBase: 1.6
+	},
+	LinearCV {
+	    label: 'gainshift'
+	    from: 0
 	}
+	
     ]
 }

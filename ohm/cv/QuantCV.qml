@@ -10,6 +10,6 @@ CV {
 	    controlVolts = Math.round(controlVolts);
     }
 	
-    stream: index(voltTicks,min(max(add(round(inVolts),controlVolts,5),0),9))
+    stream: ''
     
 }
