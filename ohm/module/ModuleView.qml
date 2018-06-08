@@ -138,6 +138,7 @@ Rectangle {
 			source: "../ui/icons/knob.png"
 			mipmap: true
 			smooth: true
+			
 			Rectangle {
 			    height: 1.65;
 			    width: .4;
@@ -148,7 +149,8 @@ Rectangle {
 			    transformOrigin: Item.Bottom
 			}
 			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
-			    
+
+			
 			Popup {
 			    id: knobControl
 			    modal: true
@@ -165,18 +167,69 @@ Rectangle {
 				color: 'white'
 				radius: 10
 			    }
-			
+			    OhmText {
+				x:knobControl.background.width-40
+				y:knobControl.background.height-20
+				text: controlVolts.toFixed(2)+' V'
+				font.pixelSize: 12
+				font.weight: Font.Bold
+				horizontalAlignment: Text.AlignLeft
+				color: Style.darkText
+			    }
 			    Slider {
+				id: knob
 				rotation: -26
 				value: controlVolts;
 				from: -5; to: 5
-				onValueChanged: controlVolts = value
+				onValueChanged: {
+				    controlVolts = value
+				}
 				anchors.fill: parent
+				background: Rectangle {
+				    x: knob.leftPadding; y: knob.topPadding + knob.availableHeight/2 - height / 2
+				    implicitWidth: 5
+				    implicitHeight: 100
+				    width: knob.availableWidth
+				    height: 5
+				    color: Style.sliderColor
+				    radius: 2
+				    Rectangle {
+					x: ((knob.visualPosition > .5) ? 0.48 : (knob.visualPosition+.02))*parent.width
+					width: ((knob.visualPosition > .5) ? (knob.position-0.5) :
+						(0.47-knob.visualPosition)) * parent.width
+					height: parent.height
+					color: Style.sliderLitColor
+					radius: 2
+				    }
+				    Rectangle {
+					x: parent.width/2-4.5; y:-3
+					width: 4
+					height:10
+					color: Style.darkText
+					radius: 2
+				    }
+				    Repeater {
+					model: 11
+					OhmText {
+					    text: (index - 5) + ((Math.abs(index-5)==5 || index==5) ? 'V' : '')
+					    x: knob.leftPadding + index*parent.width/11 + (index==0||index==5 ? -5.5: -3)
+					    y: knob.topPadding
+					    font.pixelSize: 7
+					}
+				    }
 
+				}
+				handle: Rectangle {
+				    x: knob.leftPadding + knob.visualPosition * (knob.availableWidth - width)
+				    y: knob.topPadding + knob.availableHeight / 2 - height / 2
+				    implicitWidth: 22
+				    implicitHeight: 22
+				    radius: 11
+				    color: knob.pressed ? Style.sliderHandleLitColor: Style.sliderHandleColor
+				    border.color: Style.buttonBorderColor
+				}
 			    }
-			    
-			}
-			
+			}			
 		    }
 		    OhmText {
 			id: labelText

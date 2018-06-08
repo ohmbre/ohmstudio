@@ -1,33 +1,36 @@
 import ohm.module 1.0
 import ohm.jack.out 1.0
 import ohm.jack.in 1.0
+import ohm.cv 1.0
 
 Module {
-    objectName: "SlideModule"
+    objectName: 'SlideModule'
 
-    label: "Slide"
+    label: 'Slide'
 
     outJacks: [
         OutJack {
-	    label: "output"
-	    stream: 'sum(eval(subst(x,t,@input),x,t-@delay+1ms*n),n,1,11)/10'
+	    label: 'output'
+	    stream: 'slew($input,@lag,@shape)'
 	}
     ]
 
     inJacks: [
         InJack {label: 'input'},
-        InJack {label: 'delay'},
+        InJack {label: 'lag'},
+	InJack {label: 'shape'}
     ]
 
     cvs: [
-	AttenuverterCV {
-	    label: 'input'
-	    inVolts: inStream('input')
-	},
 	LogScaleCV {
-	    label: 'input'
-	    inVolts: inStream('delay')
-	    from: '200ms'
+	    label: 'lag'
+	    inVolts: inStream('lag')
+	    from: '5ms'
+	},
+	LinearCV {
+	    label: 'shape'
+	    inVolts: inStream('shape')
+	    from: '-1.5'
 	}
     ]
 	

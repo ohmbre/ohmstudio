@@ -3,13 +3,14 @@ import ohm 1.0
 CV {
     objectName: "QuantCV"
 
-    property double nth: 2
-    property int steps: voltTicks.length
+    property var choices
     onControlVoltsChanged: {
-	if (controlVolts % 1 != 0)
-	    controlVolts = Math.round(controlVolts);
+	controlVolts = Math.round(((controlVolts+5)/10)*choices.length)/choices.length*10-5
+	updateControl(id, controlVolts)
     }
-	
-    stream: ''
+    stream: choices[
+	Math.max(Math.min(Math.round(((controlVolts+5)/10)*choices.length),choices.length-1),0)
+    ].toString()
+    
     
 }

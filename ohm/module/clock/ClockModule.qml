@@ -11,7 +11,7 @@ Module {
     outJacks: [
         GateOutJack {
 	    label: 'trig'
-	    stream: 'smaller(mod(t,(1/@tempo)),30ms) ? (10v) : 0'
+	    stream: 'smaller(mod(t,(1/@tempo)),10ms) ? (10v) : 0'
 	}
     ]
 
@@ -21,7 +21,7 @@ Module {
 
     cvs: [
 	LogScaleCV {
-	    logBase: 1.2
+	    logBase: 2
 	    label: 'tempo'
 	    inVolts: inStream('tempo')
 	    from: '120/mins'

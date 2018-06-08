@@ -10,25 +10,24 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'signal'
-	    stream: '@volume*sinusoid(@freq)'
+	    stream: '@gain*sinusoid(@freq)'
 	}
     ]
 
     inJacks: [
-        InJack {
-	    label: 'v/oct'
-	}
+        InJack { label: 'v/oct' },
+	InJack { label: 'gain' }
     ]
 
     cvs: [
 	LogScaleCV {
 	    label: 'freq'
 	    inVolts: inStream('v/oct')
-	    from: 'notehz(C,5)'
+	    from: 'notehz(C,4)'
 	},
 	LinearCV {
-	    label: 'volume'
-	    inVolts: '0'
+	    label: 'gain'
+	    inVolts: inStream('gain')
 	    from: '5v'
 	}
     ]

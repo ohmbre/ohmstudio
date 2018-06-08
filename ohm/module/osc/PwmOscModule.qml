@@ -5,18 +5,19 @@ import ohm.helpers 1.0
 import ohm.cv 1.0
 
 Module {
-    objectName: 'SawOscModule'
-    label: 'Saw Osc'
+    objectName: 'PwmOscModule'
+    label: 'PWM Osc'
 
     outJacks: [
         OutJack {
 	    label: 'signal'
-	    stream: '@gain * sawtooth(@freq)'
+	    stream: '@gain * pwm(@freq,@duty/10)'
 	}
     ]
 
     inJacks: [
         InJack { label: 'v/oct' },
+	InJack { label: 'duty' },
 	InJack { label: 'gain' }
     ]
 
@@ -27,10 +28,15 @@ Module {
 	    from: 'notehz(C,4)'
 	},
 	LinearCV {
-            label: 'gain'
-            inVolts: inStream('gain')
-            from: '5v'
-        }     
+	    label: 'duty'
+	    inVolts: inStream('duty')
+	    from: '5'
+	},
+	LinearCV {
+	    label: 'gain'
+	    inVolts: inStream('gain')
+	    from: '5'
+	}
     ]
     
 

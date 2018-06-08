@@ -11,14 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'envelope'
-	    stream: {
-		var sincetrig = '(t-triggered($gate))';
-		var attackcurve = '((%1 / @attack) ^ @atkshape)'.arg(sincetrig);
-		var decaycurve = '((1 - ((%1-@attack) / @decay)) ^ @decshape)'.arg(sincetrig);
-		var atkcond = '(smaller(%1, @attack))'.arg(sincetrig)
-		var deccond = '(smaller(%1, @attack + @decay))'.arg(sincetrig)
-		return '10v * (%1 ? %2 : (%3 ? %4 : 0))'.arg(atkcond).arg(attackcurve).arg(deccond).arg(decaycurve)
-	    }
+	    stream: 'ramps(timer($gate),0v,10v,@attack,@atkshape,0v,@decay,@decshape)'
 	}
 	
     ]
@@ -40,7 +33,7 @@ Module {
 	LogScaleCV {
 	    label: 'decay'
 	    inVolts: inStream('decay')
-	    from: '300ms'
+	    from: '100ms'
 	},
 	LogScaleCV {
 	    label: 'atkshape'

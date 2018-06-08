@@ -6,6 +6,7 @@ QtObject {
     property var palette: {
         'light': 'E6EBE0',
         'medium': '9BC1BC',
+	'gray': 'CCCCCC',
         'dark': '54969A',
         'accent': 'F4F1BB',
         'strong': 'ED6A5A',
@@ -60,5 +61,10 @@ QtObject {
     property color fileChooseLitColor: '#'+paletteLit.strong
     property color fileChooseTextColor: '#'+paletteLit.light
     
+    property color sliderColor: '#'+palette.gray
+    property color sliderLitColor: '#'+palette.dark
+    property color sliderHandleColor: '#'+paletteDim.dark
+    property color sliderHandleLitColor: '#'+paletteLit.dark
     
+    property color darkText: '#536b65'
 }

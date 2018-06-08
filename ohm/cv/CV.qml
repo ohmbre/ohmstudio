@@ -12,8 +12,7 @@ Model {
     property double controlVolts: 0
     onControlVoltsChanged: updateControl(id, controlVolts);
     
-    property var voltTicks: [-5,-4,-3,-2,-1, 0,1,2,3,4,5]
-    property var inVolts: '0v'
+    property var inVolts: 0
     property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(id)
 
     function toQML(indent) {

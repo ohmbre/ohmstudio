@@ -10,42 +10,30 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'v/oct'
-	    stream: clockSeq(inStream('clock'),1,seededSample(scaleToVoct(cv('scale')),cv('notes'),cv('seed')))
+	    stream: 'sequence($clock,randsample(@scale,@numnotes,@randseed))'
 	}
     ]
 
     inJacks: [
         InJack {label: 'clock'},
-	InJack {label: 'seed'}
+	InJack {label: 'randseed'}
     ]
 
     cvs: [
 	QuantCV {
-	    voltsToValue: function(volts) {return 'scales['+(controlVolts+8)+']'}
 	    label: 'scale'
+	    choices: ['minor','locrian','major','dorian','phrygian','lydian','mixolydian',
+		      'minorPentatonic','majorPentatonic','egyptian','minorBlues','majorBlues']
 	},
 	LogScaleCV {
-	    label: 'seed'
-	    inVolts: inStream('seed')
+	    label: 'randseed'
+	    inVolts: inStream('randseed')
 	    from: '666'
 	},
 	QuantCV {
-	    label: 'notes'
-	    voltTicks: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-	},
-	LogScaleCV {
-	    label: 'test1'
-	    controlVolts: 5
-	},
-	LogScaleCV {
-	    label: 'test2'
-	},
-	LogScaleCV {
-	    label: 'test3'
-	}
-	
-	    
-	
+	    label: 'numnotes'
+	    choices: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+	}	
     ]
 	
 }
