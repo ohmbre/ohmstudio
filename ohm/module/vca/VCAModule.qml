@@ -11,7 +11,7 @@ Module {
         OutJack {
 	    label: 'out'
 
-	    stream: '(@gain+@gainshift)/10 * $in'
+	    stream: '(@gain) * ($in + @inshift)'
 	}
     ]
 
@@ -33,7 +33,7 @@ Module {
 	    logBase: 1.6
 	},
 	LinearCV {
-	    label: 'gainshift'
+	    label: 'inshift'
 	    from: 0
 	}
 	

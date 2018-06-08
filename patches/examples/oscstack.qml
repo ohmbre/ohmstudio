@@ -41,10 +41,6 @@ Patch {
 			inp: modules[9].jack("gain")
 		},
 		Cable {
-			inp: modules[6].jack("v/oct")
-			out: modules[8].jack("out1")
-		},
-		Cable {
 			out: modules[3].jack("out2")
 			inp: modules[6].jack("gain")
 		},
@@ -62,21 +58,25 @@ Patch {
 		},
 		Cable {
 			out: modules[8].jack("out2")
+			inp: modules[11].jack("v/oct")
+		},
+		Cable {
+			out: modules[8].jack("out1")
 			inp: modules[10].jack("input")
 		},
 		Cable {
+			inp: modules[6].jack("v/oct")
 			out: modules[10].jack("output")
-			inp: modules[11].jack("v/oct")
 		}
 	]
 	modules: [
 		OutAudioModule {
 			savedControlVolts: []
-			x: -37.77983187013092
-			y: -25.962159940944957},
+			x: -41.08075893921432
+			y: -30.363396033055892},
 		ClockModule {
 			savedControlVolts: [
-				1.485406535902401
+				1.483760882714268
 			]
 			x: 43.255669018901244
 			y: 79.70984359126919},
@@ -95,8 +95,8 @@ Patch {
 			y: -28.39426556623789},
 		MixModule {
 			savedControlVolts: []
-			x: 12.082873486997869
-			y: -22.072530142409278},
+			x: 0.5296287452066508
+			y: -24.823302699978626},
 		MultipleModule {
 			savedControlVolts: []
 			x: -6.0020296111529206
@@ -106,20 +106,20 @@ Patch {
 				-1.0011757788301825,
 				-0.6150878158152215
 			]
-			x: -12.082545340028446
-			y: 16.13825627707979},
+			x: -31.337953243014226
+			y: 6.7856295813437555},
 		RandSeqModule {
 			savedControlVolts: [
-				4.166666666666666,
+				-5,
 				2.6992250351899756,
 				5
 			]
-			x: 41.229287556003555
-			y: 37.6625463322755},
+			x: 57.73392290141976
+			y: 39.31300986681708},
 		MultipleModule {
 			savedControlVolts: []
-			x: 54.362985761589016
-			y: -0.47575396316801744},
+			x: 50.511904180991905
+			y: -9.828380658903939},
 		VCAModule {
 			savedControlVolts: [
 				0.930810289894275,
@@ -129,11 +129,11 @@ Patch {
 			y: 5.134221472779927},
 		SlideModule {
 			savedControlVolts: [
-				-4.27053136577709,
-				-2.614970893693388
+				-5,
+				1.1189670116065873
 			]
-			x: 53.76838206035973
-			y: -38.44337727929724},
+			x: 9.721938979182141
+			y: 25.454071096469534},
 		PwmOscModule {
 			savedControlVolts: [
 				-1.6007292888965985,

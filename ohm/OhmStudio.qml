@@ -65,7 +65,9 @@ ApplicationWindow {
             y: 100; x: parent.width - width + radius - 3
             text: "Load Patch"
             onClicked: {
-                loadFileDialog.open();
+		setup.width = 0.8*window.width;
+		saveFileChoose.close();
+                loadFileChoose.open();
             }
         }
 
@@ -74,114 +76,44 @@ ApplicationWindow {
             visible: activePatch.status === Loader.Ready
             text: "Save Patch"
             onClicked: {
-                saveFileDialog.visible = true;
+		if (!saveFileChoose.visible) {
+		    setup.width = 0.8*window.width;
+		    loadFileChoose.close();
+                    saveFileChoose.open();
+		    label.color = Style.fileChooseLitColor 
+		} else {
+		    saveFileChoose.fileChosen(saveFileChoose.saveFile)
+		    label.color = Style.buttonTextColor
+		}
             }
         }
 
-        Rectangle {
-            id: loadFileDialog
-            visible: false
-            opacity: 0
-            width: setup.width*0.65;
-            Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
-            height: window.height*0.8;
-            color: Style.fileChooseBgColor
-            x:15
-            y: header.height+13
-            ListView {
-                id: fileChoose
-                anchors.fill: parent
-                keyNavigationEnabled: true
-                highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
-                focus: loadFileDialog.visible
-                model: FolderListModel {
-                    id: chooseFileModel
-                    folder: '../patches'
-                    rootFolder: '../patches'
-                    nameFilters: ["*.qml",".."]
-                    showDirs: true
-                    showDirsFirst: true
-                    showHidden: false
-                    showDotAndDotDot: true
-                    showFiles: true
-                }
-                delegate: OhmText {
-                    leftPadding: 5
-                    rightPadding:5
-                    topPadding: 2
-                    bottomPadding: 2
-                    text: fileName
-                    color: Style.fileChooseTextColor
-                    width: parent.width
-                    horizontalAlignment: Text.AlignLeft
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: fileChoose.currentIndex = index
-                        onDoubleClicked: {
-                            if (fileIsDir) {
-                                if (fileName == '..') chooseFileModel.folder = chooseFileModel.folder
-                                else chooseFileModel.folder += '/' + fileName;
-                            } else {
-                                if (window.loadPatchQML(fileURL))
-                                    setup.close();
-                            }
-                        }
-                    }
-                }
-                header: Rectangle {
-                    width: parent.width
-                    height:17
-                    OhmText {
-                        text: "Patch File"
-                        color: Style.fileChooseTextColor
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
-                        padding: 2
-                        leftPadding: 4
-                        horizontalAlignment: Text.AlignLeft
-                    }
-                    OhmText {
-                        width: parent.width
-                        text: "Saved"
-                        color: Style.fileChooseTextColor
-                        font.weight: Font.Bold
-                        padding: 2
-                        rightPadding: 4
-                        font.pixelSize: 11
-                        horizontalAlignment: Text.AlignRight
-                    }
-                    color: Style.buttonBorderColor
-                }
-            }
-
-            function open() {
-                setup.width = 0.8*window.width;
-                loadFileDialog.visible = true;
-                loadFileDialog.opacity = 1.0;
-            }
-            /*folder: Constants.savedPatchDir
-            nameFilters: ["Patch files (*.qml)"]
-            title: "Load Patch"
-            onAccepted: {
-                if (fileUrls.length === 0) return;
-                if (window.loadPatchQML(fileUrl))
+	onClosed: function() {
+	    loadFileChoose.close()
+	    saveFileChoose.close()
+	    setup.width = .33 * setup.parent.width;
+	}
+	    
+	OhmFileChoose {
+	    id: loadFileChoose
+	    forLoading: true
+	    onFileChosen: function(fileURL) {
+		if (window.loadPatchQML(fileURL)) {
+		    loadFileChoose.close()
                     setup.close();
-            }*/
-        }
+		}
+	    }
+	}
 
-        Rectangle {
-            id: saveFileDialog
-            visible: false
-            /*folder: Constants.savedPatchDir
-            nameFilters: ["Patch files (*.qml)"]
-            title: "Save Patch"
-            onAccepted: {
-                if (fileUrls.length === 0) return;
-                var fileName = fileUrl;
-                activePatch.item.patch.saveTo(fileName);
-                setup.close();
-            }*/
-        }
+	OhmFileChoose {
+	    id: saveFileChoose
+	    forSaving: true
+	    onFileChosen: function(fileURL) {
+		activePatch.item.patch.saveTo(fileURL);
+		saveFileChoose.close()
+		setup.close()
+	    }
+	}
     }
 
     function loadPatchQML(url) {
