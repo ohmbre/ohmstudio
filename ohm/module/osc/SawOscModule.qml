@@ -26,10 +26,11 @@ Module {
 	    inVolts: inStream('v/oct')
 	    from: 'notehz(C,4)'
 	},
-	LinearCV {
+	LogScaleCV {
             label: 'gain'
             inVolts: inStream('gain')
-            from: '5v'
+            from: 2
+	    logBase: 1.38
         }     
     ]
     

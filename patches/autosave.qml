@@ -13,14 +13,6 @@ import ohm.module.cv 1.0
 Patch {
 	cables: [
 		Cable {
-			inp: modules[4].jack("in1")
-			out: modules[11].jack("signal")
-		},
-		Cable {
-			inp: modules[0].jack("L")
-			out: modules[4].jack("out")
-		},
-		Cable {
 			out: modules[1].jack("trig")
 			inp: modules[5].jack("in")
 		},
@@ -33,114 +25,121 @@ Patch {
 			inp: modules[7].jack("clock")
 		},
 		Cable {
-			inp: modules[4].jack("in2")
-			out: modules[6].jack("signal")
+			out: modules[7].jack("v/oct")
+			inp: modules[8].jack("in")
+		},
+		Cable {
+			out: modules[8].jack("out1")
+			inp: modules[9].jack("input")
 		},
 		Cable {
 			out: modules[2].jack("envelope")
-			inp: modules[9].jack("gain")
-		},
-		Cable {
-			inp: modules[6].jack("v/oct")
-			out: modules[8].jack("out1")
+			inp: modules[3].jack("in")
 		},
 		Cable {
 			out: modules[3].jack("out2")
-			inp: modules[6].jack("gain")
+			inp: modules[10].jack("gain")
+		},
+		Cable {
+			out: modules[9].jack("output")
+			inp: modules[10].jack("v/oct")
+		},
+		Cable {
+			inp: modules[4].jack("in2")
+			out: modules[10].jack("signal")
+		},
+		Cable {
+			inp: modules[0].jack("L")
+			out: modules[4].jack("out")
+		},
+		Cable {
+			out: modules[8].jack("out2")
+			inp: modules[11].jack("v/oct")
 		},
 		Cable {
 			out: modules[3].jack("out1")
 			inp: modules[11].jack("gain")
 		},
 		Cable {
-			inp: modules[3].jack("in")
-			out: modules[9].jack("out")
-		},
-		Cable {
-			out: modules[7].jack("v/oct")
-			inp: modules[8].jack("in")
-		},
-		Cable {
-			out: modules[8].jack("out2")
-			inp: modules[10].jack("input")
-		},
-		Cable {
-			out: modules[10].jack("output")
-			inp: modules[11].jack("v/oct")
+			inp: modules[4].jack("in1")
+			out: modules[11].jack("signal")
 		}
 	]
 	modules: [
 		OutAudioModule {
 			savedControlVolts: []
-			x: -37.77983187013092
-			y: -25.962159940944957},
+			x: -100.45673417163653
+			y: -51.23393042887312},
 		ClockModule {
 			savedControlVolts: [
-				1.485406535902401
+				5.707689331244936
 			]
-			x: 43.255669018901244
-			y: 79.70984359126919},
+			x: -67.06195581355996
+			y: 1.189651798752152},
 		ADModule {
 			savedControlVolts: [
-				-0.20039972108484871,
-				0.7173447428428217,
-				1.018355737767128,
-				0.8351359756192238
+				0.24381073149348786,
+				4.773587734974392,
+				2.5193959789568154,
+				2.2739395942751983,
+				4.104491562566135,
+				-0.02777730512134724
 			]
-			x: -60.07330910469386
-			y: 40.47553687809295},
+			x: 21.17175931849465
+			y: -9.617201734419382},
 		MultipleModule {
 			savedControlVolts: []
-			x: -90.06199578644942
-			y: -28.39426556623789},
+			x: 23.06805828593417
+			y: -101.92339078527664},
 		MixModule {
 			savedControlVolts: []
-			x: 12.082873486997869
-			y: -22.072530142409278},
+			x: -60.98783461520543
+			y: -115.3190222687926},
 		MultipleModule {
 			savedControlVolts: []
-			x: -6.0020296111529206
-			y: 63.49647964674},
+			x: -13.789156069914839
+			y: 51.16686275370034},
 		SawOscModule {
 			savedControlVolts: [
-				-1.0011757788301825,
-				-0.6150878158152215
+				-2.228060104084358,
+				-4.300777150680637
 			]
-			x: -12.082545340028446
-			y: 16.13825627707979},
+			x: 69.85112475235474
+			y: -132.74984352459643},
 		RandSeqModule {
 			savedControlVolts: [
-				4.166666666666666,
-				2.6992250351899756,
-				5
+				6.666666666666668,
+				-5.3330215410084385,
+				-0.625,
+				0.0032913063762745054
 			]
-			x: 41.229287556003555
-			y: 37.6625463322755},
+			x: 96.02062799033297
+			y: 3.622013597491332},
 		MultipleModule {
 			savedControlVolts: []
-			x: 54.362985761589016
-			y: -0.47575396316801744},
-		VCAModule {
-			savedControlVolts: [
-				0.930810289894275,
-				-5
-			]
-			x: -83.12201324018997
-			y: 5.134221472779927},
+			x: 112.37699636260731
+			y: -44.902401646554154},
 		SlideModule {
 			savedControlVolts: [
-				-4.27053136577709,
-				-2.614970893693388
+				-4.13556017406374,
+				1.300541120566363
 			]
-			x: 53.76838206035973
-			y: -38.44337727929724},
+			x: 95.31124208529423
+			y: -99.66390352623921},
 		PwmOscModule {
 			savedControlVolts: [
-				-1.6007292888965985,
-				-2.7548790449711404,
-				5
+				-2.201928452151149,
+				-3.2096868437338735,
+				-3.38951589996703
 			]
-			x: -20.438126196295116
-			y: -68.89960956065397}
+			x: -15.233482566642351
+			y: -44.37190016376451},
+		SineOscModule {
+			savedControlVolts: [
+				-2.1969914925867418,
+				-0.534947807288976
+			]
+			x: 19.944683532478848
+			y: -146.98018632221692}
 	]
 	name: "new patch"}

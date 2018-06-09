@@ -5,11 +5,13 @@ CV {
 
     property var choices
     onControlVoltsChanged: {
-	controlVolts = Math.round(((controlVolts+5)/10)*choices.length)/choices.length*10-5
+	controlVolts = Math.round(((controlVolts+10)/20)*choices.length)/choices.length*20-10
 	updateControl(id, controlVolts)
     }
+    knobReading: stream
+	
     stream: choices[
-	Math.max(Math.min(Math.round(((controlVolts+5)/10)*choices.length),choices.length-1),0)
+	Math.max(Math.min(Math.round(((controlVolts+10)/20)*choices.length),choices.length-1),0)
     ].toString()
     
     

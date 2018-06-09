@@ -11,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'output'
-	    stream: 'slew($input,@lag,@shape)'
+	    stream: 'slew($input,@lag,@shape/7)'
 	}
     ]
 
@@ -25,12 +25,12 @@ Module {
 	LogScaleCV {
 	    label: 'lag'
 	    inVolts: inStream('lag')
-	    from: '5ms'
+	    from: '2ms'
 	},
 	LinearCV {
 	    label: 'shape'
 	    inVolts: inStream('shape')
-	    from: '-1.5'
+	    from: '-1'
 	}
     ]
 	

@@ -68,14 +68,21 @@
 	constructor(pool, nsamples, seed) {
 	    super(null);
 	    this.pool = pool
-	    this.nsamples = Math.round(nsamples)
-	    this.seed = Math.round(seed)
+	    this.lastnsamples = 0
+	    this.nsamples = nsamples
+	    this.lastseed = 279470274
+	    this.seed = (typeof seed == 'undefined') ? Math.floor(Math.random()*279470273) : seed
 	}
 	update() {
+	    let intseed = Math.round(this.seed)
+	    let intnsamples = Math.round(this.nsamples)
+	    if (intseed == this.lastseed && intnsamples == this.lastnsamples) return 
+	    this.lastseed = intseed
+	    this.lastnsamples = intnsamples
 	    this.val = []
-	    while (this.val.length < this.nsamples) {
-		this.val.push(this.pool[this.seed % this.pool.length])
-		this.seed = (this.seed * 279470273) % 4294967291
+		while (this.val.length < intnsamples) {
+		this.val.push(this.pool[intseed % this.pool.length])
+		intseed = (intseed * 279470273) % 4294967291
 	    }
 	}
 	propstr() { return `nsamples=${this.nsamples} seed=${this.seed}` }
@@ -115,19 +122,21 @@
     ohms.sequence = class sequence extends ohms.genny {
 	init(clock,values) {
 	    this.clock = clock
-	    this.values = values[Symbol.toPrimitive]()
+	    this.values = values
+	    this.lastvalues = values[Symbol.toPrimitive]()
 	    this.position = 0
 	    this.gate = false
-	    this.val = this.values[this.position]
+	    this.val = this.lastvalues[this.position]
 	}
 	next() {
 	    const clklvl = +this.clock
 	    if (!this.gate && clklvl >= 3) {
+		this.lastvalues = this.values[Symbol.toPrimitive]()
 		this.gate = true
-		this.position = (this.position+1) % this.values.length
+		this.position = (this.position+1) % this.lastvalues.length
 	    } else if (this.gate && clklvl <= 1)
 		this.gate = false
-	    return this.values[this.position]
+	    return this.lastvalues[this.position]
 	}
     }
 
@@ -338,7 +347,7 @@
 	assign(o,type)
     }
     o.addMathFn('notehz', (name,octave) => 0.057595865 * 1.059463094**(12*(octave-4)+name))
-
+    
     o.ohmrules=[...math.simplify.rules]
     o.ohmrules.splice(0,0,(node)=> {
 	try {
@@ -365,7 +374,6 @@
     o.streams = [new o.ohmo(0),new o.ohmo(0)]
     
     o.handler = function(msg) {
-	//console.log(msg)
 	const mparts = msg.split('=');
 	const lhs = mparts.shift();
 	const rhs = mparts.join('=')
@@ -410,7 +418,7 @@
 	    o.pcm.commit()
 	},0);
     }
-        
+
     module.exports = o
     if (require && require.main === module) {
 	o.run()

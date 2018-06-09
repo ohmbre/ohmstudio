@@ -145,7 +145,7 @@ Rectangle {
 			    x: 2.55
 			    color: '#3b3b3b';
 			    radius: .2
-			    rotation: 28*controlVolts
+			    rotation: 14*controlVolts
 			    transformOrigin: Item.Bottom
 			}
 			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
@@ -168,9 +168,18 @@ Rectangle {
 				radius: 10
 			    }
 			    OhmText {
-				x:knobControl.background.width-40
+				x:knobControl.background.width-50
 				y:knobControl.background.height-20
-				text: controlVolts.toFixed(2)+' V'
+				text: controlVolts.toFixed(3)+' V'
+				font.pixelSize: 12
+				font.weight: Font.Bold
+				horizontalAlignment: Text.AlignLeft
+				color: Style.darkText
+			    }
+			    OhmText {
+				x:10
+				y:10
+				text: knobReading
 				font.pixelSize: 12
 				font.weight: Font.Bold
 				horizontalAlignment: Text.AlignLeft
@@ -180,7 +189,7 @@ Rectangle {
 				id: knob
 				rotation: -26
 				value: controlVolts;
-				from: -5; to: 5
+				from: -10; to: 10
 				onValueChanged: {
 				    controlVolts = value
 				}

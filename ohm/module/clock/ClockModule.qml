@@ -21,10 +21,10 @@ Module {
 
     cvs: [
 	LogScaleCV {
-	    logBase: 2
+	    logBase: 1.2
 	    label: 'tempo'
 	    inVolts: inStream('tempo')
-	    from: '120/mins'
+	    from: '100/mins'
 	}
     ]
 }

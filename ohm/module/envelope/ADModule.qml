@@ -11,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'envelope'
-	    stream: 'ramps(timer($gate),0v,10v,@attack,@atkshape,0v,@decay,@decshape)'
+	    stream: '@offset + @gain*ramps(timer($gate),0v,1v,@attack,@atkshape,0v,@decay,@decshape)'
 	}
 	
     ]
@@ -21,7 +21,9 @@ Module {
 	InJack {label: 'attack'},
 	InJack {label: 'decay'},
 	InJack {label: 'atkshape'},
-	InJack {label: 'decshape'}
+	InJack {label: 'decshape'},
+	InJack {label: 'gain'},
+	InJack {label: 'offset'}
     ]
 
     cvs: [
@@ -46,6 +48,17 @@ Module {
 	    logBase: '4'
 	    inVolts: inStream('decshape')
 	    from: 1
-	}	
+	},
+	LogScaleCV {
+	    label: 'gain'
+	    logBase: 1.35
+	    from: 2
+	    inVolts: inStream('gain')
+	},
+	LinearCV {
+	    label: 'offset'
+	    from: 0
+	    inVolts: inStream('offset')
+	}
     ]
 }

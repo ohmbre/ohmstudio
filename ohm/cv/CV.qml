@@ -14,7 +14,8 @@ Model {
     
     property var inVolts: 0
     property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(id)
-
+    property string knobReading: ''
+    
     function toQML(indent) {
 	return controlVolts.toString();
     }

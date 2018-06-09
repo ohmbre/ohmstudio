@@ -10,7 +10,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'v/oct'
-	    stream: 'sequence($clock,randsample(@scale,@numnotes,@randseed))'
+	    stream: '@octaves * sequence($clock,randsample(@scale,@numnotes,@randseed))'
 	}
     ]
 
@@ -34,7 +34,13 @@ Module {
 	    label: 'numnotes'
 	    choices: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
 		      17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
-	}	
+	},
+	LogScaleCV {
+	    label: 'octaves'
+	    inVolts: '0'
+	    from: 1
+	    logBase: 1.25
+	}
     ]
 	
 }

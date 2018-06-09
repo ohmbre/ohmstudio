@@ -11,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'signal'
-	    stream: '@gain * pwm(@freq,@duty/10)'
+	    stream: '@gain * pwm(@freq,@duty/20)'
 	}
     ]
 
@@ -30,12 +30,13 @@ Module {
 	LinearCV {
 	    label: 'duty'
 	    inVolts: inStream('duty')
-	    from: '5'
+	    from: '10'
 	},
-	LinearCV {
+	LogScaleCV {
 	    label: 'gain'
 	    inVolts: inStream('gain')
-	    from: '5'
+	    from: 2
+	    logBase: 1.38
 	}
     ]
     
