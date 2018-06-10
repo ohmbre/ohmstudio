@@ -347,7 +347,7 @@
     }
     o.addMathFn('notehz', (name,octave) => 0.057595865 * 1.059463094**(12*(octave-4)+name))
     
-    o.ohmrules=[...math.simplify.rules]
+	o.ohmrules=[...math.simplify.rules].filter((rule)=> rule.name != 'simplifyConstant')
     o.ohmrules.splice(0,0,(node)=> {
 	try {
 	    return new ConstantNode(node.eval())
@@ -421,11 +421,9 @@
 		},0);
 	} catch (err) {
 	    console.log('trying speaker...')
-	    console.error('herea');
 	    const Speaker = require('speaker');
 	    const bufferAlloc = require('buffer-alloc')
 	    const Readable = require('stream').Readable
-	    console.error('hereb');
 	    const sampleBytes = o.sampleBits/8
 	    function read(n) {
 		const samples = bufferAlloc(n)
