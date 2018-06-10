@@ -4,11 +4,7 @@
   "description": "portable virtual modular synth platform that aims to be fun, usable, collaborative, and extensible. UI designed for ohmbre hardware synthesizer or similar touchscreen device, yet it is fully cross-platform.",
   "bin": "run",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "pkg": {
-    "scripts": "ohm.js",
-    "assets": ["./ohm/**","!./ohm/**/*.qmlc","!./ohm/**/*.~","!./ohm/**/*.jsc"]
+    "install": "chmod -R +w brig && npm install ./brig && npm install mathjs && npm install speaker"
   },
   "repository": {
     "type": "git",
@@ -36,5 +32,6 @@
     "nan": "^2.10.0",
     "node-gyp": "^3.7.0",
     "speaker": "^0.4.1"
-  }
+  },
+  "devDependencies": {}
 }

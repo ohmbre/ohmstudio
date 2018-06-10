@@ -1,4 +1,6 @@
 {
+  'conditions': [
+  ['OS=="linux"', {
   "targets": [
     {
       "target_name": "alsa",
@@ -6,4 +8,5 @@
       "libraries": [ "-lasound" ]
     }
   ]
+  }]]
 }
