@@ -22,5 +22,4 @@ Module {
 	eqnR: inStream('R')
 	Component.onDestruction: kill()
     }
-    
 }

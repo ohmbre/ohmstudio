@@ -7,13 +7,11 @@ env.QT_SCALE_FACTOR='2'
 
 const Brig = require('brig');
 brig = new Brig();
-
 brig.on('ready', function(brig) {
-
     const cp = require('child_process');
-
     let audioThreads = []
     const controlsCache = {}
+
     var Ohm = brig.createType('Ohm', {
 	property: {'main':null},
 	method: {
@@ -23,15 +21,28 @@ brig.on('ready', function(brig) {
 		    controlsCache[id] = val
 		}
 	    }
-	}
+	},
+	signal: ['kill()']
     });
-    
+
+    let ohminstance = null;
+    Ohm.on('instance-created', function (instance) {
+    	ohminstance = instance
+	instance.on('kill', function() {
+	    ohminstance = null;
+	    for (let thread of audioThreads)
+	       thread.subproc.kill('SIGHUP')
+	    process.exit(0);
+	});
+    });
+
     var AudioThread = brig.createType('AudioThread', {
 	property: { eqnL: '0', eqnR: '0' }, signal: ['kill()']
     });
-    
+
     AudioThread.on('instance-created', function(instance) {
 	audioThreads.push(instance)
+	console.error('creating audio thread');
 	instance.subproc = cp.fork('./ohm.js');
 	for (let id in controlsCache)
 	    instance.subproc.send(`controls[${id}]=${controlsCache[id]}`);
@@ -48,10 +59,8 @@ brig.on('ready', function(brig) {
 	});
     });
 
-    var root = brig.createComponent();
-    root.setData("import ohm 1.0; import Brig.Ohm 1.0; Ohm {main: OhmStudio {}}");
-    var errors = root.native.errors();
-    if (errors.length) console.log(errors);
-    var view = root.create();
+    brig.open('ohm/OhmStudio.qml', function(err, window) {
+        if (err) console.error(err)
+    });
 
 });

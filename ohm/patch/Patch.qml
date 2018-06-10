@@ -52,6 +52,7 @@ Model {
                 newModules.push(module);
 	});
         modules = newModules;
+	dModule.destroy()
     }
 
     function addModule(classname, namespace, x, y) {

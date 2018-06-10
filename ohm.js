@@ -3,7 +3,6 @@
     const math = require('mathjs').create()//{predictable: true, number: 'number'})
     const ConstantNode = math.expression.node.ConstantNode
     const assign = Object.assign
-    
     const o = {}
     o.math = math;
     
@@ -399,30 +398,65 @@
     }
 
     o.run = function() {
-	o.alsa = require('./alsa')
-	o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
+
 	process.on('message', o.handler)
 	process.on('disconnect', ()=>{ console.warn('\n\nchild process lost connection\n'); process.exit(0) })
-	setInterval(() => {
-	    const samples = o.pcm.writeBuffer()
-	    const nsamples = samples.length
-	    const vScale = o.vScale
-	    let i=0,l=0,r=0,maxS=o.sampleMax,minS=o.sampleMin
-	    while (i < nsamples) {
-		l = Math.round(vScale*o.streams[0])
-		samples[i++] = l > maxS ? maxS : (l < minS ? minS : l)
-		r = Math.round(vScale*o.streams[1])
-		samples[i++] = r > maxS ? maxS : (r < minS ? minS : r)
-		o.time.val++
-	    }	    
-	    o.pcm.commit()
-	},0);
+	try {
+	    console.log('trying alsa');
+	    o.alsa = require('./alsa')
+	    o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
+	    setInterval(() => {
+		    const samples = o.pcm.writeBuffer()
+		    const nsamples = samples.length
+		    const vScale = o.vScale
+		    let i=0,l=0,r=0,maxS=o.sampleMax,minS=o.sampleMin
+		    while (i < nsamples) {
+			l = Math.round(vScale*o.streams[0])
+			samples[i++] = l > maxS ? maxS : (l < minS ? minS : l)
+			r = Math.round(vScale*o.streams[1])
+			samples[i++] = r > maxS ? maxS : (r < minS ? minS : r)
+			o.time.val++
+		    }
+		    o.pcm.commit()	
+		},0);
+	} catch (err) {
+	    console.log('trying speaker...')
+	    console.error('herea');
+	    const Speaker = require('speaker');
+	    const bufferAlloc = require('buffer-alloc')
+	    const Readable = require('stream').Readable
+	    console.error('hereb');
+	    const sampleBytes = o.sampleBits/8
+	    function read(n) {
+		const samples = bufferAlloc(n)
+		const vScale = o.vScale
+		let offset = 0, l = 0, r = 0, maxS=o.sampleMax, minS=o.sampleMin
+		while (offset < n) {
+		    l = Math.round(vScale*o.streams[0])
+		    samples.writeInt32LE(l > maxS ? maxS : (l < minS ? minS : l), offset)
+		    offset += sampleBytes
+		    r = Math.round(vScale*o.streams[1])
+		    samples.writeInt32LE(r > maxS ? maxS : (r < minS ? minS : r), offset)
+		    offset += sampleBytes
+		    o.time.val++
+		}
+		this.push(samples)
+		this.samplesGenerated += n/(sampleBytes*2)
+	    }
+	    const samples = new Readable()
+	    samples.bitDepth = o.sampleBits
+	    samples.channels = 2
+	    samples.sampleRate = o.sampleRate
+	    samples.samplesGenerated = 0
+	    samples._read = read
+	    samples.pipe(new Speaker({channels: 2, bitDepth: 32, sampleRate: 48000, signed: true, samplesPerFrame: o.samplePeriod}))
+	}
     }
-
-    module.exports = o
-    if (require && require.main === module) {
-	o.run()
-    }
+       
+	module.exports = o
+	if (require && require.main === module) {
+	    o.run()
+	}
 
     //require('repl').start().context.o=o
 }
