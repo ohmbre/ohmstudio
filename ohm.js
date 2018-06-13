@@ -1,6 +1,6 @@
 'use strict';
 {
-    const math = require('mathjs').create()//{predictable: true, number: 'number'})
+    const math = require('mathjs').create()
     const ConstantNode = math.expression.node.ConstantNode
     const FunctionNode = math.expression.node.FunctionNode
     const OperatorNode = math.expression.node.OperatorNode
@@ -93,15 +93,15 @@
     ohms.genny = class genny extends ohms.ohmo {
         constructor(...args) {
             super(null)
-            this.time = o.time
+            this.t = o.time.val
             this.init(...args)
-            this.t = this.time.val
             if (this.val == null)
             this.val = this.next()
         }
         update() {
-            if (this.t != this.time) {
-                this.t = this.time.val;
+	    const curtime = o.time.val;
+            if (this.t != curtime) {
+                this.t = curtime;
                 this.val = this.next()
             }
         }
@@ -175,56 +175,46 @@
         }
     }
 
-    ohms.timer = class timer extends ohms.genny {
-        init(signal,direction) {
-            this.signal = signal
-            this.val = 0
-            this.gate = false
-        }
-        next() {
-            const siglvl = +this.signal
-            if (!this.gate && siglvl >= 3) {
-                this.gate = true
-                return 1
-            } else if (this.gate && siglvl <= 1)
-            this.gate = false
-            if (this.val == 0) return this.val
-            return this.val + 1
-        }
-    }
-
     ohms.ramps = class ramps extends ohms.genny {
-        init(time, initval, ...args) {
-            this.time = time
-            this.args = [...args]
-            this.seq = [...args]
-            this.target = this.val = this.vstart = initval
-            this.tstart = 0
-            this.tlen = 1
-            this.shape = 1
-            this.slope = 0
-        }
-        nextSeq() {
-            if (this.seq.length < 3) return this.val
-            const ramp = this.seq.splice(0,3)
-            this.target = ramp[0]; this.tlen = ramp[1]; this.shape = ramp[2]
-            this.slope = 0
-            return false
+        init(trig, initval, ...args) {
+            this.trig = trig
+	    this.gate = false
+	    this.initval = initval
+	    this.timer = 0
+	    this.ramps = []
+	    this.args = [...args]
+            this.val = initval
+	    this.running = false
         }
         next() {
-            const tlen = +this.tlen, t = +this.t
-            let ret = 0
-            if (t >= (this.tstart + tlen)) {
-                this.tstart += tlen
+	    const siglvl = +this.trig
+	    if (!this.gate && siglvl >= 3) {
+		this.gate = this.running = true
+		this.timer = 0
+		this.vstart = this.val
+		this.rampsleft = [...this.args]
+		const ramplist = this.rampsleft.splice(0,3)
+		this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
+	    } else if (this.gate && siglvl <= 1)
+		this.gate = false
+	    if (!this.running) return this.val
+
+	    this.timer++
+            let len = +this.len
+            if (this.timer >= len) {
+		if (!this.rampsleft.length) {
+		    this.running = false
+		    return this.val
+		}
+		const ramplist = this.rampsleft.splice(0,3)
+		this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
+		len = +this.len
                 this.vstart = this.val
-                if (ret = this.nextSeq()) return ret
-            } else if (t < this.tstart) {
-                this.tstart = 1
-                this.vstart = this.val
-                this.seq = [...this.args]
-                if (ret = this.nextSeq()) return ret
+		this.timer = 1
             }
-            return this.target + (this.vstart - this.target) * (1-(t-this.tstart)/tlen)**this.shape
+	    const target = +this.target, shape = +this.shape
+	    if (len == 0) return target
+	    return target + (this.vstart - target) * (1-this.timer/len)**shape
         }
     }
 
@@ -235,7 +225,7 @@
             this.shape = shape
             this.val = +this.signal
             this.target = this.val
-            this.tstart = this.time.val
+            this.tstart = this.t
         }
         next() {
             const tdiff = this.t - this.tstart, lag = +this.lag, shape = +this.shape
@@ -500,37 +490,7 @@
     
     module.exports = o
     if (require && require.main === module) {
-	o.run()
-	
-	/*o.handler('controls[1]=-2.1969914925867418')
-	o.handler('controls[2]=-0.534947807288976')
-	o.handler('controls[3]=-2.201928452151149')
-	o.handler('controls[4]=-3.2096868437338735')
-	o.handler('controls[5]=-3.38951589996703')
-	o.handler('controls[6]=-4.13556017406374')
-	o.handler('controls[7]=1.300541120566363')
-	o.handler('controls[8]=6.666666666666668')
-	o.handler('controls[8]=6.666666666666668')
-	o.handler('controls[9]=-5.3330215410084385')
-	o.handler('controls[10]=-0.625')
-	o.handler('controls[10]=-0.625')
-	o.handler('controls[11]=0.0032913063762745054')
-	o.handler('controls[12]=-2.228060104084358')
-	o.handler('controls[13]=-4.300777150680637')
-	o.handler('controls[14]=0.24381073149348786')
-	o.handler('controls[15]=4.773587734974392')
-	o.handler('controls[16]=2.5193959789568154')
-	o.handler('controls[17]=2.2739395942751983')
-	o.handler('controls[18]=4.104491562566135')
-	o.handler('controls[19]=-0.02777730512134724')
-	o.handler('controls[20]=5.707689331244936')
-	
-	o.handler('streams[0]=(((((((2 * (1.38)^(((((((0)+(0)+control(19))) + ((2 * (1.35)^((0)+control(18))))*ramps(timer((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0)))),0v,1v,((100ms * (2)^((0)+control(14)))),((1 * (4)^((0)+control(16)))),0v,((100ms * (2)^((0)+control(15)))),((1 * (4)^((0)+control(17))))))))+control(2))))*sinusoid(((notehz(C,4) * (2)^((((((1 * (1.25)^((0)+control(11)))) * sequence((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0))),randsample((minorBlues),(16),((666 * (2)^((0)+control(9)))))))))+control(1))))))) + ((((2 * (1.38)^(((((((0)+(0)+control(19))) + ((2 * (1.35)^((0)+control(18))))*ramps(timer((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0)))),0v,1v,((100ms * (2)^((0)+control(14)))),((1 * (4)^((0)+control(16)))),0v,((100ms * (2)^((0)+control(15)))),((1 * (4)^((0)+control(17))))))))+control(5)))) * pwm(((notehz(C,4) * (2)^(((slew((((((1 * (1.25)^((0)+control(11)))) * sequence((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0))),randsample((minorBlues),(16),((666 * (2)^((0)+control(9))))))))),((2ms * (2)^((0)+control(6)))),(((-1)+(0)+control(7)))/7)))+control(3)))),(((10)+(0)+control(4)))/20))))/2))')
-	o.handler('streams[1]=(((((((2 * (1.38)^(((((((0)+(0)+control(19))) + ((2 * (1.35)^((0)+control(18))))*ramps(timer((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0)))),0v,1v,((100ms * (2)^((0)+control(14)))),((1 * (4)^((0)+control(16)))),0v,((100ms * (2)^((0)+control(15)))),((1 * (4)^((0)+control(17))))))))+control(2))))*sinusoid(((notehz(C,4) * (2)^((((((1 * (1.25)^((0)+control(11)))) * sequence((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0))),randsample((minorBlues),(16),((666 * (2)^((0)+control(9)))))))))+control(1))))))) + ((((2 * (1.38)^(((((((0)+(0)+control(19))) + ((2 * (1.35)^((0)+control(18))))*ramps(timer((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0)))),0v,1v,((100ms * (2)^((0)+control(14)))),((1 * (4)^((0)+control(16)))),0v,((100ms * (2)^((0)+control(15)))),((1 * (4)^((0)+control(17))))))))+control(5)))) * pwm(((notehz(C,4) * (2)^(((slew((((((1 * (1.25)^((0)+control(11)))) * sequence((((smaller(mod(t,(1/((100/mins * (1.2)^((0)+control(20)))))),10ms) ? (10v) : 0))),randsample((minorBlues),(16),((666 * (2)^((0)+control(9))))))))),((2ms * (2)^((0)+control(6)))),(((-1)+(0)+control(7)))/7)))+control(3)))),(((10)+(0)+control(4)))/20))))/2))')*/
-
-
-	
+	o.run()	
     }
-    //global.o = o
-    //require('repl').start().context.o=o
+
 }

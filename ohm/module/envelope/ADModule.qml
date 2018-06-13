@@ -11,7 +11,7 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'envelope'
-	    stream: '@offset + @gain*ramps(timer($gate),0v,1v,@attack,@atkshape,0v,@decay,@decshape)'
+	    stream: '@offset + @gain*ramps($gate,0v,1v,@attack,@atkshape,0v,@decay,@decshape)'
 	}
 	
     ]
