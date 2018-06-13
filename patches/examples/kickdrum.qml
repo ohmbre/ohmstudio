@@ -49,7 +49,7 @@ Patch {
 		}
 	]
 	modules: [
-		OutAudioModule {
+		AudioModule {
 			savedControlVolts: []
 			x: 97.95738840498052
 			y: 85.50544588639059},

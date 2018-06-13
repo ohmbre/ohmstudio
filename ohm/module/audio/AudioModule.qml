@@ -6,9 +6,9 @@ import ohm.jack.out 1.0
 import Brig.AudioThread 1.0
 
 Module {
-    objectName: 'OutAudioModule'
+    objectName: 'AudioModule'
     id: audioOut
-    label: 'Audio Out'
+    label: 'Audio Out/In'
 
     outJacks: []
 
