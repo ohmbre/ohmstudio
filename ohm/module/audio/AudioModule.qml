@@ -7,19 +7,27 @@ import Brig.AudioThread 1.0
 
 Module {
     objectName: 'AudioModule'
-    id: audioOut
     label: 'Audio Out/In'
 
-    outJacks: []
+    outJacks: [
+	OutJack {
+	    label: 'InL'
+	    stream: 'capture(0)'
+	},
+	OutJack {
+	    label: 'InR'
+	    stream: 'capture(1)'
+	}
+    ]
 
     inJacks: [
-        InJack { label: 'L' },
-	InJack { label: 'R' }
+        InJack { label: 'OutL' },
+	InJack { label: 'OutR' }
     ]
 
     property AudioThread audioThread: AudioThread {
-	eqnL: inStream('L')
-	eqnR: inStream('R')
+	eqnL: inStream('OutL')
+	eqnR: inStream('OutR')
 	Component.onDestruction: kill()
     }
 }

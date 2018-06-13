@@ -97,7 +97,18 @@
 	toString() {
 	    return "t"
 	}
-    }	
+    }
+
+    ohms.capture = class capture extends ohms.ohmo {
+	constructor(channel,create=false) {
+	    if(!create) return o.instreams[channel]
+	    super(0)
+	    this.channel = channel
+	}
+        [Symbol.toPrimitive]() {
+	    return this.val
+	}
+    }
     
     ohms.genny = class genny extends ohms.ohmo {
         constructor(...args) {
@@ -412,11 +423,12 @@
 
     o.profile = () => {
 	const fs = require('fs');
-	let html = `<html><head><script src="https://unpkg.com/js-treeview@1.1.5/dist/treeview.min.js"></script><stylesheet src="https://unpkg.com/js-treeview@1.1.5/dist/treeview.min.css" type="text/css"></stylesheet></head><body><table><tr><td><div id='tree'></div></td></tr></table><script>var tree = new TreeView(${JSON.stringify(o.streams[0])}, 'tree')</script></body></html>`
+	let html = `<html><head><script src="https://unpkg.com/js-treeview@1.1.5/dist/treeview.min.js"></script><stylesheet src="https://unpkg.com/js-treeview@1.1.5/dist/treeview.min.css" type="text/css"></stylesheet></head><body><table><tr><td><div id='tree'></div></td></tr></table><script>var tree = new TreeView(${JSON.stringify(o.outstreams[0])}, 'tree')</script></body></html>`
     	fs.writeFileSync('profile.html', html);
     }
     
-    o.streams = [new o.ohmo(0),new o.ohmo(0)]
+    o.outstreams = [new o.ohmo(0),new o.ohmo(0)]
+    o.instreams = [new o.capture(0,true), new o.capture(1,true)]
     o.symbols = [[],[]]
     
     o.handler = function(msg) {
@@ -433,10 +445,8 @@
             });
             let [uniqified,symbols] = o.uniqify(simpler)
             o.debug(uniqified,symbols)
-            o.streams[channel] = o.mapOhms(uniqified,symbols)
+            o.outstreams[channel] = o.mapOhms(uniqified,symbols)
             o.symbols[channel] = symbols
-	    
-	    
 	} else if (lhs.slice(0,8) == 'controls') {
             let id = lhs.slice(9)
             id = id.slice(0,id.indexOf(']'))
@@ -455,15 +465,31 @@
             o.alsa = require('./alsa')
             o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
             setInterval(() => {
-		const samples = o.pcm.writeBuffer()
-		const nsamples = samples.length
+		const buffers = o.pcm.buffers()
+		const outsamples = buffers['p']
+		const insamples = buffers['c']
+		const nsamplesout = outsamples.length
+		const nsamplesin = insamples.length
 		const vScale = o.vScale
 		let i=0,l=0,r=0,maxS=o.sampleMax,minS=o.sampleMin
+		let nsamples = Math.max(nsamplesout,nsamplesin)
 		while (i < nsamples) {
-                    l = Math.round(vScale*o.streams[0])
-                    samples[i++] = l > maxS ? maxS : (l < minS ? minS : l)
-                    r = Math.round(vScale*o.streams[1])
-                    samples[i++] = r > maxS ? maxS : (r < minS ? minS : r)
+		    if (i < nsamplesin)
+			o.instreams[0].val = insamples[i] / vScale
+                    if (i < nsamplesout) {
+			l = Math.round(vScale*o.outstreams[0])
+			outsamples[i] = l > maxS ? maxS : (l < minS ? minS : l)
+		    }
+		    i++
+
+		    if (i < nsamplesin)
+			o.instreams[1].val = insamples[i] / vScale
+                    if (i < nsamplesout) {
+			r = Math.round(vScale*o.outstreams[1])
+			outsamples[i] = r > maxS ? maxS : (r < minS ? minS : r)
+		    }
+		    i++
+		    
                     o.time.val++
 		}
 		o.pcm.commit()
@@ -479,10 +505,10 @@
 		const vScale = o.vScale
 		let offset = 0, l = 0, r = 0, maxS=o.sampleMax, minS=o.sampleMin
 		while (offset < n) {
-                    l = Math.round(vScale*o.streams[0])
+                    l = Math.round(vScale*o.outstreams[0])
                     samples.writeInt32LE(l > maxS ? maxS : (l < minS ? minS : l), offset)
                     offset += sampleBytes
-                    r = Math.round(vScale*o.streams[1])
+                    r = Math.round(vScale*o.outstreams[1])
                     samples.writeInt32LE(r > maxS ? maxS : (r < minS ? minS : r), offset)
                     offset += sampleBytes
                     o.time.val++
@@ -503,6 +529,8 @@
     module.exports = o
     if (require && require.main === module) {
 	o.run()
+	//for (let msg of require('./testdata'))
+	//    o.handler(msg)
     }
 
 }
