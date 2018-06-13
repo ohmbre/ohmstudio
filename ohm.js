@@ -60,10 +60,10 @@
     ohms.ohmo = class ohmo {
         constructor(vinitial) { this.val = vinitial }
         [Symbol.toPrimitive]() {
-            if (this.update)
-		this.update();
+	    this.update();
             return this.val;
         }
+	update() {}
 	getArgNames() {
 	    const constructor = this.constructor.toString()
 	    let argmatch = constructor.match(/constructor\((.*)\)/)
@@ -90,6 +90,15 @@
         static get isOhmo() { return true }
     }
 
+    ohms.timekeep = class timekeep extends ohms.ohmo {
+        [Symbol.toPrimitive]() {
+	    return this.val
+	}
+	toString() {
+	    return "t"
+	}
+    }	
+    
     ohms.genny = class genny extends ohms.ohmo {
         constructor(...args) {
             super(null)
@@ -141,6 +150,9 @@
             this.id = id
             o.controls[id] = this;
         }
+        [Symbol.toPrimitive]() {
+            return this.val;
+        }	
     }
 
     ohms.sequence = class sequence extends ohms.genny {
@@ -257,9 +269,11 @@
             throw new Error(`composite fn not a function: ${fn}->${this.fn}`)
 
         }
-        next() {
+	[Symbol.toPrimitive]() {
             return this.fn.apply(null,this.args)
-        }
+	}
+        next() {}
+	update() {}
     }
 
     ohms.sinusoid = class sinusoid extends ohms.periodic {
@@ -282,8 +296,7 @@
     o.ohms = ohms
     assign(o,o.ohms)
 
-    o.time = new o.ohmo(0)
-    o.time.toString=()=>'t'
+    o.time = new o.timekeep(0)
 
     o.mapConstants = (node, path, parent) => {
         if (node.isSymbolNode && node.name in o.consts)
@@ -407,7 +420,6 @@
     o.symbols = [[],[]]
     
     o.handler = function(msg) {
-	//console.log(msg)
 	const mparts = msg.split('=');
 	const lhs = mparts.shift();
 	const rhs = mparts.join('=')
@@ -490,7 +502,7 @@
     
     module.exports = o
     if (require && require.main === module) {
-	o.run()	
+	o.run()
     }
 
 }
