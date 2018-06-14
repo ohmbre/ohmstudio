@@ -489,7 +489,7 @@
     if (process.platform == 'linux')
 	o.audio = (callback) => {
 	    const alsa = require('./alsa')
-	    o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
+	    o.pcm = alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
 	    setInterval(() => {
 		    const buffers = o.pcm.buffers()
 		    const outsamples = buffers.p
