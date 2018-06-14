@@ -485,75 +485,62 @@
             else o.controls[id] = val
         }
     }
-
+    
+    if (process.platform == 'linux')
+	o.audio = (callback) => {
+	    const alsa = require('./alsa')
+	    o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
+	    setInterval(() => {
+		    const buffers = o.pcm.buffers()
+		    const outsamples = buffers.p
+		    const insamples = buffers.c
+		    callback(insamples,outsamples)
+		    o.pcm.commit();
+		}, 0);
+	}
+    else
+	o.audio = (callback) => {
+	    var coreAudio = require("node-core-audio");
+	    var engine = coreAudio.createNewAudioEngine({inputChannels: 2, outputChannels: 2, sampleRate: o.sampleRate, interleaved: true,
+							 sampleFormat:coreAudio.sampleFormatInt32, framesPerBuffer: o.samplePeriod});
+	    engine.addAudioCallback((insamples) => {
+		    const outsamples = new Array(insamples.length)
+		    callback(insamples,outsamples)
+		    return outsamples
+		});    
+	}
+    
     o.run = function () {
 
         process.on('message', o.handler)
         process.on('disconnect', () => { console.warn('\n\nchild process lost connection\n'); process.exit(0) })
-        try {
-            console.log('trying alsa');
-            o.alsa = require('./alsa')
-            o.pcm = o.alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
-            setInterval(() => {
-                const buffers = o.pcm.buffers()
-                const outsamples = buffers.p
-                const insamples = buffers.c
-                const nsamplesout = outsamples.length
-                const nsamplesin = insamples.length
-                const vScale = o.vScale
-                let i = 0, l = 0, r = 0, maxS = o.sampleMax, minS = o.sampleMin
-                let nsamples = Math.max(nsamplesout, nsamplesin)
-                while (i < nsamples) {
-                    if (i < nsamplesin)
-                        o.instreams[0].val = insamples[i] / vScale
-                    if (i < nsamplesout) {
-                        l = Math.round(vScale * o.outstreams[0])
-                        outsamples[i] = l > maxS ? maxS : (l < minS ? minS : l)
-                    }
-                    i++
-
-                    if (i < nsamplesin)
-                        o.instreams[1].val = insamples[i] / vScale
-                    if (i < nsamplesout) {
-                        r = Math.round(vScale * o.outstreams[1])
-                        outsamples[i] = r > maxS ? maxS : (r < minS ? minS : r)
-                    }
-                    i++
-
-                    o.time.val++
-                }
-                o.pcm.commit()
-            }, 0);
-        } catch (err) {
-            console.log('trying speaker...')
-            const Speaker = require('speaker');
-            const bufferAlloc = require('buffer-alloc')
-            const Readable = require('stream').Readable
-            const sampleBytes = o.sampleBits / 8
-            function read(n) {
-                const samples = bufferAlloc(n)
-                const vScale = o.vScale
-                let offset = 0, l = 0, r = 0, maxS = o.sampleMax, minS = o.sampleMin
-                while (offset < n) {
-                    l = Math.round(vScale * o.outstreams[0])
-                    samples.writeInt32LE(l > maxS ? maxS : (l < minS ? minS : l), offset)
-                    offset += sampleBytes
-                    r = Math.round(vScale * o.outstreams[1])
-                    samples.writeInt32LE(r > maxS ? maxS : (r < minS ? minS : r), offset)
-                    offset += sampleBytes
-                    o.time.val++
-                }
-                this.push(samples)
-                this.samplesGenerated += n / (sampleBytes * 2)
-            }
-            const samples = new Readable()
-            samples.bitDepth = o.sampleBits
-            samples.channels = 2
-            samples.sampleRate = o.sampleRate
-            samples.samplesGenerated = 0
-            samples._read = read
-            samples.pipe(new Speaker({ channels: 2, bitDepth: 32, sampleRate: 48000, signed: true, samplesPerFrame: o.samplePeriod }))
-        }
+       
+	o.audio((insamples,outsamples) => {
+		const nsamplesout = outsamples.length	    
+		const nsamplesin = insamples.length
+		const vScale = o.vScale
+		let i = 0, l = 0, r = 0, maxS = o.sampleMax, minS = o.sampleMin
+		let nsamples = Math.max(nsamplesout, nsamplesin)
+		while (i < nsamples) {
+		    if (i < nsamplesin)
+			o.instreams[0].val = insamples[i] / vScale;
+		    if (i < nsamplesout) {
+			l = Math.round(vScale * o.outstreams[0]);
+			outsamples[i] = (l > maxS) ? maxS : (l < minS ? minS : l);
+		    }
+		    i++
+		    
+		    if (i < nsamplesin)
+		    o.instreams[1].val = insamples[i] / vScale
+		    if (i < nsamplesout) {
+			r = Math.round(vScale * o.outstreams[1])
+			outsamples[i] = r > maxS ? maxS : (r < minS ? minS : r)
+		    }
+		    i++
+   
+		    o.time.val++
+		}
+	    });
     }
 
     module.exports = o
