@@ -11,23 +11,23 @@ Module {
 
     outJacks: [
 	OutJack {
-	    label: 'InL'
+	    label: 'inL'
 	    stream: 'capture(0)'
 	},
 	OutJack {
-	    label: 'InR'
+	    label: 'inR'
 	    stream: 'capture(1)'
 	}
     ]
 
     inJacks: [
-        InJack { label: 'OutL' },
-	InJack { label: 'OutR' }
+        InJack { label: 'outL' },
+	InJack { label: 'outR' }
     ]
 
     property AudioThread audioThread: AudioThread {
-	eqnL: inStream('OutL')
-	eqnR: inStream('OutR')
+	eqnL: inStream('outL')
+	eqnR: inStream('outR')
 	Component.onDestruction: kill()
     }
 }
