@@ -29,9 +29,7 @@
     "alsa": "file:alsa",
     "brig": "file:brig",
     "mathjs": "file:mathjs",
-    "nan": "^2.10.0",
-    "node-core-audio": "file:node-core-audio",
-    "node-gyp": "^3.7.0"
+    "node-core-audio": "file:node-core-audio"
   },
   "devDependencies": {}
 }

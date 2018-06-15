@@ -50,7 +50,7 @@ Item {
             yScale: zoom
             property real zoom: 1.0
             property real max: 10
-            property real min: 0.2
+            property real min: 0.5
 
             function zoomContent(zoomDelta, center) {
                 if (zoomPanAnim.running) return;

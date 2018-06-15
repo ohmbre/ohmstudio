@@ -102,7 +102,7 @@
         }
         [Symbol.toPrimitive]() {
             const curtime = o.time.val
-            if (this.t != curtime) {
+            if (this.t != curtime || this.cachedval === undefined) {
                 this.t = o.time.val
                 this.cachedval = this.val[Symbol.toPrimitive]()
             }
@@ -190,7 +190,9 @@
             super()
             this.clock = clock
             this.values = values
-            this.lastvalues = values[Symbol.toPrimitive]()
+            this.lastvalues = this.values[Symbol.toPrimitive]()
+	    if (this.lastvalues === undefined)
+		throw new Error('could not get primitive from: '+values)
             this.position = 0
             this.gate = false
         }
