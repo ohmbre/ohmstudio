@@ -1,4 +1,4 @@
-import QtQuick 2.10
+import QtQuick 2.11
 
 import ohm 1.0
 import ohm.jack.out 1.0
@@ -24,6 +24,10 @@ Model {
 	    cv.controlVolts = savedControlVolts[i];
 	});
     }
+
+    property Component closeupDisplay: Item {}
+    function enterCloseup() {}
+    function exitCloseup() {}
 
     function jack(index) {
         if (typeof index == "number")

@@ -16,6 +16,10 @@ namespace Brig {
 		obj = new QQmlEngine();
 		obj->setOutputWarningsToStandardError(true);
 		signal = new SignalHandler(obj);
+		obj->addImportPath("/usr/lib64/qt5/qml");
+		QStringList pluginPaths = obj->pluginPathList();
+		pluginPaths << "/usr/lib64/qt5/plugins";
+		obj->setPluginPathList(pluginPaths);
 	}
 
 	QmlEngineWrap::~QmlEngineWrap()

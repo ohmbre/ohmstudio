@@ -1,5 +1,7 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.2
+import QtQuick 2.11
+import QtCharts 2.2
+//import QtQuick.Controls 2.4
+import QtQuick.Templates 2.4
 import Qt.labs.folderlistmodel 2.2
 
 import Brig.Ohm 1.0
@@ -55,7 +57,7 @@ Ohm {
                     font.pixelSize: 18
                 }
             }
-
+	    
             OhmButton {
                 y: 50; x: parent.width - width + radius - 3
                 text: "New Patch"

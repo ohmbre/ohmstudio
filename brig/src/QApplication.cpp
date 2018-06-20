@@ -27,16 +27,10 @@ namespace Brig {
 		app = new QGuiApplication(app_argc, app_argv);
 		QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 
-#if 0
-		qDebug() << QCoreApplication::applicationDirPath();
-		QStringList paths = QCoreApplication::libraryPaths();
-		for (int i = 0; i < paths.count(); ++i) {
-			const QString &pluginDir = paths.at(i);
-			qDebug() << pluginDir;
-		}
-#endif
-//		QCoreApplication *app1 = QCoreApplication::instance();
-//		QCoreApplication::removePostedEvents(app1, QEvent::Quit);
+		QCoreApplication::addLibraryPath("/usr/lib64/qt5/qml");
+		QCoreApplication::addLibraryPath("/usr/lib64/qt5/plugins");
+		
+		  
 	}
 
 	QApplicationWrap::~QApplicationWrap()

@@ -1,5 +1,5 @@
 
-import QtQuick 2.10
+import QtQuick 2.11
 import QtQml.StateMachine 1.0 as SM
 import QtQuick.Controls 2.4
 
@@ -90,19 +90,41 @@ Rectangle {
             }
 	}
 
+	Rectangle {
+	    id: display
+	    x: parent.width*.20
+	    y: parent.height*.20
+	    width:parent.width*.6
+	    height: parent.height*.55
+	    color: 'black'
+	    radius: parent.height*.015
+	    opacity: 0
+	    visible: false
+	    clip: true
+	    Loader {
+		id: displayLoader
+		anchors.fill: parent
+		sourceComponent: Item {}
+	    }
+	}
+
 	states: [
 	    State {
 		name: "controlMode"
-		StateChangeScript { script: { forceCollapse(); }}
-		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale; topPadding:-92 }
+		StateChangeScript { script: { forceCollapse(); module.enterCloseup(); }}
+		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
+				  topPadding:-92; leftPadding: -20; rightPadding: -20 }
 		PropertyChanges { target: moduleMouseArea; enabled: false }
 		PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
 		PropertyChanges { target: moduleView; radius: 5 
 				  width: pView.width/scaler.max; height: pView.height/scaler.max }
 		PropertyChanges { target: controller; opacity: 1.0; visible: true }
+		PropertyChanges { target: displayLoader; sourceComponent: module.closeupDisplay }
+		PropertyChanges { target: display; opacity: 1.0; visible: true }
 	    },
 	    State {
 		name: "patchMode"
+		StateChangeScript { script: { forceCollapse(); module.exitCloseup(); }}
 	    }
 	]
 	
@@ -114,6 +136,8 @@ Rectangle {
 		NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
 				  duration: 500; easing.type: Easing.InOutQuad }
 		NumberAnimation { target: controller; properties: "opacity";
+				  duration: 500; easing.type: Easing.InOutQuad }
+		NumberAnimation { target: display; properties: "opacity";
 				  duration: 500; easing.type: Easing.InOutQuad }
 		
 	    }
@@ -149,7 +173,6 @@ Rectangle {
 			    transformOrigin: Item.Bottom
 			}
 			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
-
 			
 			Popup {
 			    id: knobControl
@@ -164,32 +187,32 @@ Rectangle {
 			    height: 94
 			    background: Rectangle {
 				anchors.fill: parent
-				color: 'white'
+				color: 'transparent'
 				radius: 10
 			    }
 			    OhmText {
-				x:knobControl.background.width-50
-				y:knobControl.background.height-20
+				x:knobControl.background.width-70
+				y:knobControl.background.height-30
 				text: controlVolts.toFixed(3)+' V'
 				font.pixelSize: 12
 				font.weight: Font.Bold
 				horizontalAlignment: Text.AlignLeft
-				color: Style.darkText
+				color: Style.sliderColor
 			    }
 			    OhmText {
-				x:10
-				y:10
+				x:35
+				y:20
 				text: knobReading
 				font.pixelSize: 12
 				font.weight: Font.Bold
 				horizontalAlignment: Text.AlignLeft
-				color: Style.darkText
+				color: Style.sliderColor
 			    }
 			    Slider {
 				id: knob
 				rotation: -26
 				value: controlVolts;
-				from: -10; to: 10
+				from: -5; to: 5
 				onValueChanged: {
 				    controlVolts = value
 				}
@@ -224,6 +247,7 @@ Rectangle {
 					    x: knob.leftPadding + index*parent.width/11 + (index==0||index==5 ? -5.5: -3)
 					    y: knob.topPadding
 					    font.pixelSize: 7
+					    color: Style.sliderColor
 					}
 				    }
 
@@ -253,12 +277,12 @@ Rectangle {
 	    pathItemCount: undefined
 	    offset: .5
 	    path: Path {
-		startX: .15*controller.width; startY: .2*controller.height
-		PathLine { x: .15*controller.width; y: .8*controller.height }
+		startX: .13*controller.width; startY: .2*controller.height
+		PathLine { x: .13*controller.width; y: .835*controller.height }
 		PathPercent { value: .333 }
-		PathLine { x: .85*controller.width; y: .8*controller.height }
+		PathLine { x: .88*controller.width; y: .835*controller.height }
 		PathPercent { value: .667 }
-		PathLine { x: .85*controller.width; y: .2*controller.height }
+		PathLine { x: .88*controller.width; y: .2*controller.height }
 		PathPercent { value: 1 }
 	    }
 	}

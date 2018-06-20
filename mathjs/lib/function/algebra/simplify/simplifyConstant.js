@@ -13,7 +13,8 @@ function factory(type, config, load, typed, math) {
   var OperatorNode = math.expression.node.OperatorNode;
   var FunctionNode = math.expression.node.FunctionNode;
   var ConditionalNode = math.expression.node.ConditionalNode;
-
+  var ArrayNode = math.expression.node.ArrayNode;
+    
   function simplifyConstant(expr) {
     var res = foldFraction(expr);
     return type.isNode(res) ? res : _toNode(res);
@@ -166,6 +167,15 @@ function factory(type, config, load, typed, math) {
 	    return cond ? texpr : fexpr
 	}
 	return new ConditionalNode(cond, type.isNode(texpr) ? texpr : _toNode(texpr), type.isNode(fexpr) ? fexpr : _toNode(fexpr))
+    case 'ArrayNode':
+	var newitems = []
+	for (var i = 0; i < node.items.length; i++) {
+	    var inode = foldFraction(node.items[i])
+	    if (inode.isNode) newitems.push(inode)
+	    else newitems.push(new ConstantNode(inode))
+	}
+	console.log('newitems:',newitems)
+	return new ArrayNode(newitems)
       case 'FunctionNode':
         if (math[node.name] && math[node.name].rawArgs) {
           return node;

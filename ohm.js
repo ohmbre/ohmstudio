@@ -20,6 +20,9 @@
         sampleMin: -2147483647,
         samplePeriod: 512,
         sampleBuffer: 4096,
+	scopeWindow: 512,
+	scopeHistory: 512*256,
+	scopeTrigChan: 0,
         vMax: 10,
         vMin: -10,
         v: 1,
@@ -310,15 +313,14 @@
         }
         [Symbol.toPrimitive]() {
             this.phase += this.freq;
-            return (((this.phase % o.tau) / o.tau) < this.duty) ? 1 : 0
+            return (((this.phase % o.tau) / o.tau) < this.duty) ? 1 : -1
         }
     }
 
     ohms.separator = class separator extends ohms.ohmo {
-        constructor(ch0, ch1) {
+        constructor(...nodes) {
             super()
-            this.ch0 = ch0
-            this.ch1 = ch1
+	    this.nodes = nodes
         }
         [Symbol.toPrimitive]() {
             throw new Exception("not supposed to execute this")
@@ -328,6 +330,8 @@
     o.ohms = ohms
     assign(o, o.ohms)
 
+    o.clip = (min,v,max) => (v > max) ? max : ((v < min) ? min : v)
+    
     o.addMathFn = (name, fn, sig = 'number,number') => {
         const type = {}
         const sigobj = {}; sigobj[sig] = fn
@@ -361,7 +365,7 @@
     o.debug = (node, symbols) => {
         const fs = require('fs');
         let options = { parenthesis: 'auto', implicit: 'hide' }
-        let html = `<html><head><script src="https://unpkg.com/mathjs@4.4.2/dist/math.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default" async/></script></head><body><table>${symbols.map(n => '<tr><td>$$' + n.symbol + ':=' + n.args[0].toTex(options) + '$$</td></tr>').join('\n')}<tr><td>$$ left:=${node.args[0].toTex(options)} $$</td></tr><tr><td>$$ right:=${node.args[1].toTex(options)} $$</td></tr></table></body></html>`
+        let html = `<html><head><script src="https://unpkg.com/mathjs@4.4.2/dist/math.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default" async/></script></head><body><table>${symbols.map(n => '<tr><td>$$' + n.symbol + ':=' + n.args[0].toTex(options) + '$$</td></tr>').join('\n')}<tr></tr>${node.args.map(n=> '<tr><td>$$ch'+ node.args.indexOf(n) + ':=' + n.toTex(options) + '$$</td></tr>').join('\n')}</table></body></html>`
         fs.writeFileSync('debug.html', html);
     }
 
@@ -371,9 +375,9 @@
         fs.writeFileSync('profile.html', html);
     }
 
-    o.outstreams = [new o.ohmo(0), new o.ohmo(0)]
-    o.preoutstreams = [new ConstantNode(0), new ConstantNode(0)]
+    o.outstreams = new Array(5).fill(new o.ohmo(0))
     o.instreams = [new o.capture(0, true), new o.capture(1, true)]
+    o.msgBacklog = []
     o.time = new o.timekeep(0)
 
     o.mapConstants = (node, path, parent) => {
@@ -398,7 +402,10 @@
 
         if (node.isConditionalNode)
             return new o.composite((a, b, c) => (+a) ? (+b) : (+c), o.mapOhms(node.condition, symbols),
-                o.mapOhms(node.trueExpr, symbols), o.mapOhms(node.falseExpr, symbols))
+				   o.mapOhms(node.trueExpr, symbols), o.mapOhms(node.falseExpr, symbols))
+
+	if (node.isArrayNode)
+	    return new o.mutval(node.items.map(it => o.mapOhms(it)))
 
         if (node.isFunctionNode || node.isOperatorNode)
             return new o.composite(node.fn, ...node.args.map(arg => o.mapOhms(arg, symbols)))
@@ -456,36 +463,95 @@
 
 
     o.handler = function (msg) {
-        const mparts = msg.split('=');
-        const lhs = mparts.shift();
-        const rhs = mparts.join('=')
-        if (lhs.slice(0, 7) == 'streams') {
-            const channel = parseInt(lhs.slice(8, 9))
-            const parsed = math.parse(rhs).transform(o.mapConstants)
-            const simpler = math.simplify(parsed.transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules)
-                            .transform((node, parent, path) => {
-                                if (node.isOperatorNode)
-                                    return new FunctionNode(node.fn, node.args)
-                                return node
-                            });
-            o.preoutstreams[channel] = simpler
-            const combo = new FunctionNode('separator',[o.preoutstreams[0],o.preoutstreams[1]])
+	console.log(msg)
+        if (msg.cmd == 'set' && msg.key == 'streams') {
+
+	    if (!o.audioEnabled && !o.scopeEnabled) {
+		o.msgBacklog[msg.key] = msg;
+		return
+	    }
+	    
+	    const simplified = msg.val.map(
+		sval => math.simplify(
+		    math.parse(sval)
+			.transform(o.mapConstants)
+			.transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules
+		).transform((node, parent, path) => {
+		    if (node.isOperatorNode)
+			return new FunctionNode(node.fn, node.args)
+		    return node
+		}))
+	    
+            const combo = new FunctionNode('separator',simplified)
             let [uniqified, symbols] = o.uniqify(combo)           
 
             o.debug(uniqified, symbols)
             const ohm = o.mapOhms(uniqified, symbols)
 
-            o.outstreams[0] = ohm.ch0
-            o.outstreams[1] = ohm.ch1
-
+	    for (let n = 0; n < ohm.nodes.length; n++)
+		o.outstreams[n] = ohm.nodes[n]
             o.symbols = symbols
-        } else if (lhs.slice(0, 8) == 'controls') {
-            let id = lhs.slice(9)
-            id = id.slice(0, id.indexOf(']'))
-            let val = parseFloat(rhs)
-            if (id in o.controls && typeof o.controls[id] != 'number') o.controls[id].val = val
-            else o.controls[id] = val
-        }
+	    
+        } else if (msg.cmd == 'set' && msg.key == 'controls') {
+            let val = parseFloat(msg.val)
+            if (msg.subkey in o.controls && typeof o.controls[msg.subkey] != 'number')
+		o.controls[msg.subkey].val = val
+            else o.controls[msg.subkey] = val
+        } else if (msg.cmd == 'set' && msg.key == 'audioEnabled' && msg.val == true) {
+	    o.audioEnabled = true
+	    for (let key in o.msgBacklog)
+		if (o.msgBacklog[key])
+		    o.handler(o.msgBacklog[key])
+	    o.msgBacklog = []
+	    o.runAudio()
+	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled' && msg.val == true) {
+	    o.scopeEnabled = true
+	    for (let key in o.msgBacklog)
+		if (o.msgBacklog[key])
+		    o.handler(o.msgBacklog[key])
+	    o.msgBacklog = []
+	    o.runScope()
+	}
+    }
+
+    o.audioEnabled = false
+    o.scopeEnabled = false
+                
+    o.runScope = function() {
+	const scopeData = [[],[],0]
+	let hr = process.hrtime()
+	const start = hr[0] + hr[1]/1e9
+	let running = false
+	let runstart = 0
+	let recordpos = 0
+	let prevch1 = 0
+	function loop() {
+	    for (let i = 0; i < 512; i++) {
+		const ch1 = +o.outstreams[0]
+		const ch2 = +o.outstreams[1]
+		const vtrig = +o.outstreams[2]
+		const window = +o.outstreams[3]
+		if (!running && prevch1 < vtrig && ch1 >= vtrig) {
+		    running = true
+		    runstart = o.time.val
+		} else if (running && o.time.val-runstart > window) {
+		    running = false
+		    scopeData[2] = window
+		    process.send(scopeData)
+		    scopeData[0] = []; scopeData[1] = []
+		}
+		if (running) {
+		    scopeData[0].push(o.clip(o.sampleMin,Math.round(o.vScale * ch1),o.sampleMax)>>24)
+		    scopeData[1].push(o.clip(o.sampleMin,Math.round(o.vScale * ch2),o.sampleMax)>>24)
+		}
+		o.time.val++
+		prevch1 = ch1
+	    }    
+	    hr = process.hrtime()
+	    const delay = Math.max(o.time.val / 48000 - (hr[0] + hr[1]/1e9 - start),0)
+	    setTimeout(loop,delay)
+	}
+	setTimeout(loop,0)
     }
     
     if (process.platform == 'linux')
@@ -493,63 +559,59 @@
 	    const alsa = require('./alsa')
 	    o.pcm = alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
 	    setInterval(() => {
-		    const buffers = o.pcm.buffers()
-		    const outsamples = buffers.p
-		    const insamples = buffers.c
-		    callback(insamples,outsamples)
-		    o.pcm.commit();
-		}, 0);
+		const buffers = o.pcm.buffers()
+		const outsamples = buffers.p
+		const insamples = buffers.c
+		callback(insamples,outsamples)
+		o.pcm.commit();
+	    }, 0);
 	}
     else
 	o.audio = (callback) => {
 	    var coreAudio = require("node-core-audio");
-	    var engine = coreAudio.createNewAudioEngine({inputChannels: 2, outputChannels: 2, sampleRate: o.sampleRate, interleaved: true,
-							 sampleFormat:coreAudio.sampleFormatInt32, framesPerBuffer: o.samplePeriod});
+	    var engine = coreAudio.createNewAudioEngine(
+		{inputChannels: 2, outputChannels: 2, sampleRate: o.sampleRate, interleaved: true,
+		 sampleFormat:coreAudio.sampleFormatInt32, framesPerBuffer: o.samplePeriod});
 	    engine.addAudioCallback((insamples) => {
-		    const outsamples = new Array(insamples.length)
-		    callback(insamples,outsamples)
-		    return outsamples
-		});    
+		const outsamples = new Array(insamples.length)
+		callback(insamples,outsamples)
+		return outsamples
+	    });    
 	}
-    
-    o.run = function () {
 
-        process.on('message', o.handler)
-        process.on('disconnect', () => { console.warn('\n\nchild process lost connection\n'); process.exit(0) })
-       
+    o.runAudio = function() {
 	o.audio((insamples,outsamples) => {
-		const nsamplesout = outsamples.length	    
-		const nsamplesin = insamples.length
-		const vScale = o.vScale
-		let i = 0, l = 0, r = 0, maxS = o.sampleMax, minS = o.sampleMin
-		let nsamples = Math.max(nsamplesout, nsamplesin)
-		while (i < nsamples) {
-		    if (i < nsamplesin)
-			o.instreams[0].val = insamples[i] / vScale;
-		    if (i < nsamplesout) {
-			l = Math.round(vScale * o.outstreams[0]);
-			outsamples[i] = (l > maxS) ? maxS : (l < minS ? minS : l);
-		    }
-		    i++
-		    
-		    if (i < nsamplesin)
-		    o.instreams[1].val = insamples[i] / vScale
-		    if (i < nsamplesout) {
-			r = Math.round(vScale * o.outstreams[1])
-			outsamples[i] = r > maxS ? maxS : (r < minS ? minS : r)
-		    }
-		    i++
-   
-		    o.time.val++
+	    const nsamplesout = outsamples.length	    
+	    const nsamplesin = insamples.length
+	    const vScale = o.vScale
+	    let icnt = 0, ocnt = 0, l = 0, r = 0, maxS = o.sampleMax, minS = o.sampleMin
+	    
+	    while (icnt < nsamplesin || ocnt < nsamplesout) {
+		if (icnt < nsamplesin)
+		    o.instreams[0].val = insamples[icnt++] / vScale;
+		if (ocnt < nsamplesout) {
+		    l = Math.round(vScale * o.outstreams[0]);
+		    outsamples[ocnt++] = o.clip(minS,l,maxS)
 		}
-	    });
+		if (icnt < nsamplesin) 
+		    o.instreams[1].val = insamples[icnt++] / vScale
+		if (ocnt < nsamplesout) {
+		    r = Math.round(vScale * o.outstreams[1])
+		    outsamples[ocnt++] = o.clip(minS,r,maxS)
+		}		
+		o.time.val++
+	    }
+	});
     }
 
     module.exports = o
     if (require && require.main === module) {
-        o.run()
-        //for (let msg of require('./testdata'))
-         //   o.handler(msg)
+        process.on('message', o.handler)
+        process.on('disconnect', () => {
+	    console.warn('\n\nchild process lost connection\n')
+	    process.exit(0)
+	})
+        //for (let msg of require('./testdata')) o.handler(msg)
     }
-
+    //require('repl').start().context.o = o
 }

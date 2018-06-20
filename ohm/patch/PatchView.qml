@@ -1,6 +1,6 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
-import QtQml 2.2
+import QtQuick 2.11
+import QtQuick.Controls 2.4
+import QtQml 2.11
 import QtQml.Models 2.2
 import Qt.labs.folderlistmodel 2.2
 
@@ -208,7 +208,6 @@ Item {
 
     Component.onCompleted: {
         patch.view = pView;
-
     }
 
 }

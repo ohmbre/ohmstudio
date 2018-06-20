@@ -1,4 +1,4 @@
-import QtQuick 2.10
+import QtQuick 2.11
 
 import ohm 1.0
 import ohm.helpers 1.0

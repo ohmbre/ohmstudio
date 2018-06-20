@@ -3,6 +3,7 @@
 	{
 		'target_name': 'brig',
 		'module_name': 'brig',
+		'module_path': './build/Release',
 		'sources': [
 			'<!@(tools/genmoc.sh)',
 			'src/brig.cpp',
@@ -31,13 +32,13 @@
 					'-std=c++11',
 					'-fPIC',
 					'-I./src',
-					'<!@(pkg-config --cflags Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2)'
+					'<!@(tools/cflags.sh Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2 Qt5Charts Qt5Widgets)'
 				],
 				'ldflags': [
-					'<!@(pkg-config --libs-only-L --libs-only-other Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2)'
+					'<!@(pkg-config --libs-only-L --libs-only-other Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2 Qt5Charts Qt5Widgets)'
 				],
 				'libraries': [
-					'<!@(pkg-config --libs-only-l Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2)'
+					'<!@(pkg-config --libs-only-l Qt5Core Qt5Quick Qt5Qml Qt5Multimedia Qt5QuickControls2 Qt5Charts Qt5Widgets)'
 				]
 			}],      
 			['OS=="mac"', {

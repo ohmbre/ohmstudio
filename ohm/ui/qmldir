@@ -5,3 +5,4 @@ OhmPopup 1.0 OhmPopup.qml
 OhmButton 1.0 OhmButton.qml
 OhmFileChoose 1.0 OhmFileChoose.qml
 CenterItem 1.0 CenterItem.qml
+OhmScope 1.0 OhmScope.qml

@@ -4,7 +4,7 @@
   "description": "portable virtual modular synth platform that aims to be fun, usable, collaborative, and extensible. UI designed for ohmbre hardware synthesizer or similar touchscreen device, yet it is fully cross-platform.",
   "bin": "run",
   "scripts": {
-    "install": "chmod -R +w brig && npm install ./brig && npm install ./mathjs && (npm install ./alsa || npm install ./node-core-audio)"
+    "install": "npm install ./brig && npm install ./mathjs && (npm install ./alsa || npm install ./node-core-audio)"
   },
   "repository": {
     "type": "git",

@@ -4,62 +4,78 @@ env = process.env
 env.QML2_IMPORT_PATH='.'
 env.QSG_RENDER_LOOP='threaded'
 env.QT_SCALE_FACTOR='2'
+env.QT_LOGGING_RULES='*.debug=true; qt.*.debug=false'
+//env.QSG_INFO='1'
+
 
 const Brig = require('brig');
 brig = new Brig();
+
 brig.on('ready', function(brig) {
     const cp = require('child_process');
-    let audioThreads = []
+    let sinkThreads = []
     const controlsCache = {}
-
     var Ohm = brig.createType('Ohm', {
 	property: {'main':null},
 	method: {
 	    'updateControl(id,val)': function(id,val) {
-		for (let i = 0; i < audioThreads.length; i++) {
-		    audioThreads[i].subproc.send(`controls[${id}]=${val}`)
-		    controlsCache[id] = val
-		}
-	    }
+		controlsCache[id] = val
+		for (let thread of sinkThreads)
+		    thread.subproc.send({cmd:'set',key:'controls',subkey:parseInt(id),val:val})
+	    },
 	},
 	signal: ['kill()']
     });
 
     let ohminstance = null;
-    Ohm.on('instance-created', function (instance) {
+    Ohm.on('instance-created', (instance) => {
     	ohminstance = instance
-	instance.on('kill', function() {
+	instance.on('kill', () => {
 	    ohminstance = null;
-	    for (let thread of audioThreads)
+	    for (let thread of sinkThreads)
 	       thread.subproc.kill('SIGHUP')
 	    process.exit(0);
 	});
     });
 
-    var AudioThread = brig.createType('AudioThread', {
-	property: { eqnL: '0', eqnR: '0' }, signal: ['kill()']
+    var SinkThread = brig.createType('SinkThread', {
+	property: {}, signal: ['kill()','reconnect()'],
+	method: {
+	    'sendMessage(msg)': function(msg) {
+		if (this.subproc && !this.subproc.killed)
+		    this.subproc.send(JSON.parse(msg))
+	    }
+	}
     });
 
-    AudioThread.on('instance-created', function(instance) {
-	audioThreads.push(instance)
-	console.error('creating audio thread');
-	instance.subproc = cp.fork('./ohm.js');
-	for (let id in controlsCache)
-	    instance.subproc.send(`controls[${id}]=${controlsCache[id]}`);
-	instance.on('eqnLChanged', function() {
-	    instance.subproc.send('streams[0]='+instance.getProperty('eqnL'));
-	});
-	instance.on('eqnRChanged', function() {
-	    instance.subproc.send('streams[1]='+instance.getProperty('eqnR'));
-	});
-	instance.on('kill', function() {
+    SinkThread.on('instance-created', (instance) => {
+	function fork() {
+	    sinkThreads.push(instance)
+	    instance.subproc = cp.fork('./ohm.js');
+	    for (let id in controlsCache)
+		instance.subproc.send({cmd:'set',key:'controls',subkey:id,val:controlsCache[id]});
+	}
+	fork();
+
+	instance.on('kill', () => {
 	    instance.subproc.kill('SIGHUP');
-	    audioThreads = audioThreads.filter(thread=>thread != instance)
-	    console.error('sent kill signal to audio thread');
+	    sinkThreads = sinkThreads.filter(thread=>thread != instance)
+	    instance.killed = true
+	    console.log('sent kill signal to sink thread');
 	});
+	
+	instance.subproc.on('message', (msg) => {
+	    //console.log('run',msg)
+	    instance.invokeMethod('callback', msg[0].join(','), msg[1].join(','), msg[2])
+	})
+
     });
 
-    brig.open('ohm/OhmStudio.qml', function(err, window) {
+    brig.on('window-all-closed', () => {
+	process.exit();
+    });
+
+    brig.open('ohm/OhmStudio.qml', (err, window) => {
         if (err) console.error(err)
     });
 
