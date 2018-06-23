@@ -25,9 +25,7 @@ Model {
 	});
     }
 
-    property Component closeupDisplay: Item {}
-    function enterCloseup() {}
-    function exitCloseup() {}
+    property Component display: (parent && parent.view) ? parent.view.moduleDisplay : null
 
     function jack(index) {
         if (typeof index == "number")

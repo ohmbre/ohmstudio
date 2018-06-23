@@ -36,13 +36,12 @@ QtObject {
     property color moduleLabelColor: '#'+paletteLit.light
     property int moduleBorderWidth: 2
     property real moduleLabelPadding: 6.5
-    property real jackExtension: 10
+    property real jackExtension: 6
     property color inJackColor: '#A0'+palette.dark
     property color inJackLitColor: '#FF'+paletteLit.dark
     property color outJackColor: '#A0'+palette.strong
     property color outJackLitColor: '#FF'+paletteLit.strong
-    property real minJackGap: 0.1 // (radians)
-    property real maxJackSweep: 1 // (radians)
+    property real maxJackSweep: Math.PI/5 // (radians)
 
     property color jackLabelColor: "#FF"+palette.light
     property real jackLabelGap: 3

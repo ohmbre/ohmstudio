@@ -20,11 +20,8 @@ Rectangle {
     z: 1
     width: 50
     height: 50
-    property double rx: width/2
-    property double ry: height/2
-    property double rxext: rx + Style.jackExtension
-    property double ryext: ry + Style.jackExtension
-    radius: Math.min(rx,ry)
+    radius: Math.max(width/2,height/2)
+    property double rext: radius + Style.jackExtension
     color: Style.moduleColor
     border.color: Style.moduleBorderColor
     border.width: Style.moduleBorderWidth
@@ -104,14 +101,14 @@ Rectangle {
 	    Loader {
 		id: displayLoader
 		anchors.fill: parent
-		sourceComponent: Item {}
+		sourceComponent: pView.moduleDisplay
 	    }
 	}
 
 	states: [
 	    State {
 		name: "controlMode"
-		StateChangeScript { script: { forceCollapse(); module.enterCloseup(); }}
+		StateChangeScript { script: { forceCollapse(); displayLoader.item.enter(); }}
 		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
 				  topPadding:-92; leftPadding: -20; rightPadding: -20 }
 		PropertyChanges { target: moduleMouseArea; enabled: false }
@@ -119,12 +116,12 @@ Rectangle {
 		PropertyChanges { target: moduleView; radius: 5 
 				  width: pView.width/scaler.max; height: pView.height/scaler.max }
 		PropertyChanges { target: controller; opacity: 1.0; visible: true }
-		PropertyChanges { target: displayLoader; sourceComponent: module.closeupDisplay }
+		PropertyChanges { target: displayLoader; sourceComponent: module.display }
 		PropertyChanges { target: display; opacity: 1.0; visible: true }
 	    },
 	    State {
 		name: "patchMode"
-		StateChangeScript { script: { forceCollapse(); module.exitCloseup(); }}
+		StateChangeScript { script: { forceCollapse(); displayLoader.item.exit() }}
 	    }
 	]
 	
@@ -172,19 +169,24 @@ Rectangle {
 			    rotation: 14*controlVolts
 			    transformOrigin: Item.Bottom
 			}
-			MouseArea { anchors.fill: parent; onClicked: knobControl.open() }
+			MouseArea {
+			    id: knobClick
+			    enabled: controller.visible
+			    anchors.fill: parent
+			    onClicked: knobControl.open()
+			}
 			
 			Popup {
 			    id: knobControl
 			    modal: true
 			    focus: true
 			    padding: 0
-			    topMargin: 60
-			    leftMargin: 76
+			    topMargin: 58
+			    leftMargin: 52
 			    x: -knobView.x
 			    y: -knobView.y
-			    width: 168
-			    height: 94
+			    width: 215
+			    height: 107
 			    background: Rectangle {
 				anchors.fill: parent
 				color: 'transparent'
@@ -212,7 +214,7 @@ Rectangle {
 				id: knob
 				rotation: -26
 				value: controlVolts;
-				from: -5; to: 5
+				from: -10; to: 10
 				onValueChanged: {
 				    controlVolts = value
 				}
@@ -226,7 +228,7 @@ Rectangle {
 				    color: Style.sliderColor
 				    radius: 2
 				    Rectangle {
-					x: ((knob.visualPosition > .5) ? 0.48 : (knob.visualPosition+.02))*parent.width
+					x: ((knob.visualPosition > .5) ? .5 : (knob.visualPosition+.02))*parent.width
 					width: ((knob.visualPosition > .5) ? (knob.position-0.5) :
 						(0.47-knob.visualPosition)) * parent.width
 					height: parent.height
@@ -234,7 +236,7 @@ Rectangle {
 					radius: 2
 				    }
 				    Rectangle {
-					x: parent.width/2-4.5; y:-3
+					x: parent.width/2-3; y:-3
 					width: 4
 					height:10
 					color: Style.darkText
@@ -243,8 +245,8 @@ Rectangle {
 				    Repeater {
 					model: 11
 					OhmText {
-					    text: (index - 5) + ((Math.abs(index-5)==5 || index==5) ? 'V' : '')
-					    x: knob.leftPadding + index*parent.width/11 + (index==0||index==5 ? -5.5: -3)
+					    text: (index - 5)*2 + ((index==0||index==10)? 'V':'')
+					    x: knob.leftPadding+2+index*parent.width/10.9-contentWidth/2
 					    y: knob.topPadding
 					    font.pixelSize: 7
 					    color: Style.sliderColor
@@ -306,7 +308,7 @@ Rectangle {
 
     Rectangle {
         id: perimeter
-        property double extra: Style.jackExtension * Math.max(inJackExtend,outJackExtend)
+        property double extra: Style.jackExtension * Math.max(inJackExtend,outJackExtend)+12
         width: parent.width + extra*2
         height: parent.height + extra*2
         x: -extra
@@ -318,13 +320,65 @@ Rectangle {
     readonly property real minPadRadians: 0.1
     readonly property real maxSweepRadians: 1
 
+    function computeJackAngles(jacks, sweep) {
+	if (jacks.length = 0) return {}
+	var angles = []
+	var unknowns = []
+	
+	Fn.forEach(jacks, function(jack,j) {
+	    var cbl = module.parent.lookupCableFor(jack)
+	    if (cbl.cable) {
+		var other = cbl.otherend.parent;
+		var dx = module.x-other.x, dy = module.y-other.y
+		var angle = (dx>0) ? (Math.PI-Math.atan(dy/dx)) : Math.atan(-dy/dx)
+		angles.push({jack: jack, theta: angle, start: angle-sweep/2, end: angle+sweep/2})
+	    } else unknowns.push(jack)
+	});
+
+	while (unknowns.length) {
+	    var gaps = []
+	    if (angles.length == 0)
+		gaps.push({start:3*Math.PI/2, end:7*Math.PI/2, len: 2*Math.PI})
+	    else {
+		angles.sort(function(a,b) { return a.theta-b.theta })
+		for (var a = 0; a < angles.length-1; a++) {
+		    var gap = {start: angles[a].end, end: angles[a+1].start}
+		    gap.len = gap.end - gap.start
+		    gaps.push(gap)
+		}
+		var lastgap = {start: angles[angles.length-1].end, end: angles[0].start}
+		lastgap.len = lastgap.end - lastgap.start + 2*Math.PI	    	    
+		gaps.push(lastgap)
+		gaps.sort(function (a,b) { return b.len-a.len })
+	    }
+	    var biggest = gaps[0];
+	    var nfit = Math.max(1,Math.min(unknowns.length,Math.floor(biggest.len/sweep)))
+	    var inc = biggest.len / nfit
+	    for (var n = 0; n < nfit; n++) {
+		var t = biggest.start + inc/2 + inc*n
+		angles.push({jack:unknowns.shift(), theta: t, start: t-sweep, end: t+sweep})
+	    }
+	}
+
+	var ret = {}
+	for (var a = 0; a < angles.length; a++)
+	    ret[angles[a].jack.label] = angles[a]
+	return ret
+    }
+
+    
+    property var inJackAngles: computeJackAngles(module.inJacks, inSweep)
+    property var outJackAngles: computeJackAngles(module.outJacks, outSweep)
+    property double inSweep: Math.min(Style.maxJackSweep, 2*Math.PI/module.inJacks.length)
+    property double outSweep: Math.min(Style.maxJackSweep, 2*Math.PI/module.outJacks.length)
+    
     Repeater {
         anchors.fill: parent
         model: module.inJacks
         InJackView {
             jack: modelData
-            position: index
-            siblings: module.inJacks.length
+	    theta: inJackAngles[modelData.label].theta
+	    sweep: inSweep
             extend: inJackExtend
         }
     }
@@ -334,8 +388,8 @@ Rectangle {
         model: module.outJacks
         OutJackView {
             jack: modelData
-            position: index
-            siblings: module.outJacks.length
+	    theta: outJackAngles[modelData.label].theta
+	    sweep: outSweep
             extend: outJackExtend
         }
     }	

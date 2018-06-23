@@ -8,21 +8,24 @@ import ohm.ui 1.0
 Item {
     id: jackView
     property Jack jack
-    property int position
-    property int siblings
     property int direction
     property double extend
-
-    property double clearRad: 2*Math.PI / siblings
-    property double sweepRad: Math.min(clearRad - Style.minJackGap, Style.maxJackSweep)
-    property double theta: direction * (position * clearRad + Math.PI/2)
-    property double r: extend * Math.sqrt(Math.pow(moduleView.rxext*Math.cos(theta),2) +
-                                 Math.pow(moduleView.ryext*Math.sin(theta),2))
+    property double sweep
+    property double theta: {
+	var cableLookup = jack.parent.parent.lookupCableFor(modelData)
+        if (cableLookup.cable) {
+	    var otherModule = cableLookup.otherend.parent;
+            var dx = module.x - otherModule.x
+            var dy = module.y - otherModule.y;
+            return (dx > 0) ? Math.atan(dy/dx) : Math.atan(-dy/dx)
+        } else return direction * (position * clearRad + Math.PI/2)
+    }
+    property double r: extend * moduleView.rext
     property color bgColor
     property color bgColorLit
     property int arrowRotation
 
-    height: (Style.jackExtension + moduleView.radius) * 2 * Math.sin(sweepRad/2)
+    height: moduleView.rext * 2 * Math.sin(sweep/2)
     width: r + Style.jackLabelGap + jackLabel.contentWidth
     z: -1
     Shape {
@@ -39,14 +42,14 @@ Item {
             startX: 0; startY: jackShape.height/2
             PathLine {
                 id: linePath
-                x: r * Math.cos(-sweepRad/2)
+                x: r * Math.cos(-sweep/2)
                 y: jackShape.height
             }
             PathArc {
                 id: arcPath
-                radiusX: rxext
-                radiusY: ryext
-                x: r * Math.cos(sweepRad/2)
+                radiusX: 12
+                radiusY: 12
+                x: r * Math.cos(sweep/2)
                 y: 0
                 direction: PathArc.Counterclockwise
             }
@@ -97,12 +100,12 @@ Item {
 
     transform: [
         Translate {
-            x: moduleView.rx
+            x: moduleView.radius
             y: Fn.centerInY(jackView, moduleView)
         },
         Rotation {
-            origin.x: moduleView.rx
-            origin.y: moduleView.ry
+            origin.x: moduleView.width/2
+            origin.y: moduleView.height/2
             axis.y: 0
             axis.x: 0
             axis.z: 1
@@ -120,7 +123,6 @@ Item {
         jack.view = jackView;
         if (!Qt.jacks) Qt.jacks = [jackView];
         else Qt.jacks.push(jackView);
-        //Fn.dDump(jackView);
     }
 }
 

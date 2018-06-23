@@ -4,7 +4,7 @@
   "description": "portable virtual modular synth platform that aims to be fun, usable, collaborative, and extensible. UI designed for ohmbre hardware synthesizer or similar touchscreen device, yet it is fully cross-platform.",
   "bin": "run",
   "scripts": {
-    "install": "npm install ./brig && npm install ./mathjs && (npm install ./alsa || npm install ./node-core-audio)"
+    "install": "npm install ./mathjs && (npm install ./alsa || npm install ./node-core-audio)"
   },
   "repository": {
     "type": "git",
@@ -27,9 +27,12 @@
   "homepage": "https://github.com/ohmbre/ohmstudio#readme",
   "dependencies": {
     "alsa": "file:alsa",
-    "brig": "file:brig",
     "mathjs": "file:mathjs",
-    "node-core-audio": "file:node-core-audio"
+    "node-core-audio": "file:node-core-audio",
+    "ws": "^5.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "optionalDependencies": {
+    "bufferutil": "^3.0.5"
+  }
 }

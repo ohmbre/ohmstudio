@@ -1,82 +1,10 @@
-#!/usr/bin/env node
-
-env = process.env
-env.QML2_IMPORT_PATH='.'
-env.QSG_RENDER_LOOP='threaded'
-env.QT_SCALE_FACTOR='2'
-env.QT_LOGGING_RULES='*.debug=true; qt.*.debug=false'
-//env.QSG_INFO='1'
+#!/usr/bin/env bash
 
 
-const Brig = require('brig');
-brig = new Brig();
+export QSG_RENDER_LOOP=threaded
+export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false"
 
-brig.on('ready', function(brig) {
-    const cp = require('child_process');
-    let sinkThreads = []
-    const controlsCache = {}
-    var Ohm = brig.createType('Ohm', {
-	property: {'main':null},
-	method: {
-	    'updateControl(id,val)': function(id,val) {
-		controlsCache[id] = val
-		for (let thread of sinkThreads)
-		    thread.subproc.send({cmd:'set',key:'controls',subkey:parseInt(id),val:val})
-	    },
-	},
-	signal: ['kill()']
-    });
-
-    let ohminstance = null;
-    Ohm.on('instance-created', (instance) => {
-    	ohminstance = instance
-	instance.on('kill', () => {
-	    ohminstance = null;
-	    for (let thread of sinkThreads)
-	       thread.subproc.kill('SIGHUP')
-	    process.exit(0);
-	});
-    });
-
-    var SinkThread = brig.createType('SinkThread', {
-	property: {}, signal: ['kill()','reconnect()'],
-	method: {
-	    'sendMessage(msg)': function(msg) {
-		if (this.subproc && !this.subproc.killed)
-		    this.subproc.send(JSON.parse(msg))
-	    }
-	}
-    });
-
-    SinkThread.on('instance-created', (instance) => {
-	function fork() {
-	    sinkThreads.push(instance)
-	    instance.subproc = cp.fork('./ohm.js');
-	    for (let id in controlsCache)
-		instance.subproc.send({cmd:'set',key:'controls',subkey:id,val:controlsCache[id]});
-	}
-	fork();
-
-	instance.on('kill', () => {
-	    instance.subproc.kill('SIGHUP');
-	    sinkThreads = sinkThreads.filter(thread=>thread != instance)
-	    instance.killed = true
-	    console.log('sent kill signal to sink thread');
-	});
-	
-	instance.subproc.on('message', (msg) => {
-	    //console.log('run',msg)
-	    instance.invokeMethod('callback', msg[0].join(','), msg[1].join(','), msg[2])
-	})
-
-    });
-
-    brig.on('window-all-closed', () => {
-	process.exit();
-    });
-
-    brig.open('ohm/OhmStudio.qml', (err, window) => {
-        if (err) console.error(err)
-    });
-
-});
+node ohm.js 60600 &
+node ohm.js 54700 &
+QT_SCALE_FACTOR=2 qmlscene --scaling --vebose -I . ohm/OhmStudio.qml
+killall node

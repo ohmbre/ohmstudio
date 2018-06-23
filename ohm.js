@@ -238,7 +238,7 @@
 
             this.timer++
             let len = +this.len
-            if (this.timer >= len) {
+            if (this.timer > len) {
                 if (!this.rampsleft.length) {
                     this.running = false
                     return this.val
@@ -250,7 +250,7 @@
                 this.timer = 1
             }
             const target = +this.target, shape = +this.shape
-            if (len == 0) return target
+            if (len == 0) return this.val = target
             return this.val = target + (this.vstart - target) * (1 - this.timer / len) ** shape
         }
     }
@@ -463,14 +463,7 @@
 
 
     o.handler = function (msg) {
-	console.log(msg)
         if (msg.cmd == 'set' && msg.key == 'streams') {
-
-	    if (!o.audioEnabled && !o.scopeEnabled) {
-		o.msgBacklog[msg.key] = msg;
-		return
-	    }
-	    
 	    const simplified = msg.val.map(
 		sval => math.simplify(
 		    math.parse(sval)
@@ -504,13 +497,13 @@
 		    o.handler(o.msgBacklog[key])
 	    o.msgBacklog = []
 	    o.runAudio()
-	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled' && msg.val == true) {
-	    o.scopeEnabled = true
-	    for (let key in o.msgBacklog)
-		if (o.msgBacklog[key])
-		    o.handler(o.msgBacklog[key])
-	    o.msgBacklog = []
-	    o.runScope()
+	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
+	    if (msg.val == true && !o.scopeEnabled) {
+		o.scopeEnabled = true
+		setTimeout(o.runScope,500)
+	    } else if (msg.val == false && o.scopeEnabled) {
+		o.scopeEnabled = false
+	    }
 	}
     }
 
@@ -518,38 +511,38 @@
     o.scopeEnabled = false
                 
     o.runScope = function() {
-	const scopeData = [[],[],0]
+	const samples = new Int8Array(2*o.s)
+	let bufpos = 0
 	let hr = process.hrtime()
 	const start = hr[0] + hr[1]/1e9
 	let running = false
-	let runstart = 0
-	let recordpos = 0
 	let prevch1 = 0
 	function loop() {
 	    for (let i = 0; i < 512; i++) {
 		const ch1 = +o.outstreams[0]
 		const ch2 = +o.outstreams[1]
 		const vtrig = +o.outstreams[2]
-		const window = +o.outstreams[3]
+		const window = Math.min(Math.round(o.outstreams[3]), o.s) * 2
 		if (!running && prevch1 < vtrig && ch1 >= vtrig) {
 		    running = true
-		    runstart = o.time.val
-		} else if (running && o.time.val-runstart > window) {
+		    bufpos = 0
+		} else if (running && bufpos > window) {
 		    running = false
-		    scopeData[2] = window
-		    process.send(scopeData)
-		    scopeData[0] = []; scopeData[1] = []
+		    for (let client of o.clients)	
+			client.send(new Int8Array(samples.buffer, 0, window),{binary: true})
+		    bufpos = 0
 		}
 		if (running) {
-		    scopeData[0].push(o.clip(o.sampleMin,Math.round(o.vScale * ch1),o.sampleMax)>>24)
-		    scopeData[1].push(o.clip(o.sampleMin,Math.round(o.vScale * ch2),o.sampleMax)>>24)
+		    samples[bufpos++] = o.clip(o.sampleMin,Math.round(o.vScale * ch1),o.sampleMax) >> 24
+		    samples[bufpos++] = o.clip(o.sampleMin,Math.round(o.vScale * ch2),o.sampleMax) >> 24
 		}
 		o.time.val++
 		prevch1 = ch1
 	    }    
 	    hr = process.hrtime()
 	    const delay = Math.max(o.time.val / 48000 - (hr[0] + hr[1]/1e9 - start),0)
-	    setTimeout(loop,delay)
+	    if (o.scopeEnabled)
+		setTimeout(loop,delay)
 	}
 	setTimeout(loop,0)
     }
@@ -604,14 +597,28 @@
 	});
     }
 
+    o.clients = []
+
     module.exports = o
+    
     if (require && require.main === module) {
-        process.on('message', o.handler)
-        process.on('disconnect', () => {
-	    console.warn('\n\nchild process lost connection\n')
-	    process.exit(0)
+	const port = parseInt(process.argv[process.argv.length-1])
+
+	const WebSocket = require('ws');
+
+	console.log('creating server on port', port)
+	const wss = new WebSocket.Server({ port: port })
+	
+	wss.on('connection', (ws) => {
+	    ws.on('message', function incoming(msg) {
+		o.handler(JSON.parse(msg))
+	    })
+	    ws.on('close', function close() {
+		console.error('\n\nchild process lost connection to ui\n')	
+	    })
+	    ws.binaryType = 'arraybuffer'
+	    o.clients.push(ws)
 	})
-        //for (let msg of require('./testdata')) o.handler(msg)
     }
-    //require('repl').start().context.o = o
+    
 }

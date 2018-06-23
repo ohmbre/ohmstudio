@@ -10,7 +10,7 @@ Model {
     property string label
 
     property double controlVolts: 0
-    onControlVoltsChanged: updateControl(id, controlVolts);
+    onControlVoltsChanged: engine.updateControl(id, controlVolts);
     
     property var inVolts: 0
     property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(id)

@@ -203,6 +203,11 @@ Item {
         CableDragView {id: childCableDragView; }
     }
 
+    property Component moduleDisplay: Item {
+	function enter(){}
+	function exit(){}
+    }
+
     property alias contentItem: content
     property alias cableDragView: childCableDragView
 

@@ -13,7 +13,6 @@ Canvas {
     property var channelColors: ['red','blue','green','yellow']
     property var bgColor: 'black'
     property var buffers
-    property string window: ''
     property real trig: 0
     property real trigOpacity: 0
     NumberAnimation { id: trigAnim; target: scope; property:'trigOpacity'; from: 1; to: 0; duration: 1000 }
@@ -30,17 +29,17 @@ Canvas {
 	ctx.clearRect(0, 0, 512, 256);
         ctx.globalAlpha = 0.75
         ctx.lineWidth = 3
-	
+	var window
 	for (var ch = 0; ch < buffers.length; ch++) {
 	    var buf = buffers[ch]
-	    var buflen = buf.truncate ? buf.truncate : buf.length
-	    if (buflen == 0) continue
+	    window = buf.truncate ? buf.truncate : buf.length
+	    if (window == 0) continue
             ctx.strokeStyle = channelColors[ch]
 	    ctx.beginPath();
 	    ctx.moveTo(0,128-buf[0]);
-	    const xinc = 512/buflen
+	    const xinc = 512/window
 	    var x = xinc
-	    for (var i=1; i < buflen; i++) {
+	    for (var i=1; i < window; i++) {
 		ctx.lineTo(x, 128-buf[i])
 		x += xinc
 	    }
@@ -57,7 +56,7 @@ Canvas {
 	ctx.fillText('10v', 0, 15)
 	ctx.fillText('0v', 0, 130)
 	ctx.fillText('-10v', 0, 255)
-	ctx.fillText(window,455,145)
+	ctx.fillText((Math.round(window/4.8)/10)+'ms',440,145)
         ctx.restore();
     }
 }
