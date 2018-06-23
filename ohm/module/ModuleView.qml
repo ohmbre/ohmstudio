@@ -330,39 +330,66 @@ Rectangle {
 	    if (cbl.cable) {
 		var other = cbl.otherend.parent;
 		var dx = module.x-other.x, dy = module.y-other.y
-		var angle = (dx>0) ? (Math.PI-Math.atan(dy/dx)) : Math.atan(-dy/dx)
-		angles.push({jack: jack, theta: angle, start: angle-sweep/2, end: angle+sweep/2})
+		var angle
+		if (dx == 0) angle = (dy > 0) ? Math.PI/2 : 3*Math.PI/2
+		else if (dx > 0) angle = (Math.PI-Math.atan(dy/dx))
+		else angle = Math.atan(-dy/dx)
+		angles.push({jack: jack, theta: angle})
+		
 	    } else unknowns.push(jack)
 	});
 
+	var gaps = []
+	for (var a = 0; a < angles.length-1; a++) {
+	    var gap = {from: angles[a], to: angles[a+1]}
+	    var g = gaps.length
+	    gaps.push(gap)
+	    while (g >= 0 && (gap.to.theta-gap.from.theta) < sweep) {
+		var glen = Math.abs(gap.to.theta - gap.from.theta - sweep)
+		gap.from.theta -= glen/2
+		gap.to.theta += glen/2
+		gap = gaps[--g] 
+	    }
+	}
+
 	while (unknowns.length) {
-	    var gaps = []
-	    if (angles.length == 0)
-		gaps.push({start:3*Math.PI/2, end:7*Math.PI/2, len: 2*Math.PI})
-	    else {
-		angles.sort(function(a,b) { return a.theta-b.theta })
-		for (var a = 0; a < angles.length-1; a++) {
-		    var gap = {start: angles[a].end, end: angles[a+1].start}
-		    gap.len = gap.end - gap.start
-		    gaps.push(gap)
+	    var gapstart,gaplen=-Infinity;
+	    if (angles.length == 0) {
+		gapstart = Math.PI/2
+		gaplen = 2*Math.PI
+	    } else {
+		if (angles.length > 1) {
+		    var gaps = []
+		    angles.sort(function(a,b) { return a.theta-b.theta })
+		    for (var a = 0; a < angles.length-1; a++)
+			gaps.push({from: angles[a], to: angles[a+1]})
+		    gaps.sort(function (a,b) {
+			return (b.to.theta-b.from.theta)-(a.to.theta-a.from.theta)
+		    })
+		    var biggest = gaps[0];
+		    gapstart = biggest.from.theta+sweep/2
+		    gaplen = biggest.to.theta-sweep/2
 		}
-		var lastgap = {start: angles[angles.length-1].end, end: angles[0].start}
-		lastgap.len = lastgap.end - lastgap.start + 2*Math.PI	    	    
-		gaps.push(lastgap)
-		gaps.sort(function (a,b) { return b.len-a.len })
+		var lastgaplen = angles[0].theta - angles[angles.length-1].theta - sweep + 2*Math.PI
+		if (lastgaplen > gaplen) {
+		    gaplen = lastgaplen
+		    gapstart = angles[angles.length-1].theta+sweep/2
+		}
 	    }
-	    var biggest = gaps[0];
-	    var nfit = Math.max(1,Math.min(unknowns.length,Math.floor(biggest.len/sweep)))
-	    var inc = biggest.len / nfit
+
+
+	    var nfit = Math.max(1,Math.min(unknowns.length,Math.floor(gaplen/sweep)))
+	    var inc = gaplen / nfit
 	    for (var n = 0; n < nfit; n++) {
-		var t = biggest.start + inc/2 + inc*n
-		angles.push({jack:unknowns.shift(), theta: t, start: t-sweep, end: t+sweep})
+		var t = gapstart + inc/2 + inc*n
+		angles.push({jack:unknowns.shift(), theta: t})
 	    }
+
 	}
 
 	var ret = {}
 	for (var a = 0; a < angles.length; a++)
-	    ret[angles[a].jack.label] = angles[a]
+	    ret[angles[a].jack.label] = angles[a].theta
 	return ret
     }
 
@@ -377,7 +404,7 @@ Rectangle {
         model: module.inJacks
         InJackView {
             jack: modelData
-	    theta: inJackAngles[modelData.label].theta
+	    theta: inJackAngles[modelData.label]
 	    sweep: inSweep
             extend: inJackExtend
         }
@@ -388,7 +415,7 @@ Rectangle {
         model: module.outJacks
         OutJackView {
             jack: modelData
-	    theta: outJackAngles[modelData.label].theta
+	    theta: outJackAngles[modelData.label]
 	    sweep: outSweep
             extend: outJackExtend
         }

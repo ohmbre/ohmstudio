@@ -6,5 +6,5 @@ export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false"
 
 node ohm.js 60600 &
 node ohm.js 54700 &
-QT_SCALE_FACTOR=2 qmlscene --scaling --vebose -I . ohm/OhmStudio.qml
+QT_SCALE_FACTOR=4 qml -I . ohm/OhmStudio.qml
 killall node

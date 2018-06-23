@@ -11,8 +11,8 @@ ApplicationWindow {
     visible: true
     width: 320
     height: 240
-    maximumWidth: 320
-    maximumHeight: 240
+    //maximumWidth: 320
+    //maximumHeight: 240
     minimumWidth: 320
     minimumHeight: 240
     title: "Ohm Studio"
