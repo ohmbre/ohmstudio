@@ -9,83 +9,73 @@ import ohm.jack.out 1.0
 import ohm.helpers 1.0
 import ohm.ui 1.0
 
-Rectangle {
-    id: moduleView
+Item {
+    id: mView
     property Module module
-    property double inJackExtend: 0
-    property double outJackExtend: 0
-
     x: Fn.centerInX(this, this.parent) + module.x
-    y: Fn.centerInY(this, this.parent) + module.y;
+    y: Fn.centerInY(this, this.parent) + module.y
     z: 1
-    width: 50
-    height: 50
-    radius: Math.max(width/2,height/2)
-    property double rext: radius + Style.jackExtension
-    color: Style.moduleColor
-    border.color: Style.moduleBorderColor
-    border.width: Style.moduleBorderWidth
-    antialiasing: true
-    smooth: true
-
-    NumberAnimation {
-        id: extendAnim; target: moduleView; from: 0; to: 1;
-        function run(on) { property = on; start(); }
+    width: 48; height: 32
+  
+    property alias outline: outline
+    
+    OhmRect {
+	id: outline
+	x:0; y:0; z: 0
+	size: Qt.size(parent.width, parent.height)
+	radius: height/2
+	color: Style.moduleColor
+	border: Style.moduleBorderWidth
+	borderColor: Style.moduleBorderColor
+        onPressAndHold: pView.contentItem.confirmDeleteModule(module)
+	onClicked: {
+	    var anyExtended = false
+	    for (var j = 0; j < module.nJacks; j++)
+		if (module.jack(j).view.extension > 0) {
+		    anyExtended = true
+		    break
+		}
+	
+	    if (anyExtended) collapseAll()
+	    else extendAll()
+	}
+	dragTarget: parent
     }
-    NumberAnimation {
-        id: collapseAnim; target: moduleView; from: 1; to: 0;
-        function run(on) { property = on; start(); }
+   
+    function collapseAll() {
+	for (var j = 0; j < module.nJacks; j++)
+	    module.jack(j).view.collapse()
     }
 
-    property SM.State nextState: (collapsed.active && module.inJacks.length && extendInputs)
-                                 || (!extendOutputs.active && module.outJacks.length && extendOutputs)
-                                 || collapsed
-
-    SM.StateMachine {
-        id: ioState
-        initialState: collapsed
-        running: true
-        SM.State {
-            id: collapsed
-            SM.SignalTransition { signal: moduleMouseArea.clicked; targetState: nextState }
-            SM.SignalTransition { signal: forceInputExtend; targetState: extendInputs }
-            SM.SignalTransition { signal: forceOutputExtend; targetState: extendOutputs }
-        }
-        SM.State {
-            id: extendInputs
-            SM.SignalTransition { signal: moduleMouseArea.clicked; targetState: nextState }
-            SM.SignalTransition { signal: forceCollapse; targetState: collapsed }
-            onEntered: extendAnim.run("inJackExtend")
-            onExited: collapseAnim.run("inJackExtend")
-        }
-        SM.State {
-            id: extendOutputs
-            SM.SignalTransition { signal: moduleMouseArea.clicked; targetState: nextState }
-            SM.SignalTransition { signal: forceCollapse; targetState: collapsed; }
-            onEntered: extendAnim.run("outJackExtend")
-            onExited: collapseAnim.run("outJackExtend")
-        }
-
+    function extendAll() {
+	for (var j = 0; j < module.nJacks; j++)
+	    module.jack(j).view.extend()
     }
-    signal forceInputExtend
-    signal forceOutputExtend
-    signal forceCollapse
 
     Item {
 	id: innerModule
 	anchors.fill: parent
-	
-	OhmText {
-            id: moduleLabel
-            text: module.label
-            padding: Style.moduleLabelPadding
-            anchors.fill: parent
-            color: Style.moduleLabelColor
-            Component.onCompleted: {
-		moduleView.height = contentHeight + padding*2;
-		moduleView.width = contentWidth + padding*2;
-            }
-	}
+
+	    OhmText {
+		id: moduleLabel
+		x: mView.height/5
+		y: mView.height/5
+		width: mView.width - mView.height/2.5
+		height: mView.height - mView.height/2.5
+		text: module.label
+		padding: 0
+		fontSizeMode: Text.Fit
+		color: Style.moduleLabelColor
+		font.family: asapFont.name
+		font.weight: Font.Medium
+		font.pixelSize: 10
+		minimumPixelSize: 8
+		maximumLineCount: 2
+		elide: Text.ElideNone
+		wrapMode: Text.WordWrap
+	    }
+
+
 
 	Rectangle {
 	    id: display
@@ -111,9 +101,8 @@ Rectangle {
 		StateChangeScript { script: { forceCollapse(); displayLoader.item.enter(); }}
 		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
 				  topPadding:-92; leftPadding: -20; rightPadding: -20 }
-		PropertyChanges { target: moduleMouseArea; enabled: false }
 		PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
-		PropertyChanges { target: moduleView; radius: 5 
+		PropertyChanges { target: outline; radius: 5; eventsEnabled: false
 				  width: pView.width/scaler.max; height: pView.height/scaler.max }
 		PropertyChanges { target: controller; opacity: 1.0; visible: true }
 		PropertyChanges { target: displayLoader; sourceComponent: module.display }
@@ -128,7 +117,7 @@ Rectangle {
 	transitions: Transition {
 	    ParallelAnimation {
 		id: controlAnim
-		NumberAnimation { target: moduleView; properties: "width,height,radius";
+		NumberAnimation { target: outline; properties: "width,height,radius";
 				  duration: 500; easing.type: Easing.InOutQuad }
 		NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
 				  duration: 500; easing.type: Easing.InOutQuad }
@@ -146,6 +135,7 @@ Rectangle {
 	    width: parent.width / scale; height: parent.height / scale
 	    anchors.centerIn: parent
 	    opacity: 0
+	    visible: false
 	    interactive: false
 	    scale: 6.75/scaler.max
 	    model: module.cvs
@@ -181,10 +171,9 @@ Rectangle {
 			    modal: true
 			    focus: true
 			    padding: 0
-			    topMargin: 58
-			    leftMargin: 52
-			    x: -knobView.x
-			    y: -knobView.y
+			    parent: Overlay.overlay
+			    x: Math.round((parent.width - width) / 2)
+			    y: Math.round((parent.height - height) / 2.2)
 			    width: 215
 			    height: 107
 			    background: Rectangle {
@@ -289,124 +278,82 @@ Rectangle {
 	    }
 	}
     }
-    property alias innerModule: innerModule
-
-    MouseArea { // around innerModule and perimeter
-        id: moduleMouseArea
-        height: (parent.height > parent.width) ? (parent.height - radius ) : parent.height
-        width: (parent.width > parent.height) ? (parent.width - radius ) : parent.width
-        x: Fn.centerInX(moduleMouseArea, moduleMouseArea.parent)
-        y: Fn.centerInY(moduleMouseArea, moduleMouseArea.parent)
-        drag.target: parent
-        drag.smoothed: true
-        propagateComposedEvents: true
-        preventStealing: true
-        onPressAndHold: pView.contentItem.confirmDeleteModule(module);
-        pressAndHoldInterval: 800
-    }
-
+    property alias innerModule: innerModule  
 
     Rectangle {
         id: perimeter
-        property double extra: Style.jackExtension * Math.max(inJackExtend,outJackExtend)+12
-        width: parent.width + extra*2
-        height: parent.height + extra*2
-        x: -extra
-        y: -extra
+        width: parent.width + Style.jackExtension*2
+        height: parent.height + Style.jackExtension*2
+        x: -Style.jackExtension
+        y: -Style.jackExtension
         visible: false
     }
     property alias perimeter: perimeter
 
-    readonly property real minPadRadians: 0.1
-    readonly property real maxSweepRadians: 1
+    function computeJackShapes(jacks) {
+	var mH = mView.height
+	var mW = mView.width
+	var mR = mH/2
+	var cstart = mW/2 - mR
+	var tstart = cstart + Math.PI * mR
+	var perim = tstart + mW/2 - mR
+	var sweep = perim / jacks.length
 
-    function computeJackAngles(jacks, sweep) {
-	if (jacks.length = 0) return {}
-	var angles = []
-	var unknowns = []
+	function posToPoint(pos,ext) {
+	    if (pos <= cstart) 
+		return Qt.point(mW/2-mR-pos,mR+ext)
+	    else if (pos < tstart) {
+		var theta = (pos-cstart) / mR
+		return Qt.point(-(mR+ext) * Math.sin(theta), (mR+ext) * Math.cos(theta))
+	    } else 
+		return Qt.point(pos-tstart,-(mR+ext))
+	}
+
+	var shapeData = {}
+	for (var j = 0, start = 0; j < jacks.length; j++, start += sweep) {
+	    var path = []
+	    var xt = (jacks[j].view ? (jacks[j].view.extension * Style.jackExtension) : 0)
+	    var center = start + sweep/2
+	    var s = center - Math.min((j==0) ? (sweep/2) : (sweep/2-0.35), Style.maxJackSweep)
+	    var e = center + Math.min((j==jacks.length-1) ? (sweep/2) : (sweep/2-0.35), Style.maxJackSweep)
+	    if (s < cstart) {
+		if (e > cstart)
+		    path.push({p:posToPoint(cstart,0), a: 0, d: 0})
+		if (e > tstart)
+		    path.push({p:posToPoint(tstart,0), a: mR, d: 0})
+	    } else if (s < tstart && e > tstart)
+		path.push({p:posToPoint(tstart,0), a: mR, d: 0})
+	    path.push({p:posToPoint(e,0), a: (e > cstart && e < tstart) ? mR : 0, d: 0})
+	    path.push({p:posToPoint(e,xt), a: 0, d: 0})
+	    if (e > tstart) {
+		if (s < tstart)
+		    path.push({p:posToPoint(tstart,xt), a:0, d: 1})
+		if (s < cstart)
+		    path.push({p:posToPoint(cstart,xt), a:mR+xt, d: 1})
+	    } else if (e > cstart && s < cstart)
+		path.push({p:posToPoint(cstart,xt), a:mR+xt, d: 1})
+	    path.push({p:posToPoint(s,xt), a: (s > cstart && s < tstart) ? (mR+xt) : 0, d:1})
+	    path.push({p:posToPoint(s,0), a: 0, d: 1})
+	    shapeData[jacks[j]] = { start: posToPoint(s,0), path: path,
+				    center: posToPoint(center,0),
+				    theta: Fn.clip(-Math.PI/2, (center-cstart)/mR - Math.PI/2, Math.PI/2) }
+	}
 	
-	Fn.forEach(jacks, function(jack,j) {
-	    var cbl = module.parent.lookupCableFor(jack)
-	    if (cbl.cable) {
-		var other = cbl.otherend.parent;
-		var dx = module.x-other.x, dy = module.y-other.y
-		var angle
-		if (dx == 0) angle = (dy > 0) ? Math.PI/2 : 3*Math.PI/2
-		else if (dx > 0) angle = (Math.PI-Math.atan(dy/dx))
-		else angle = Math.atan(-dy/dx)
-		angles.push({jack: jack, theta: angle})
-		
-	    } else unknowns.push(jack)
-	});
-
-	var gaps = []
-	for (var a = 0; a < angles.length-1; a++) {
-	    var gap = {from: angles[a], to: angles[a+1]}
-	    var g = gaps.length
-	    gaps.push(gap)
-	    while (g >= 0 && (gap.to.theta-gap.from.theta) < sweep) {
-		var glen = Math.abs(gap.to.theta - gap.from.theta - sweep)
-		gap.from.theta -= glen/2
-		gap.to.theta += glen/2
-		gap = gaps[--g] 
-	    }
-	}
-
-	while (unknowns.length) {
-	    var gapstart,gaplen=-Infinity;
-	    if (angles.length == 0) {
-		gapstart = Math.PI/2
-		gaplen = 2*Math.PI
-	    } else {
-		if (angles.length > 1) {
-		    var gaps = []
-		    angles.sort(function(a,b) { return a.theta-b.theta })
-		    for (var a = 0; a < angles.length-1; a++)
-			gaps.push({from: angles[a], to: angles[a+1]})
-		    gaps.sort(function (a,b) {
-			return (b.to.theta-b.from.theta)-(a.to.theta-a.from.theta)
-		    })
-		    var biggest = gaps[0];
-		    gapstart = biggest.from.theta+sweep/2
-		    gaplen = biggest.to.theta-sweep/2
-		}
-		var lastgaplen = angles[0].theta - angles[angles.length-1].theta - sweep + 2*Math.PI
-		if (lastgaplen > gaplen) {
-		    gaplen = lastgaplen
-		    gapstart = angles[angles.length-1].theta+sweep/2
-		}
-	    }
-
-
-	    var nfit = Math.max(1,Math.min(unknowns.length,Math.floor(gaplen/sweep)))
-	    var inc = gaplen / nfit
-	    for (var n = 0; n < nfit; n++) {
-		var t = gapstart + inc/2 + inc*n
-		angles.push({jack:unknowns.shift(), theta: t})
-	    }
-
-	}
-
-	var ret = {}
-	for (var a = 0; a < angles.length; a++)
-	    ret[angles[a].jack.label] = angles[a].theta
-	return ret
+	    
+	return shapeData
     }
-
+	
     
-    property var inJackAngles: computeJackAngles(module.inJacks, inSweep)
-    property var outJackAngles: computeJackAngles(module.outJacks, outSweep)
-    property double inSweep: Math.min(Style.maxJackSweep, 2*Math.PI/module.inJacks.length)
-    property double outSweep: Math.min(Style.maxJackSweep, 2*Math.PI/module.outJacks.length)
+    property var inJackShapes: computeJackShapes(module.inJacks)
+    property var outJackShapes: computeJackShapes(module.outJacks)
     
     Repeater {
         anchors.fill: parent
         model: module.inJacks
         InJackView {
             jack: modelData
-	    theta: inJackAngles[modelData.label]
-	    sweep: inSweep
-            extend: inJackExtend
+	    shapeData: inJackShapes[modelData]
+	    posRef: Qt.point(mView.height/2, mView.height/2)
         }
     }
 
@@ -415,16 +362,15 @@ Rectangle {
         model: module.outJacks
         OutJackView {
             jack: modelData
-	    theta: outJackAngles[modelData.label]
-	    sweep: outSweep
-            extend: outJackExtend
+	    shapeData: outJackShapes[modelData]
+	    posRef: Qt.point(mView.width - mView.height/2, mView.height/2)
         }
     }	
     
     Component.onCompleted: {
-        module.view = moduleView;
-        module.x = Qt.binding(function() { return moduleView.x - Fn.centerInX(moduleView, moduleView.parent);});
-        module.y = Qt.binding(function() { return moduleView.y - Fn.centerInY(moduleView, moduleView.parent);});
+        module.view = mView;
+        module.x = Qt.binding(function() { return mView.x - Fn.centerInX(mView, mView.parent);});
+        module.y = Qt.binding(function() { return mView.y - Fn.centerInY(mView, mView.parent);});
     }
 
 }

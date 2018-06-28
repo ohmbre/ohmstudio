@@ -8,8 +8,10 @@ RoundButton {
     //implicitWidth: imageUrl ? image.height/2 : label.width
     padding: 10
     property string imageUrl: null
+    property double border: 4
     property Image image: Image {
         source: imageUrl
+	mipmap: true
     }
     property OhmText label: OhmText {
         text: control.text
@@ -22,7 +24,7 @@ RoundButton {
         radius: control.radius
         anchors.fill: control
         color: control.imageUrl ? "#00000000" : (control.down ? Style.buttonOverColor : Style.buttonColor)
-        border.width: 4
+        border.width: control.border
         border.color: '#'+Style.paletteDim.medium
     }
 }

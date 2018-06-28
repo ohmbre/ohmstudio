@@ -31,21 +31,22 @@ QtObject {
 
     property color patchBackgroundColor: "black"
 
-    property color moduleColor: '#'+palette.dark
+    property color moduleColor: '#5E99AA'
     property color moduleBorderColor: '#'+palette.light
     property color moduleLabelColor: '#'+paletteLit.light
-    property int moduleBorderWidth: 2
+    property double moduleBorderWidth: 2.2
     property real moduleLabelPadding: 6.5
-    property real jackExtension: 6
-    property color inJackColor: '#A0'+palette.dark
-    property color inJackLitColor: '#FF'+paletteLit.dark
-    property color outJackColor: '#A0'+palette.strong
-    property color outJackLitColor: '#FF'+paletteLit.strong
-    property real maxJackSweep: Math.PI/5 // (radians)
+    property real jackExtension: 10
+    property color inJackColor: '#70A87C'
+    property color inJackLitColor: Qt.lighter(inJackColor)
+    property color outJackColor: '#BC4E51'
+    property color outJackLitColor: Qt.lighter(outJackColor)
+    property real maxJackSweep: 10
 
     property color jackLabelColor: "#FF"+palette.light
     property real jackLabelGap: 3
-
+    property real jackTabRadius: 12
+    
     property color cableColor: '#'+palette.strong
     property double cableControlStiffness: 5
     property double cableGravity: 100

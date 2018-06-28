@@ -62,7 +62,7 @@ Module {
     
     property Component scopeDisplay: OhmScope {
 	channelColors: ['#7df9ff', '#84ff8a']
-	buffers: [new Int8Array(1), new Int8Array(1)]
+	buffers: [new Int8Array(512), new Int8Array(512)]
 	bgColor: 'transparent'
 	trig: cvs[0].controlVolts * 12.7
 

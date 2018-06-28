@@ -280,6 +280,28 @@
         }
     }
 
+    ohms.clkdiv = class clkdiv extends ohms.ohmo {
+	constructor(clock,div,shift) {
+	    super()
+	    this.clock = clock
+	    this.div = div
+	    this.shift = shift
+	    this.count = 0
+	    this.ingate = false
+	}
+	[Symbol.toPrimitive]() {
+            const clklvl = +this.clock
+            if (!this.ingate && clklvl >= 3) {
+                this.ingate = true
+                this.count++
+            } else if (this.ingate && clklvl <= 1)
+                this.ingate = false
+	    if ((this.count+this.shift) % this.div == 0)
+		return clklvl
+            return 0
+	}
+    }
+	    
     ohms.sinusoid = class sinusoid extends ohms.ohmo {
         constructor(freq) {
             super()
@@ -358,7 +380,8 @@
         unaryMinus: (a) => -a,
         add: (a, b) => a + b,
         multiply: (a, b) => a * b,
-        divide: (a, b) => a / b
+        divide: (a, b) => a / b,
+	random: () => Math.random()
     }
     Object.assign(mathOverrides, Math)
 

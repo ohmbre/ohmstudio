@@ -61,3 +61,7 @@ function uniqId() {
     uniqCnt++;
     return ret;
 }
+
+function clip(min,v,max) {
+    return (v > max) ? max : ((v < min) ? min : v)
+}

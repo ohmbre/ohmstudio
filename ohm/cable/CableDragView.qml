@@ -13,15 +13,9 @@ Shape {
 
     width: pView.width
     height: pView.height
-    //antialiasing: true
-    //layer.samples: 16
-    //smooth: true
-    //layer.smooth: true
-    //layer.mipmap: true
-    //layer.enabled: true
 
     property MouseArea dragPad;
-
+	
     Item{
         id: destination
         width: 5; height: 5;
@@ -48,17 +42,25 @@ Shape {
             id: dragCurve
             x: Fn.centerX(destination) - destination.dot.width/2
             y: Fn.centerY(destination) - destination.dot.height/2
-            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity;
+	    control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity
             control2X: x; control2Y: y + gravityOn * Style.cableGravity;
-            Behavior on control2X { enabled: animationOn; id: springX; SpringAnimation { spring: 1; damping: 0.05} }
-            Behavior on control2Y { enabled: animationOn; id: springY; SpringAnimation { spring: 1; damping: 0.05} }
+            Behavior on control2X {
+		id: springX
+		enabled: animationOn
+		SpringAnimation { spring: .5; damping: 0.03}
+	    }
+            Behavior on control2Y {
+		id: springY
+		enabled: animationOn
+		SpringAnimation { spring: .5; damping: 0.03}
+	    }
         }
         property alias dragCurve: dragCurve
     }
     property alias dragShape: dragShape
     property bool animationOn: false
     property real gravityOn: 0
-    Behavior on gravityOn { NumberAnimation { duration: 1 } }
+    Behavior on gravityOn { NumberAnimation { duration: 100 } }
 
     states: [
         State {
@@ -75,11 +77,11 @@ Shape {
             PropertyChanges {
                 target: cableDragView
                 dragShape.strokeColor: Style.cableColor
-                dragShape.startX: Fn.centerX(startJackView.parent) + startJackView.r * 0.8 * Math.cos(startJackView.theta);
-                dragShape.startY: Fn.centerY(startJackView.parent) + startJackView.r * 0.8 * -Math.sin(startJackView.theta);
+                dragShape.startX: startJackView.anchor2X
+                dragShape.startY: startJackView.anchor2Y
                 destination.visible: true
-                destination.x: cableDragView.mapFromItem(dragPad, dragPad.mouseX, dragPad.mouseY).x;
-                destination.y: cableDragView.mapFromItem(dragPad, dragPad.mouseX, dragPad.mouseY).y;
+                destination.x: dragPad.mouseX + dragPad.parentModuleView.x - Style.jackExtension
+                destination.y: dragPad.mouseY + dragPad.parentModuleView.y - Style.jackExtension
                 gravityOn: 1
             }
 
@@ -93,6 +95,7 @@ Shape {
         if (cableResult.cable) {
             pView.patch.deleteCable(cableResult.cable);
             startJackView = cableResult.otherend.view;
+	    startJackView.extend()
             endJackView = jv;
             jv.dropTargeted = true;
         } else
@@ -112,16 +115,18 @@ Shape {
             if (mv.perimeter.contains(mRelPos)) {
                 var jacklist = [];
                 if (startJackView.jack.dir === "inp") {
-                    mv.forceOutputExtend();
                     jacklist = mv.module.outJacks;
                 } else if (startJackView.jack.dir === "out") {
-                    mv.forceInputExtend();
                     jacklist = mv.module.inJacks;
                 }
 		Fn.forEach(jacklist, function(jack) {
-                    if (pView.patch.lookupCableFor(jack).cable) return;
+                    if (pView.patch.lookupCableFor(jack).cable) {
+			jack.view.collapse()
+			return;
+		    }
                     var jv = jack.view;
-                    var jRelPos = dragPad.mapToItem(jv.shape, dragPad.mouseX, dragPad.mouseY);
+		    jv.extend()
+                    var jRelPos = dragPad.mapToItem(jv, dragPad.mouseX, dragPad.mouseY);
                     if (jv.shape.contains(jRelPos)) {
                         if (!jv.dropTargeted) {
                             jv.dropTargeted = true;
@@ -135,7 +140,7 @@ Shape {
                     }
                 });
             } else {
-                mv.forceCollapse();
+                mv.collapseAll();
                 if (endJackView !== null && endJackView.parent === mv) {
                     endJackView.dropTargeted = false;
                     endJackView = null;
@@ -158,8 +163,8 @@ Shape {
                 cData[endJackView.jack.dir] = endJackView.jack;
                 var cObj = cComponent.createObject(pView.patch, cData);
                 pView.patch.addCable(cObj);
-                startJackView.parent.forceCollapse();
-                endJackView.parent.forceCollapse();
+                startJackView.parent.collapseAll();
+                endJackView.parent.collapseAll();
             }
             endJackView.dropTargeted = false;
             endJackView = null;

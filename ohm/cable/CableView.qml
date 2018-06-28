@@ -9,50 +9,28 @@ import ohm.helpers 1.0
 import ohm.ui 1.0
 
 Shape {
+    id: cView
     property Cable cable
-    property OutJackView ojv: cable.out.view
-    property ModuleView ojm: ojv ? ojv.parent : null
-    property InJackView ijv: cable.inp.view
-    property ModuleView ijm: ijv ? ijv.parent : null
-
-    width: pView.width;
-    height: pView.height;
-    //antialiasing: true
-    //layer.samples: 16
-    //smooth: true    
-    //layer.smooth: true
-    //layer.mipmap: true
-    //layer.enabled: true
-
+	    
     ShapePath {
-        id: cableView
+        id: cPath
         strokeWidth: 2.5
         strokeColor: Style.cableColor
         fillColor: "transparent"
-        joinStyle: ShapePath.RoundJoin
-        strokeStyle: ShapePath.SolidLine
-        startX: Fn.centerX(ojm)
-        startY: Fn.centerY(ojm)
-
-        PathCubic {
-            id: pathCubic
-            property double c: Style.cableControlStiffness
-            x: Fn.centerX(ijm)
-            y: Fn.centerY(ijm)
-            control1X:
-            c * ojv.r*Math.cos(ojv.theta) + Fn.centerX(ojm)
-            control1Y:
-            -c * ojv.r*Math.sin(ojv.theta) + Fn.centerY(ojm)
-            control2X:
-            c * ijv.r*Math.cos(ijv.theta) + Fn.centerX(ijm)
-            control2Y:
-            -c * ijv.r*Math.sin(ijv.theta) + Fn.centerY(ijm)
-
-        }
+	startX: cable.out.view.anchor1X
+	startY: cable.out.view.anchor1Y
+	PathCubic {
+	    control1X: cable.out.view.anchor3X
+	    control1Y: cable.out.view.anchor3Y
+	    control2X: cable.inp.view.anchor3X
+	    control2Y: cable.inp.view.anchor3Y
+	    x: cable.inp.view.anchor1X
+	    y: cable.inp.view.anchor1Y
+	}
     }
 
     Component.onCompleted: {
-        cable.view = cableView;
+        cable.view = cView;
     }
 }
 

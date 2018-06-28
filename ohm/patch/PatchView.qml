@@ -105,6 +105,7 @@ Item {
                 anchors.fill: parent
                 drag.target: content
                 drag.filterChildren: true
+		drag.threshold: 1
                 propagateComposedEvents: false
                 onReleased: propagateComposedEvents = true
                 onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(mouseX, mouseY));
@@ -178,7 +179,9 @@ Item {
             contents: OhmButton {
                 x: Fn.centerInX(this,delModuleMenu)
                 y: Fn.centerInY(this,delModuleMenu.body)
+		width: 45; height: 45
                 imageUrl: "../ui/icons/delete.svg"
+		border: 0
                 onClicked: {
                     patch.deleteModule(delModuleMenu.candidate);
                     delModuleMenu.close();

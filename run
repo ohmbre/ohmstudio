@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
 
-export QSG_RENDER_LOOP=threaded
+export QSG_RENDER_LOOP=basic
 export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false"
+export QT_SCALE_FACTOR=2
+export QT_QPA_PLATFORM=xcb
+#export QSG_INFO=1
 
 node ohm.js 60600 &
 node ohm.js 54700 &
-QT_SCALE_FACTOR=4 qml -I . ohm/OhmStudio.qml
+qmlscene --multisample --desktop -I . ohm/OhmStudio.qml
 killall node

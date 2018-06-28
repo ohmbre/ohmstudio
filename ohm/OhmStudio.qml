@@ -1,5 +1,6 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
+import QtQuick.Window 2.11
 import Qt.labs.folderlistmodel 2.2
 
 import ohm.patch 1.0
@@ -11,8 +12,6 @@ ApplicationWindow {
     visible: true
     width: 320
     height: 240
-    //maximumWidth: 320
-    //maximumHeight: 240
     minimumWidth: 320
     minimumHeight: 240
     title: "Ohm Studio"
@@ -28,8 +27,8 @@ ApplicationWindow {
         Behavior on width { SmoothedAnimation { velocity: 300 } }
         height: parent.height
         background: Rectangle {
-            implicitHeight: setup.height + border.width * 2
-            implicitWidth: setup.width + border.width * 2
+            height: setup.height + border.width * 2
+            width: setup.width + border.width * 2
             x: -border.width
             y: -border.width
 	    
