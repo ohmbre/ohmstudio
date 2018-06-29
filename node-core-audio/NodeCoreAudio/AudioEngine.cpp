@@ -425,44 +425,23 @@ NAN_MODULE_INIT(Audio::AudioEngine::Init) {
 	functionTemplate->InstanceTemplate()->SetInternalFieldCount( 1 );
 
 
-    //Local<FunctionTemplate> constructorHandle = Nan::New(constructor);
-    //target->Set(Nan::New<String>("AudioEngine"), functionTemplate->GetFunction());
+	Nan::SetPrototypeMethod(functionTemplate, "isActive", Audio::AudioEngine::isActive);
+	Nan::SetPrototypeMethod(functionTemplate, "getDeviceName", Audio::AudioEngine::getDeviceName);
+	Nan::SetPrototypeMethod(functionTemplate, "getNumDevices", Audio::AudioEngine::getNumDevices);
 
-    // Get
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("isActive"), Nan::New<FunctionTemplate>(Audio::AudioEngine::isActive)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("getDeviceName"), Nan::New<FunctionTemplate>(Audio::AudioEngine::getDeviceName)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("getNumDevices"), Nan::New<FunctionTemplate>(Audio::AudioEngine::getNumDevices)->GetFunction() );
-    Nan::SetPrototypeMethod(functionTemplate, "isActive", Audio::AudioEngine::isActive);
-    Nan::SetPrototypeMethod(functionTemplate, "getDeviceName", Audio::AudioEngine::getDeviceName);
-    Nan::SetPrototypeMethod(functionTemplate, "getNumDevices", Audio::AudioEngine::getNumDevices);
+	Nan::SetPrototypeMethod(functionTemplate, "setOptions", Audio::AudioEngine::setOptions);
+	Nan::SetPrototypeMethod(functionTemplate, "getOptions", Audio::AudioEngine::getOptions);
+	Nan::SetPrototypeMethod(functionTemplate, "write", Audio::AudioEngine::write);
+	Nan::SetPrototypeMethod(functionTemplate, "read", Audio::AudioEngine::read);
+	Nan::SetPrototypeMethod(functionTemplate, "isBufferEmpty", Audio::AudioEngine::isBufferEmpty);
 
-	// Set
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("setOptions"), Nan::New<FunctionTemplate>(Audio::AudioEngine::setOptions)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("getOptions"), Nan::New<FunctionTemplate>(Audio::AudioEngine::getOptions)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("write"), Nan::New<FunctionTemplate>(Audio::AudioEngine::write)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("read"), Nan::New<FunctionTemplate>(Audio::AudioEngine::read)->GetFunction() );
-	//functionTemplate->PrototypeTemplate()->Set( Nan::New<String>("isBufferEmpty"), Nan::New<FunctionTemplate>(Audio::AudioEngine::isBufferEmpty)->GetFunction() );
-    Nan::SetPrototypeMethod(functionTemplate, "setOptions", Audio::AudioEngine::setOptions);
-    Nan::SetPrototypeMethod(functionTemplate, "getOptions", Audio::AudioEngine::getOptions);
-    Nan::SetPrototypeMethod(functionTemplate, "write", Audio::AudioEngine::write);
-    Nan::SetPrototypeMethod(functionTemplate, "read", Audio::AudioEngine::read);
-    Nan::SetPrototypeMethod(functionTemplate, "isBufferEmpty", Audio::AudioEngine::isBufferEmpty);
-
-	//constructor = Persistent<Function>::New( functionTemplate->GetFunction() );
-    //Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(EOLFinder::New);
-//    NanAssignPersistent(constructor, functionTemplate->GetFunction());
-    constructor.Reset(Isolate::GetCurrent(), functionTemplate->GetFunction());
+	constructor.Reset(Isolate::GetCurrent(), functionTemplate->GetFunction());
 } // end AudioEngine::Init()
 
 
 //////////////////////////////////////////////////////////////////////////////
 /*! Create a new instance of the audio engine */
-//v8::Handle<v8::Value> Audio::AudioEngine::NewInstance(const v8::Arguments& info) {
 void Audio::AudioEngine::NewInstance(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  //Nan::HandleScope scope;
-	//HandleScope scope;
-
-
 	int argc = info.Length();
 	if (argc > 2) argc = 2;
        
@@ -482,9 +461,8 @@ void Audio::AudioEngine::NewInstance(const Nan::FunctionCallbackInfo<v8::Value>&
 //////////////////////////////////////////////////////////////////////////////
 /*! Create a v8 object */
 void Audio::AudioEngine::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
-
+        Nan::HandleScope scope;
+	
 	Local<Object> options;
 
 	if( info.Length() > 0 ) {
@@ -506,8 +484,7 @@ void Audio::AudioEngine::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 //////////////////////////////////////////////////////////////////////////////
 /*! Write samples to the current audio device */
 void Audio::AudioEngine::write(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
+        Nan::HandleScope scope;
 
 	AudioEngine* pEngine = AudioEngine::Unwrap<AudioEngine>( info.This() );
 
@@ -525,9 +502,8 @@ void Audio::AudioEngine::write(const Nan::FunctionCallbackInfo<v8::Value>& info)
 //////////////////////////////////////////////////////////////////////////////
 /*! Checks if the current audio buffer has been fed to Port Audio */
 void Audio::AudioEngine::isBufferEmpty(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
-
+        Nan::HandleScope scope;
+	
 	AudioEngine* pEngine = AudioEngine::Unwrap<AudioEngine>( info.This() );
 
 	uv_mutex_lock( &pEngine->m_mutex );
@@ -539,9 +515,8 @@ void Audio::AudioEngine::isBufferEmpty(const Nan::FunctionCallbackInfo<v8::Value
 //////////////////////////////////////////////////////////////////////////////
 /*! Read samples from the current audio device */
 void Audio::AudioEngine::read(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
-
+        Nan::HandleScope scope;
+	
 	AudioEngine* pEngine = AudioEngine::Unwrap<AudioEngine>( info.This() );
 
 	if (pEngine->m_bReadMicrophone) {
@@ -557,8 +532,7 @@ void Audio::AudioEngine::read(const Nan::FunctionCallbackInfo<v8::Value>& info) 
 //////////////////////////////////////////////////////////////////////////////
 /*! Returns whether the PortAudio stream is active */
 void Audio::AudioEngine::isActive(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
+        Nan::HandleScope scope;
 
 	AudioEngine* pEngine = AudioEngine::Unwrap<AudioEngine>( info.This() );
 
@@ -572,8 +546,7 @@ void Audio::AudioEngine::isActive(const Nan::FunctionCallbackInfo<v8::Value>& in
 //////////////////////////////////////////////////////////////////////////////
 /*! Get the name of an audio device with a given ID number */
 void Audio::AudioEngine::getDeviceName(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
+        Nan::HandleScope scope;
 
 	if( !info[0]->IsNumber() ) {
 		return  Nan::ThrowTypeError("getDeviceName() requires a device index");
@@ -590,8 +563,7 @@ void Audio::AudioEngine::getDeviceName(const Nan::FunctionCallbackInfo<v8::Value
 //////////////////////////////////////////////////////////////////////////////
 /*! Get the number of available devices */
 void Audio::AudioEngine::getNumDevices(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    Nan::HandleScope scope;
-	//HandleScope scope;
+        Nan::HandleScope scope;
 
 	int deviceCount = Pa_GetDeviceCount();
 

@@ -15,6 +15,14 @@ Module {
 	OutJack {
 	    label: "out2"
 	    stream: inStream('in')
+	},
+	OutJack {
+	    label: "out3"
+	    stream: inStream('in')
+	},
+	OutJack {
+	    label: "out4"
+	    stream: inStream('in')
 	}
     ]
 

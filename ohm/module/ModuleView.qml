@@ -82,7 +82,7 @@ Item {
 	    x: parent.width*.20
 	    y: parent.height*.20
 	    width:parent.width*.6
-	    height: parent.height*.55
+	    height: parent.height*.64
 	    color: 'black'
 	    radius: parent.height*.015
 	    opacity: 0
@@ -98,26 +98,27 @@ Item {
 	states: [
 	    State {
 		name: "controlMode"
-		StateChangeScript { script: { forceCollapse(); displayLoader.item.enter(); }}
+		StateChangeScript { script: { collapseAll(); displayLoader.item.enter(); }}
 		PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
 				  topPadding:-92; leftPadding: -20; rightPadding: -20 }
 		PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
-		PropertyChanges { target: outline; radius: 5; eventsEnabled: false
-				  width: pView.width/scaler.max; height: pView.height/scaler.max }
+		PropertyChanges { target: outline; radius: outline.height/10; eventsEnabled: false
+				  size.width: pView.width/scaler.max; size.height: pView.height/scaler.max
+				  dragTarget: null }
 		PropertyChanges { target: controller; opacity: 1.0; visible: true }
 		PropertyChanges { target: displayLoader; sourceComponent: module.display }
 		PropertyChanges { target: display; opacity: 1.0; visible: true }
 	    },
 	    State {
 		name: "patchMode"
-		StateChangeScript { script: { forceCollapse(); displayLoader.item.exit() }}
+		StateChangeScript { script: { collapseAll(); displayLoader.item.exit() }}
 	    }
 	]
 	
 	transitions: Transition {
 	    ParallelAnimation {
 		id: controlAnim
-		NumberAnimation { target: outline; properties: "width,height,radius";
+		NumberAnimation { target: outline; properties: "size.width,size.height,radius";
 				  duration: 500; easing.type: Easing.InOutQuad }
 		NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
 				  duration: 500; easing.type: Easing.InOutQuad }
@@ -269,9 +270,9 @@ Item {
 	    offset: .5
 	    path: Path {
 		startX: .13*controller.width; startY: .2*controller.height
-		PathLine { x: .13*controller.width; y: .835*controller.height }
+		PathLine { x: .13*controller.width; y: .95*controller.height }
 		PathPercent { value: .333 }
-		PathLine { x: .88*controller.width; y: .835*controller.height }
+		PathLine { x: .88*controller.width; y: .95*controller.height }
 		PathPercent { value: .667 }
 		PathLine { x: .88*controller.width; y: .2*controller.height }
 		PathPercent { value: 1 }

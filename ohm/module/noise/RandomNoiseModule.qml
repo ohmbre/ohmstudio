@@ -10,12 +10,13 @@ Module {
     outJacks: [
         OutJack {
 	    label: 'signal'
-	    stream: '@gain*(random(u)-0.5)'
+	    stream: '@gain*noise(@seed)'
 	}
     ]
 
     inJacks: [
-	InJack { label: 'gain' }
+	InJack { label: 'gain' },
+	InJack { label: 'seed' }
     ]
 
     cvs: [
@@ -24,6 +25,12 @@ Module {
 	    inVolts: inStream('gain')
 	    from: 2
 	    logBase: 1.38
+	},
+	LogScaleCV {
+	    label: 'seed'
+	    inVolts: inStream('seed')
+	    from: 666
+	    onControlVoltsChanged: controlVolts = Math.round(controlVolts)
 	}
     ]
     

@@ -187,6 +187,23 @@
         }
     }
 
+    ohms.noise = class noise extends ohms.ohmo {
+	constructor(seed) {
+	    super()
+	    this.seed = seed
+	    this.lastseed = 1
+	}
+	[Symbol.toPrimitive]() {
+	    const seed = +this.seed
+	    if (seed != this.lastseed) {
+		this.lastseed = seed
+		this.state = seed
+	    }
+	    this.state = (this.state * 279470273) % 4294967291
+	    return this.state / 2147483645 - 1
+	}
+    }
+	    
 
     ohms.sequence = class sequence extends ohms.ohmo {
         constructor(clock, values) {
@@ -296,7 +313,7 @@
                 this.count++
             } else if (this.ingate && clklvl <= 1)
                 this.ingate = false
-	    if ((this.count+this.shift) % this.div == 0)
+	    if ((this.count-this.shift) % this.div == 0)
 		return clklvl
             return 0
 	}
@@ -348,7 +365,7 @@
             throw new Exception("not supposed to execute this")
         }
     }
-
+    
     o.ohms = ohms
     assign(o, o.ohms)
 
@@ -380,8 +397,7 @@
         unaryMinus: (a) => -a,
         add: (a, b) => a + b,
         multiply: (a, b) => a * b,
-        divide: (a, b) => a / b,
-	random: () => Math.random()
+        divide: (a, b) => a / b
     }
     Object.assign(mathOverrides, Math)
 
@@ -506,27 +522,24 @@
 
 	    for (let n = 0; n < ohm.nodes.length; n++)
 		o.outstreams[n] = ohm.nodes[n]
-            o.symbols = symbols
-	    
+            o.symbols = symbols	    
         } else if (msg.cmd == 'set' && msg.key == 'controls') {
             let val = parseFloat(msg.val)
             if (msg.subkey in o.controls && typeof o.controls[msg.subkey] != 'number')
 		o.controls[msg.subkey].val = val
             else o.controls[msg.subkey] = val
-        } else if (msg.cmd == 'set' && msg.key == 'audioEnabled' && msg.val == true) {
-	    o.audioEnabled = true
-	    for (let key in o.msgBacklog)
-		if (o.msgBacklog[key])
-		    o.handler(o.msgBacklog[key])
-	    o.msgBacklog = []
-	    o.runAudio()
+        } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
+	    if (msg.val == true && !o.audioEnabled) {
+		o.audioEnabled = true
+		o.runAudio()
+	    } else if (msg.val == false && o.audioEnabled)
+		o.audioEnabled = false
 	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
 	    if (msg.val == true && !o.scopeEnabled) {
 		o.scopeEnabled = true
 		setTimeout(o.runScope,500)
-	    } else if (msg.val == false && o.scopeEnabled) {
+	    } else if (msg.val == false && o.scopeEnabled)
 		o.scopeEnabled = false
-	    }
 	}
     }
 
@@ -567,20 +580,26 @@
 	    if (o.scopeEnabled)
 		setTimeout(loop,delay)
 	}
-	setTimeout(loop,0)
+	if (o.scopeEnabled)
+	    setTimeout(loop,0)
     }
     
     if (process.platform == 'linux')
 	o.audio = (callback) => {
 	    const alsa = require('./alsa')
-	    o.pcm = alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
-	    setInterval(() => {
+	    if (!o.pcm)
+		o.pcm = alsa.Sound(o.device, o.sampleRate, o.samplePeriod, o.sampleBuffer);
+	    function loop() {
 		const buffers = o.pcm.buffers()
 		const outsamples = buffers.p
 		const insamples = buffers.c
 		callback(insamples,outsamples)
 		o.pcm.commit();
-	    }, 0);
+		if (o.audioEnabled)
+		    setTimeout(loop,0)
+	    }
+	    if (o.audioEnabled)
+		setTimeout(loop,0)
 	}
     else
 	o.audio = (callback) => {
@@ -591,6 +610,8 @@
 	    engine.addAudioCallback((insamples) => {
 		const outsamples = new Array(insamples.length)
 		callback(insamples,outsamples)
+		if (!o.audioEnabled)
+		    engine.processingCallbacks = []
 		return outsamples
 	    });    
 	}

@@ -11,27 +11,28 @@ Module {
     outJacks: [
         GateOutJack {
 	    label: 'clkout'
-	    stream: 'clkdiv($clkin,round(@div,0),round(@shift,0))'
+	    stream: 'clkdiv($clkin,@div,@shift)'
 	}
     ]
 
     inJacks: [
-        InJack {label: 'clkin'},
 	InJack {label: 'div'},
+        InJack {label: 'clkin'},
 	InJack {label: 'shift'}
     ]
 
     cvs: [
-	LogScaleCV {
-	    logBase: 1.5
+	LinearCV {
 	    label: 'div'
 	    inVolts: inStream('div')
-	    from: 2
+	    from: 10
+	    onControlVoltsChanged: controlVolts = Math.round(controlVolts)
 	},
 	LinearCV {
 	    label: 'shift'
 	    inVolts: inStream('shift')
 	    from: 0
+	    onControlVoltsChanged: controlVolts = Math.round(controlVolts)
 	}
     ]
 }

@@ -60,9 +60,10 @@ Shape {
         anchors.fill: parent
 	drag.target: parent.dragTarget
         drag.smoothed: true
-	drag.threshold: 1
+	drag.threshold: 5
         propagateComposedEvents: true
         preventStealing: true
+	hoverEnabled: true
 
 	function inside(event) {
 	    return rect.contains(Qt.point(event.x, event.y)) && rect.eventsEnabled

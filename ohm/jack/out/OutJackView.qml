@@ -3,7 +3,7 @@ import ohm.jack 1.0
 import ohm.ui 1.0
 
 JackView {
-    direction: -1
+    isOut: true
     bgColor: Style.outJackColor
     bgColorLit: Style.outJackLitColor
 }

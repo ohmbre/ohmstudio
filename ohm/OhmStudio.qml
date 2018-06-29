@@ -14,6 +14,7 @@ ApplicationWindow {
     height: 240
     minimumWidth: 320
     minimumHeight: 240
+
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
     

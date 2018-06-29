@@ -29,12 +29,12 @@ Module {
 
     property var outL: inStream('outL')
     property var outR: inStream('outR')
-    onOutLChanged: engine.codec.msg({cmd:'set',key:'streams',val:[outL,outR]})
-    onOutRChanged: engine.codec.msg({cmd:'set',key:'streams',val:[outL,outR]})
+    onOutLChanged: engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
+    onOutRChanged: engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
 
 
-    Component.onCompleted: engine.codec.msg({cmd:'set',key:'audioEnabled',val:true})
-
+    Component.onCompleted: engine.codec.msg({cmd:'set', key:'audioEnabled', val:true})
+    Component.onDestruction: engine.codec.msg({cmd:'set', key:'audioEnabled', val:false})
 }
 
 

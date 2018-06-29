@@ -17,11 +17,11 @@ Module {
 
     inJacks: [
         InJack {
-	    label: 'in'
-	    defaultStream: '5'
+	    label: 'gain'
 	},
         InJack {
-	    label: 'gain'
+	    label: 'in'
+	    defaultStream: '5'
 	}
     ]
 

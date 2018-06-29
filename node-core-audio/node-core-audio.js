@@ -18,7 +18,6 @@ var globalNamespace = {};
 	};
 }(typeof exports === 'object' && exports || globalNamespace));
 
-var FFT = require("fft");
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -55,8 +54,6 @@ function AudioEngine( options ) {
 	this.tempBuffer = [];
 	this.processBuffer = [];
 
-	this.fft = new FFT.complex( this.audioEngine.getOptions().framesPerBuffer, false );
-	this.fftBuffer = [];
 	
 	var _this = this;
 
@@ -130,8 +127,7 @@ AudioEngine.prototype.getProcessAudio = function() {
 	var _this = this;
 
 	var options = this.audioEngine.getOptions(),
-		numChannels = options.inputChannels,
-		fftBuffer = this.fftBuffer;
+	    numChannels = options.inputChannels;
 	
 	var processAudio = function( inputBuffer ) {	
 
@@ -176,13 +172,6 @@ AudioEngine.prototype.setOptions = function( options ) {
 	this.audioEngine.setOptions( options );
 	this.options = this.audioEngine.getOptions();
 } // end AudioEngine.setOptions()
-
-
-//////////////////////////////////////////////////////////////////////////
-// Add a processing callback 
-AudioEngine.prototype.createAudioHub = function( port ) {
-	this.audioStreamer = require("audio-streamer").createNewAudioStreamer( port );
-} // end AudioEngine.createAudiohub()
 
 
 //////////////////////////////////////////////////////////////////////////

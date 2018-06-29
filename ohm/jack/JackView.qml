@@ -9,7 +9,8 @@ import ohm.module 1.0
 Item {
     id: jView
     property Jack jack
-    property int direction
+    property bool isOut
+    property int direction: isOut? -1 : 1
     property double extension: 0
     property var shapeData
     property color bgColor
@@ -45,7 +46,7 @@ Item {
 		var elements = []
 		var cw = 'PathArc.Clockwise; '
 		var ccw = 'PathArc.Counterclockwise; '
-		if (direction == -1) {
+		if (isOut) {
 		    var tmp = cw
 		    cw = ccw
 		    ccw = tmp
@@ -90,7 +91,7 @@ Item {
     property alias shape: jackShape
     property alias path: shapePath
     property alias pad: jackPad
-    property double extRad: parent.height/2+Style.jackExtension*3
+    property double extRad: parent.height/2+Style.jackExtension*2.7
     property double extRadHalf: parent.height/2+Style.jackExtension/2
     property double centerX: posRef.x + direction*shapeData.center.x
     property double centerY: posRef.y + shapeData.center.y 
@@ -105,22 +106,22 @@ Item {
     Item {
 	id: middle
 									       
-	x: centerX - (direction == 1 ? Style.jackExtension : 0)
+	x: centerX - (isOut ? 0 : Style.jackExtension)
 	y: centerY - 4
 	width: Style.jackExtension
 	height: 8
 	OhmText {
             id: jackLabel
-	    x: direction == 1 ? 0 : Style.jackExtension
+	    x: isOut ? Style.jackExtension : 0
 	    y:0; width: 0; height: 8
             text: jack.label
             property color blend: Style.jackLabelColor
             color: Qt.rgba(blend.r, blend.g, blend.b, 0.98 * (jView.hasCable ? 1 : extension))
-            horizontalAlignment: direction == 1 ? Text.AlignRight : Text.AlignLeft
+            horizontalAlignment: isOut ? Text.AlignLeft : Text.AlignRight
             font.pixelSize: 8
 	    font.weight: Font.Medium
-	    rightPadding: (direction == 1 ? 1.5 : 0)
-	    leftPadding: (direction == 1 ? 0 : 1.5)
+	    rightPadding: (isOut ? 0 : 1.5)
+	    leftPadding: (isOut ? 1.5 : 0)
 	}
 	
 	Image {
@@ -129,15 +130,15 @@ Item {
             width: Style.jackExtension
 	    height: 5
 	    verticalAlignment: Text.AlignVCenter
-	    horizontalAlignment: direction == 1 ? Text.AlignRight : Text.AlignLeft
+	    horizontalAlignment: isOut ? Text.AlignLeft : Text.AlignRight
             rotation: 0
 	    transformOrigin: Item.Center
-	    opacity: jView.hasCable ? 1 : extension
+	    opacity: hasCable ? 1 : extension
 	    mipmap: true
             smooth: true
 	}
 	rotation: direction*shapeData.theta*180/Math.PI
-        transformOrigin: Item.Right
+        transformOrigin: isOut ? Item.Left : Item.Right
     }
 
     property bool dropTargeted: false

@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-
 export QSG_RENDER_LOOP=basic
-export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false"
-export QT_SCALE_FACTOR=2
-export QT_QPA_PLATFORM=xcb
-#export QSG_INFO=1
+export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false; qt.*.info=true; qt.qml.gc.allocatorStats=false; qt.qml.gc.statistics=false; qt.quick.focus=false; qt.quick.hover.trace=false; qt.qml.diskcache=false; qt.quick.dirty=false; qt.quick.itemview.lifecycle=false; qt.qml.binding.removal=false; qt.scenegraph.time.renderloop=false"
+export QT_SCALE_FACTOR=4
+export QSG_INFO=1
+
 
 node ohm.js 60600 &
 node ohm.js 54700 &
-qmlscene --multisample --desktop -I . ohm/OhmStudio.qml
+qml -scaling -gles -I . ohm/OhmStudio.qml
 killall node

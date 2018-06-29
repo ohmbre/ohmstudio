@@ -15,9 +15,9 @@ Module {
     label: 'Scope'
 
     inJacks: [
-        InJack { label: 'ch1' },
-	InJack { label: 'ch2' },
 	InJack { label: 'vtrig' },
+	InJack { label: 'ch2' },
+        InJack { label: 'ch1' },
 	InJack { label: 'window' }
     ]
 

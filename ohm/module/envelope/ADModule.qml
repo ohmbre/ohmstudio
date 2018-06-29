@@ -17,12 +17,12 @@ Module {
     ]
 
     inJacks: [
-        InJack {label: 'gate'},
-	InJack {label: 'attack'},
-	InJack {label: 'decay'},
-	InJack {label: 'atkshape'},
-	InJack {label: 'decshape'},
 	InJack {label: 'gain'},
+	InJack {label: 'atkshape'},
+	InJack {label: 'attack'},
+        InJack {label: 'gate'},
+	InJack {label: 'decay'},
+	InJack {label: 'decshape'},
 	InJack {label: 'offset'}
     ]
 

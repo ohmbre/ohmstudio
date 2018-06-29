@@ -65,7 +65,7 @@ Item {
                         if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
                             scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
                             xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
-                            yAnim.to = -(m.view.y + m.view.height/2)*scaler.max + pView.height/2
+                            yAnim.to = -(m.view.y + m.view.height/2 + 2)*scaler.max + pView.height/2
                             zoomPanAnim.start();
                             m.view.innerModule.state = "controlMode";
                             return -1; // break
@@ -108,7 +108,7 @@ Item {
 		drag.threshold: 1
                 propagateComposedEvents: false
                 onReleased: propagateComposedEvents = true
-                onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(mouseX, mouseY));
+                onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
                 onPressAndHold: moduleMenu.popup()
             }
         }
