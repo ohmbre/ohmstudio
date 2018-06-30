@@ -9,13 +9,10 @@ import ohm.module.multiple 1.0
 import ohm.module.mix 1.0
 import ohm.module.noise 1.0
 import ohm.module.vca 1.0
+import ohm.module.sequencer 1.0
 
 Patch {
 	cables: [
-		Cable {
-			out: modules[0].jack("trig")
-			inp: modules[3].jack("in")
-		},
 		Cable {
 			out: modules[1].jack("clkout")
 			inp: modules[4].jack("in")
@@ -25,48 +22,20 @@ Patch {
 			inp: modules[7].jack("gate")
 		},
 		Cable {
-			out: modules[6].jack("envelope")
-			inp: modules[9].jack("in")
-		},
-		Cable {
-			inp: modules[8].jack("v/oct")
-			out: modules[9].jack("out2")
-		},
-		Cable {
-			inp: modules[8].jack("gain")
-			out: modules[9].jack("out3")
-		},
-		Cable {
 			out: modules[8].jack("signal")
-			inp: modules[11].jack("in2")
+			inp: modules[10].jack("in2")
 		},
 		Cable {
 			out: modules[7].jack("envelope")
-			inp: modules[13].jack("gain")
+			inp: modules[12].jack("gain")
+		},
+		Cable {
+			out: modules[12].jack("signal")
+			inp: modules[14].jack("in2")
 		},
 		Cable {
 			out: modules[13].jack("signal")
-			inp: modules[15].jack("in2")
-		},
-		Cable {
-			out: modules[14].jack("signal")
-			inp: modules[15].jack("in1")
-		},
-		Cable {
-			inp: modules[11].jack("in1")
-			out: modules[15].jack("out")
-		},
-		Cable {
-			out: modules[11].jack("out")
-			inp: modules[16].jack("in")
-		},
-		Cable {
-			inp: modules[12].jack("in")
-			out: modules[16].jack("out")
-		},
-		Cable {
-			out: modules[4].jack("out3")
-			inp: modules[6].jack("gate")
+			inp: modules[14].jack("in1")
 		},
 		Cable {
 			out: modules[4].jack("out2")
@@ -77,37 +46,157 @@ Patch {
 			out: modules[3].jack("out4")
 		},
 		Cable {
-			inp: modules[10].jack("outL")
-			out: modules[12].jack("out1")
-		},
-		Cable {
-			inp: modules[10].jack("outR")
-			out: modules[12].jack("out2")
-		},
-		Cable {
 			inp: modules[2].jack("clkin")
 			out: modules[3].jack("out1")
 		},
 		Cable {
 			out: modules[2].jack("clkout")
-			inp: modules[17].jack("gate")
+			inp: modules[15].jack("gate")
 		},
 		Cable {
-			inp: modules[14].jack("gain")
-			out: modules[17].jack("envelope")
+			inp: modules[9].jack("outR")
+			out: modules[11].jack("out2")
 		},
 		Cable {
-			out: modules[9].jack("out1")
-			inp: modules[14].jack("seed")
+			inp: modules[9].jack("outL")
+			out: modules[11].jack("out1")
+		},
+		Cable {
+			out: modules[4].jack("out4")
+			inp: modules[6].jack("gate")
+		},
+		Cable {
+			out: modules[4].jack("out3")
+			inp: modules[16].jack("gate")
+		},
+		Cable {
+			inp: modules[3].jack("in")
+			out: modules[17].jack("clkout")
+		},
+		Cable {
+			out: modules[0].jack("trig")
+			inp: modules[18].jack("in")
+		},
+		Cable {
+			inp: modules[17].jack("clkin")
+			out: modules[18].jack("out4")
+		},
+		Cable {
+			out: modules[14].jack("out")
+			inp: modules[20].jack("in2")
+		},
+		Cable {
+			inp: modules[10].jack("in1")
+			out: modules[20].jack("out")
+		},
+		Cable {
+			out: modules[6].jack("envelope")
+			inp: modules[22].jack("in")
+		},
+		Cable {
+			inp: modules[8].jack("gain")
+			out: modules[22].jack("out2")
+		},
+		Cable {
+			inp: modules[8].jack("v/oct")
+			out: modules[16].jack("envelope")
+		},
+		Cable {
+			out: modules[18].jack("out1")
+			inp: modules[21].jack("clkin")
+		},
+		Cable {
+			inp: modules[13].jack("gain")
+			out: modules[15].jack("envelope")
+		},
+		Cable {
+			inp: modules[19].jack("clock")
+			out: modules[25].jack("out3")
+		},
+		Cable {
+			out: modules[21].jack("clkout")
+			inp: modules[25].jack("in")
+		},
+		Cable {
+			out: modules[23].jack("envelope")
+			inp: modules[26].jack("gain")
+		},
+		Cable {
+			out: modules[18].jack("out2")
+			inp: modules[23].jack("gate")
+		},
+		Cable {
+			out: modules[19].jack("v/oct")
+			inp: modules[28].jack("in")
+		},
+		Cable {
+			inp: modules[27].jack("v/oct")
+			out: modules[28].jack("out3")
+		},
+		Cable {
+			out: modules[27].jack("signal")
+			inp: modules[29].jack("in1")
+		},
+		Cable {
+			out: modules[26].jack("signal")
+			inp: modules[29].jack("in2")
+		},
+		Cable {
+			inp: modules[20].jack("in1")
+			out: modules[29].jack("out")
+		},
+		Cable {
+			out: modules[25].jack("out2")
+			inp: modules[30].jack("gate")
+		},
+		Cable {
+			inp: modules[27].jack("gain")
+			out: modules[30].jack("envelope")
+		},
+		Cable {
+			inp: modules[26].jack("v/oct")
+			out: modules[28].jack("out4")
+		},
+		Cable {
+			out: modules[24].jack("signal")
+			inp: modules[31].jack("in")
+		},
+		Cable {
+			inp: modules[26].jack("duty")
+			out: modules[31].jack("out4")
+		},
+		Cable {
+			inp: modules[19].jack("randseed")
+			out: modules[31].jack("out2")
+		},
+		Cable {
+			inp: modules[24].jack("gain")
+			out: modules[32].jack("signal")
+		},
+		Cable {
+			out: modules[10].jack("out")
+			inp: modules[33].jack("in2")
+		},
+		Cable {
+			inp: modules[11].jack("in")
+			out: modules[33].jack("out")
+		},
+		Cable {
+			inp: modules[33].jack("in1")
+			out: modules[34].jack("signal")
+		},
+		Cable {
+			out: modules[9].jack("inL")
+			inp: modules[34].jack("v/oct")
 		}
 	]
 	modules: [
 		ClockModule {
 			savedControlVolts: [
-				8.587416837928544
+				7.562818460288604
 			]
-			x: -120.78266470764902
-			y: 1.285150382852862},
+			x: -181.4213324200266
+			y: 30.788548423749944},
 		ClockDividerModule {
 			savedControlVolts: [
 				-6,
@@ -117,19 +206,19 @@ Patch {
 			y: -29.395760869547985},
 		ClockDividerModule {
 			savedControlVolts: [
-				-6,
+				-8,
 				1
 			]
-			x: -30.15168111920275
-			y: 83.65986217575983},
+			x: -26.312171490103765
+			y: 92.3932254413445},
 		MultipleModule {
 			savedControlVolts: []
 			x: -71.70371926692201
 			y: 31.674684673592765},
 		MultipleModule {
 			savedControlVolts: []
-			x: -10.835111973787662
-			y: 13.7218947875308},
+			x: -14.034760128697599
+			y: 7.785928175116396},
 		ClockDividerModule {
 			savedControlVolts: [
 				-8,
@@ -139,84 +228,197 @@ Patch {
 			y: 58.355277070142165},
 		ADModule {
 			savedControlVolts: [
-				-6.160918294906795,
-				2.602735154485236,
-				-1.0929924276865481,
-				-0.6109674893354384,
-				6.3239004659117235,
-				-1.8118024784388673
+				-8.13806601350122,
+				3.2009837791933275,
+				1.7536906352603783,
+				-0.6903264992985783,
+				7.254593475641752,
+				0.015764686826386765
 			]
-			x: 46.024753153461006
-			y: -41.10271436347227},
+			x: 106.83723481517063
+			y: -74.145334457118},
 		ADModule {
 			savedControlVolts: [
-				-3.187046585686357,
-				1.7167523702579413,
-				1.2650384766799867,
-				0.543791768168445,
-				6.179119639492413,
-				0
+				-9.236540921146034,
+				7.5373807310339025,
+				0.8647356174426477,
+				2.7189588408422143,
+				8.551087737365915,
+				-9.40005866798217
 			]
-			x: 72.1830943261698
-			y: 17.105193877630427},
+			x: 81.64888881456068
+			y: 12.621396488392634},
 		SineOscModule {
 			savedControlVolts: [
 				-10,
-				-6.177901310612794
+				-10
 			]
-			x: 183.50381750242695
-			y: -20.057847371570688},
-		MultipleModule {
-			savedControlVolts: []
-			x: 105.097686735622
-			y: -12.680349735961954},
+			x: 246.14299731531162
+			y: -47.362027521765754},
 		AudioCodecModule {
 			savedControlVolts: []
-			x: 378.303584522223
-			y: 20.621062868402078},
+			x: 368.4805684421365
+			y: 101.3373369767171},
 		MixModule {
 			savedControlVolts: []
-			x: 240.47482515570505
-			y: 32.255738418316014},
+			x: 231.64895651901202
+			y: 47.23089356593289},
 		MultipleModule {
 			savedControlVolts: []
-			x: 304.3427781581313
-			y: -1.5808955566503755},
+			x: 300.9853429918471
+			y: 8.911089337987505},
 		RandomNoiseModule {
 			savedControlVolts: [
 				-10,
 				-3
 			]
-			x: 153.69887906516692
-			y: 35.90478914045036},
+			x: 145.34023907422625
+			y: 35.25430119880741},
 		RandomNoiseModule {
 			savedControlVolts: [
 				-10,
-				10
+				-7
 			]
-			x: 100.5046089395023
-			y: 75.91397242193455},
+			x: 90.27425733719576
+			y: 89.40981407268123},
 		MixModule {
 			savedControlVolts: []
-			x: 180.9434593209669
-			y: 87.50575066417264},
-		VCAModule {
-			savedControlVolts: [
-				1.4594028441204934,
-				0
-			]
-			x: 280.59796116773623
-			y: 69.912250882433},
+			x: 171.7698914175262
+			y: 92.63962841310376},
 		ADModule {
 			savedControlVolts: [
-				0.7666396870626855,
-				-0.555292303916179,
-				-0.5661836752241083,
-				-1.3794346697175435,
-				7.106840415632,
+				0.6194957914927421,
+				1.4926861224840877,
+				0.015155522386580245,
+				1.4436381572941066,
+				8.339740354219408,
 				-10
 			]
-			x: 30.57823879569139
-			y: 121.23312454369534}
+			x: 11.627512759304182
+			y: 129.35967425527315},
+		ADModule {
+			savedControlVolts: [
+				-7.7354000851132465,
+				2.8092092221132816,
+				2.0237590260251803,
+				-2.2217783801045243,
+				4.102657661638409,
+				0.829624845759632
+			]
+			x: 81.95960583512351
+			y: -31.706162586839923},
+		ClockDividerModule {
+			savedControlVolts: [
+				-8,
+				0
+			]
+			x: -113.90719042343619
+			y: 82.0578184901957},
+		MultipleModule {
+			savedControlVolts: []
+			x: -137.4913471490197
+			y: 144.70597982044558},
+		RandSeqModule {
+			savedControlVolts: [
+				-5,
+				-5.559623847999669,
+				-5.625,
+				0
+			]
+			x: 50.29939346106278
+			y: 221.74405048566973},
+		MixModule {
+			savedControlVolts: []
+			x: 226.86160667180388
+			y: 137.27269890369985},
+		ClockDividerModule {
+			savedControlVolts: [
+				-8,
+				-4
+			]
+			x: -92.54592663024982
+			y: 203.9032894895223},
+		MultipleModule {
+			savedControlVolts: []
+			x: 174.50600817431655
+			y: -49.86219827486764},
+		ADModule {
+			savedControlVolts: [
+				-2.741959912337685,
+				-0.675170976911998,
+				-1.4775306000975057,
+				-1.4145454414005592,
+				5.265336056859784,
+				5.534259707353566
+			]
+			x: -51.74525330770189
+			y: 152.51546080982985},
+		SineOscModule {
+			savedControlVolts: [
+				-8.41605354198351,
+				2.187276772861317
+			]
+			x: -10.332503504421084
+			y: 210.17355456808014},
+		MultipleModule {
+			savedControlVolts: []
+			x: -20.618221670284356
+			y: 253.9998776438265},
+		PwmOscModule {
+			savedControlVolts: [
+				-0.7278739287408236,
+				1.0227708843205185,
+				-10
+			]
+			x: 135.4245896741711
+			y: 165.70124203607747},
+		SineOscModule {
+			savedControlVolts: [
+				-1.6059375752506266,
+				-8.153830700327605
+			]
+			x: 189.3519461702524
+			y: 252.17556257162687},
+		MultipleModule {
+			savedControlVolts: []
+			x: 122.41831019390418
+			y: 234.00880854445677},
+		MixModule {
+			savedControlVolts: []
+			x: 202.73163188891272
+			y: 180.5713687701832},
+		ADModule {
+			savedControlVolts: [
+				-6.467315786234226,
+				1.1965708380247797,
+				2.1255099430439834,
+				-0.01690942709740284,
+				8.996174410714588,
+				-10
+			]
+			x: 105.077281822842
+			y: 269.6267098087244},
+		MultipleModule {
+			savedControlVolts: []
+			x: 63.990260538928624
+			y: 176.2934366815084},
+		SineOscModule {
+			savedControlVolts: [
+				-10,
+				0.310052477966277
+			]
+			x: -101.92280071243715
+			y: 254.60504225123736},
+		MixModule {
+			savedControlVolts: []
+			x: 290.89300543079116
+			y: 95.33210788511246},
+		SineOscModule {
+			savedControlVolts: [
+				1.6695318983873815,
+				-10
+			]
+			x: 301.9047461381256
+			y: 196.0925974554824}
 	]
 	name: "new patch"}

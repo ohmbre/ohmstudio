@@ -29,8 +29,16 @@ Module {
 
     property var outL: inStream('outL')
     property var outR: inStream('outR')
-    onOutLChanged: engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
-    onOutRChanged: engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
+
+    property Timer streamSender: Timer {
+	interval: 100; running: false; repeat: false
+	onTriggered: {
+	    engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
+	}
+    }
+
+    onOutLChanged: streamSender.restart()
+    onOutRChanged: streamSender.restart()
 
 
     Component.onCompleted: engine.codec.msg({cmd:'set', key:'audioEnabled', val:true})

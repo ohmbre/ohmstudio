@@ -1,6 +1,6 @@
 'use strict';
 {
-    const math = require('mathjs').create()
+    const math = require('./math.min').create()
     const ConstantNode = math.expression.node.ConstantNode
     const FunctionNode = math.expression.node.FunctionNode
     const OperatorNode = math.expression.node.OperatorNode
@@ -502,6 +502,7 @@
 
 
     o.handler = function (msg) {
+	if (o.port == 60600) console.log(msg)
         if (msg.cmd == 'set' && msg.key == 'streams') {
 	    const simplified = msg.val.map(
 		sval => math.simplify(
@@ -517,7 +518,7 @@
             const combo = new FunctionNode('separator',simplified)
             let [uniqified, symbols] = o.uniqify(combo)           
 
-            o.debug(uniqified, symbols)
+            //o.debug(uniqified, symbols)
             const ohm = o.mapOhms(uniqified, symbols)
 
 	    for (let n = 0; n < ohm.nodes.length; n++)
@@ -646,12 +647,12 @@
     module.exports = o
     
     if (require && require.main === module) {
-	const port = parseInt(process.argv[process.argv.length-1])
+	o.port = parseInt(process.argv[process.argv.length-1])
 
 	const WebSocket = require('ws');
 
-	console.log('creating server on port', port)
-	const wss = new WebSocket.Server({ port: port })
+	console.log('creating server on port', o.port)
+	const wss = new WebSocket.Server({ port: o.port })
 	
 	wss.on('connection', (ws) => {
 	    ws.on('message', function incoming(msg) {
@@ -662,7 +663,7 @@
 	    })
 	    ws.binaryType = 'arraybuffer'
 	    o.clients.push(ws)
-	})
+	})	
     }
     
 }

@@ -37,6 +37,7 @@ Model {
         return undefined;
     }
 
+    
     function inStream(label) {
 	return Fn.forEach(inJacks, function(inJack) {
 	    if (inJack.label == label) 

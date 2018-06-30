@@ -9,8 +9,8 @@ Model {
 
     objectName: "Patch"
     property string name
-    property list<Module> modules
     property list<Cable> cables
+    property list<Module> modules
     property var importList: ({'ohm.patch 1.0': true, 'ohm.cable 1.0': true})
 
     function lookupCableFor(jack) {
@@ -27,7 +27,6 @@ Model {
     function addCable(cable) {
         cables.push(cable);
         cable.parent = this;
-        //cable.inp.cableAdded(cable.out) <- done in cable oncomplete
     }
 
     function deleteCable(dCable) {
@@ -88,22 +87,23 @@ Model {
     qmlExports: ({name:'name', modules:'modules', cables:'cables'})
 
     Component.onCompleted: function() {
-        Qt.patch = this;
-        cablesChanged.connect(userChanges);
-        modulesChanged.connect(userChanges);
+        Qt.patch = this
+        cablesChanged.connect(userChanges)
+        modulesChanged.connect(userChanges)
 	Fn.forEach(modules, function(module) {
-            module.xChanged.connect(userChanges);
-            module.yChanged.connect(userChanges);
-	    module.parent = Qt.patch;
-	    Fn.forEach(module.inJacks, function(jack) { jack.parent = module });
-	    Fn.forEach(module.outJacks, function(jack) { jack.parent = module });
-        });
+            module.xChanged.connect(userChanges)
+            module.yChanged.connect(userChanges)
+	    module.parent = Qt.patch
+	    Fn.forEach(module.inJacks, function(jack) { jack.parent = module })
+	    Fn.forEach(module.outJacks, function(jack) { jack.parent = module })
+        })
+	
 	Fn.forEach(cables, function(cable) {
-            cable.parent = Qt.patch;
+            cable.parent = Qt.patch
             // de-bind from module array indices so we can add/remove modules
-            cable.inp = cable.inp;
-            cable.out = cable.out;
-        });
+            cable.inp = cable.inp
+            cable.out = cable.out
+        })
 
     }
 

@@ -137,7 +137,7 @@ ApplicationWindow {
         obj.importList = obj.parseImports(rawdata)
         activePatch.setSource("patch/PatchView.qml", {patch: obj});
         return true;
-        }
+    }
     
     Loader {
         id: activePatch

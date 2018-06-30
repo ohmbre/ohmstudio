@@ -11,4 +11,5 @@ Jack {
 	    parsed = parsed.replace(match,'(%1)'.arg(inStream(match[0].slice(1))));
 	return '(%1)'.arg(parsed)
     }
+    
 }

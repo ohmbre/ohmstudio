@@ -26,7 +26,7 @@ Module {
 	    from: 2
 	    logBase: 1.38
 	},
-	LogScaleCV {
+	LinearCV {
 	    label: 'seed'
 	    inVolts: inStream('seed')
 	    from: 666

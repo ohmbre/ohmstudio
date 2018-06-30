@@ -24,7 +24,7 @@ Module {
 	    logBase: 1.2
 	    label: 'tempo'
 	    inVolts: inStream('tempo')
-	    from: '100/mins'
+	    from: '240/mins'
 	}
     ]
 }
