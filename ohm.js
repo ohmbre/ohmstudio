@@ -502,7 +502,6 @@
 
 
     o.handler = function (msg) {
-	if (o.port == 60600) console.log(msg)
         if (msg.cmd == 'set' && msg.key == 'streams') {
 	    const simplified = msg.val.map(
 		sval => math.simplify(
