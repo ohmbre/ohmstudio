@@ -1,28 +1,22 @@
 import QtQuick 2.11
 
-import ohm 1.0
-import ohm.jack.out 1.0
-import ohm.jack.in 1.0
-import ohm.helpers 1.0
-import ohm.cv 1.0
-
 Model {
     objectName: "Module"
 
     property string label
-    
+
     property list<InJack> inJacks
     property list<OutJack> outJacks
     property list<CV> cvs
     property real x
     property real y
-    
+
     property var savedControlVolts
     onSavedControlVoltsChanged: {
-	if (cvs.length != savedControlVolts.length) return;
-	Fn.forEach(cvs, function(cv,i) {
-	    cv.controlVolts = savedControlVolts[i];
-	});
+        if (cvs.length !== savedControlVolts.length) return;
+        Fn.forEach(cvs, function(cv,i) {
+            cv.controlVolts = savedControlVolts[i];
+        });
     }
 
     property Component display: (parent && parent.view) ? parent.view.moduleDisplay : null
@@ -37,20 +31,20 @@ Model {
         return undefined;
     }
 
-    
+
     function inStream(label) {
-	return Fn.forEach(inJacks, function(inJack) {
-	    if (inJack.label == label) 
-		return inJack.stream
-	});
+        return Fn.forEach(inJacks, function(inJack) {
+            if (inJack.label === label)
+                return inJack.stream
+        });
     }
 
     function cvStream(index) {
         if (typeof index == "number")
             return cvs[index].cv;
-	return Fn.forEach(cvs, function(cv) {
+        return Fn.forEach(cvs, function(cv) {
             if (cv.label === index)
-		return cv.stream;
+                return cv.stream;
         });
     }
 

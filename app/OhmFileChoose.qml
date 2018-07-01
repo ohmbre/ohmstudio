@@ -2,7 +2,6 @@ import QtQuick 2.11
 import QtQuick.Controls 2.4
 import Qt.labs.folderlistmodel 2.11
 
-
 Rectangle {
     id: fileChooseDialog
     visible: false
@@ -13,7 +12,9 @@ Rectangle {
     color: Style.fileChooseBgColor
     x:15
     y: header.height+13
-    
+
+    property string directory
+    property string extension
     property bool forLoading: false
     property bool forSaving: false
     signal fileChosen(string fileURL)
@@ -30,20 +31,20 @@ Rectangle {
     ListView {
         id: fileChoose
         anchors.fill: parent
-	footerPositioning: ListView.OverlayFooter
+        footerPositioning: ListView.OverlayFooter
         keyNavigationEnabled: true
         highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
         focus: fileChooseDialog.visible
         model: FolderListModel {
             id: fileChooseModel
-            folder: '../../patches'
-            rootFolder: '../../patches'
-            nameFilters: ["*.qml",".."]
+            folder: fileChooseDialog.directory
+            rootFolder: fileChooseDialog.directory
+            nameFilters: ["*."+fileChooseDialog.extension, ".."]
             showDirs: true
             showDirsFirst: true
             showHidden: false
             showDotAndDotDot: true
-	    showOnlyReadable: true
+            showOnlyReadable: true
             showFiles: true
         }
         delegate: OhmText {
@@ -54,23 +55,23 @@ Rectangle {
             text: fileName == '.' ? '' : fileName
             color: Style.fileChooseTextColor
             width: parent.width
-	    height: fileName == '.' ? 0 : 13
+            height: fileName == '.' ? 0 : 13
             horizontalAlignment: Text.AlignLeft
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-		    fileChoose.currentIndex = index
+                    fileChoose.currentIndex = index
                     if (fileIsDir) {
                         if (fileName == '..') fileChooseModel.folder = fileChooseModel.parentFolder;
                         else fileChooseModel.folder += '/' + fileName;
                     } else {
-			if (fileChooseDialog.forLoading)
-			    fileChooseDialog.fileChosen(fileURL)
-			else if (fileChooseDialog.forSaving)
-			    fileChoose.footerItem.text = fileName
+                        if (fileChooseDialog.forLoading)
+                            fileChooseDialog.fileChosen(fileURL)
+                        else if (fileChooseDialog.forSaving)
+                            fileChoose.footerItem.text = fileName
                     }
                 }
-             }
+            }
         }
         header: Rectangle {
             width: parent.width
@@ -96,16 +97,16 @@ Rectangle {
             }
             color: Style.buttonBorderColor
         }
-	footer: forSaving ? saveBox: emptyFooter
-	property Component emptyFooter: Item {}
-	property Component saveBox: TextField {
-	    placeholderText: qsTr("Enter filename")
-	    font.family: asapFont.name
-	    font.pixelSize: 11
-	    height: 20
-	    width: fileChooseDialog.width
-	    padding: 1
-	    text: (new Date()).toLocaleString(Qt.locale(),'MMMd-h.map').toLowerCase() + '.qml'
-	}
+        footer: forSaving ? saveBox: emptyFooter
+        property Component emptyFooter: Item {}
+        property Component saveBox: TextField {
+            placeholderText: qsTr("Enter filename")
+            font.family: asapFont.name
+            font.pixelSize: 11
+            height: 20
+            width: fileChooseDialog.width
+            padding: 1
+            text: (new Date()).toLocaleString(Qt.locale(),'MMMd-h.map').toLowerCase() + '.qml'
+        }
     }
 }

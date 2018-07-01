@@ -1,5 +1,3 @@
-import ohm 1.0
-
 Model {
     objectName: "Jack"
 

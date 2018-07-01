@@ -1,15 +1,5 @@
-import ohm.cable 1.0
-import ohm.patch 1.0
-import ohm.module.logic 1.0
-import ohm.module.envelope 1.0
-import ohm.module.osc 1.0
-import ohm.module.output 1.0
-import ohm.module.clock 1.0
-import ohm.module.multiple 1.0
-import ohm.module.mix 1.0
-import ohm.module.noise 1.0
-import ohm.module.vca 1.0
-import ohm.module.sequencer 1.0
+import ohm 1.0
+import modules 1.0
 
 Patch {
 	cables: [

@@ -4,12 +4,6 @@ import QtQml 2.11
 import QtQml.Models 2.2
 import Qt.labs.folderlistmodel 2.2
 
-import ohm 1.0
-import ohm.module 1.0
-import ohm.cable 1.0
-import ohm.ui 1.0
-import ohm.helpers 1.0
-
 Item {
     id: pView
     property Patch patch
@@ -105,7 +99,7 @@ Item {
                 anchors.fill: parent
                 drag.target: content
                 drag.filterChildren: true
-		drag.threshold: 1
+                drag.threshold: 1
                 propagateComposedEvents: false
                 onReleased: propagateComposedEvents = true
                 onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
@@ -126,8 +120,8 @@ Item {
                 keyNavigationEnabled: true
                 model: FolderListModel {
                     id: folderModel
-                    folder: '../module'
-                    rootFolder: '../module'
+                    folder: 'file:./modules'
+                    rootFolder: 'file:./modules'
                     nameFilters: ["*?Module.qml",".."]
                     showDirs: true
                     showDirsFirst: true
@@ -151,12 +145,9 @@ Item {
                                 if (fileName == "..") folderModel.folder = folderModel.parentFolder;
                                 else folderModel.folder += "/" + fileName;
                             } else {
-                                var ns = folderModel.folder.toString();
-                                ns = ns.replace(Qt.resolvedUrl('../..'), '');
-                                while (ns.indexOf("/") !== -1) ns = ns.replace('/','.');
                                 var pos = moduleMenu.contentItem.mapToItem(pView, 0, 0);
                                 pos.x -= pView.width/2; pos.y -= pView.height/2;
-                                pView.patch.addModule(fileBaseName, ns + " 1.0", pos.x, pos.y);
+                                pView.patch.addModule(fileURL, pos.x, pos.y);
                                 moduleMenu.close();
                             }
                         }
@@ -179,9 +170,9 @@ Item {
             contents: OhmButton {
                 x: Fn.centerInX(this,delModuleMenu)
                 y: Fn.centerInY(this,delModuleMenu.body)
-		width: 45; height: 45
+                width: 45; height: 45
                 imageUrl: "../ui/icons/delete.svg"
-		border: 0
+                border: 0
                 onClicked: {
                     patch.deleteModule(delModuleMenu.candidate);
                     delModuleMenu.close();
@@ -207,8 +198,8 @@ Item {
     }
 
     property Component moduleDisplay: Item {
-	function enter(){}
-	function exit(){}
+        function enter(){}
+        function exit(){}
     }
 
     property alias contentItem: content

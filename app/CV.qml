@@ -1,27 +1,31 @@
 import QtQuick 2.11
 
-import ohm 1.0
-import ohm.helpers 1.0
-
 Model {
+    id: cv
     objectName: "CV"
-    readonly property string id: Fn.uniqId()
-
     property string label
 
+    property string _uuid
+    function uuid() {
+	if (_uuid) return _uuid
+	_uuid = Fn.uniqId()
+	return _uuid
+    }
+
+    	
     property double controlVolts: 0
-    onControlVoltsChanged: engine.updateControl(id, controlVolts);
-    
+    onControlVoltsChanged: engine.updateControl(uuid(), controlVolts);
+
     property var inVolts: 0
-    property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(id)
+    property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(uuid())
     property string knobReading: ''
-    
+
     function toQML(indent) {
-	return controlVolts.toString();
+        return controlVolts.toString();
     }
 
     Component.onCompleted: {
-	controlVoltsChanged.connect(userChanges);
+        controlVoltsChanged.connect(userChanges);
     }
-    
+
 }

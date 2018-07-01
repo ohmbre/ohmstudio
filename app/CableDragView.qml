@@ -1,11 +1,6 @@
 import QtQuick 2.11
 import QtQuick.Shapes 1.11
 
-import ohm 1.0
-import ohm.jack 1.0
-import ohm.helpers 1.0
-import ohm.ui 1.0
-
 Shape {
     id: cableDragView
     property JackView startJackView: null
@@ -15,7 +10,7 @@ Shape {
     height: pView.height
 
     property MouseArea dragPad;
-	
+
     Item{
         id: destination
         width: 5; height: 5;
@@ -42,18 +37,18 @@ Shape {
             id: dragCurve
             x: Fn.centerX(destination) - destination.dot.width/2
             y: Fn.centerY(destination) - destination.dot.height/2
-	    control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity
+            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity
             control2X: x; control2Y: y + gravityOn * Style.cableGravity;
             Behavior on control2X {
-		id: springX
-		enabled: animationOn
-		SpringAnimation { spring: .5; damping: 0.03}
-	    }
+                id: springX
+                enabled: animationOn
+                SpringAnimation { spring: .5; damping: 0.03}
+            }
             Behavior on control2Y {
-		id: springY
-		enabled: animationOn
-		SpringAnimation { spring: .5; damping: 0.03}
-	    }
+                id: springY
+                enabled: animationOn
+                SpringAnimation { spring: .5; damping: 0.03}
+            }
         }
         property alias dragCurve: dragCurve
     }
@@ -95,7 +90,7 @@ Shape {
         if (cableResult.cable) {
             pView.patch.deleteCable(cableResult.cable);
             startJackView = cableResult.otherend.view;
-	    startJackView.extend()
+            startJackView.extend()
             endJackView = jv;
             jv.dropTargeted = true;
         } else
@@ -119,13 +114,13 @@ Shape {
                 } else if (startJackView.jack.dir === "out") {
                     jacklist = mv.module.inJacks;
                 }
-		Fn.forEach(jacklist, function(jack) {
+                Fn.forEach(jacklist, function(jack) {
                     if (pView.patch.lookupCableFor(jack).cable) {
-			jack.view.collapse()
-			return;
-		    }
+                        jack.view.collapse()
+                        return;
+                    }
                     var jv = jack.view;
-		    jv.extend()
+                    jv.extend()
                     var jRelPos = dragPad.mapToItem(jv, dragPad.mouseX, dragPad.mouseY);
                     if (jv.shape.contains(jRelPos)) {
                         if (!jv.dropTargeted) {

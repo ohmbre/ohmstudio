@@ -4,14 +4,12 @@ import QtQuick 2.11
 RoundButton {
     id: control
     radius: implicitHeight/2
-    //implicitHeight: imageUrl ? image.width/2 : label.height
-    //implicitWidth: imageUrl ? image.height/2 : label.width
     padding: 10
     property string imageUrl: null
     property double border: 4
     property Image image: Image {
         source: imageUrl
-	mipmap: true
+        mipmap: true
     }
     property OhmText label: OhmText {
         text: control.text

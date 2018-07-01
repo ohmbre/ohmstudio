@@ -1,9 +1,0 @@
-module ui
-singleton Style 1.0 Style.qml
-OhmText 1.0 OhmText.qml
-OhmPopup 1.0 OhmPopup.qml
-OhmButton 1.0 OhmButton.qml
-OhmFileChoose 1.0 OhmFileChoose.qml
-CenterItem 1.0 CenterItem.qml
-OhmScope 1.0 OhmScope.qml
-OhmRect 1.0 OhmRect.qml
