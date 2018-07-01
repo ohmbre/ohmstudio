@@ -1,9 +1,13 @@
 *~
-__pycache__
 *.qbs.user*
 *.qmlproject.user*
+.qmake.stash
+node_modules
+*.o
+qrc_qml.cpp
 build
 *.qmlc
 *.jsc
-debug
+debug.html
 autosave.qml
+Makefile
