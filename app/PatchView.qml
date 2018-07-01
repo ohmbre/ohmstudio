@@ -103,7 +103,10 @@ Item {
                 propagateComposedEvents: false
                 onReleased: propagateComposedEvents = true
                 onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
-                onPressAndHold: moduleMenu.popup()
+                onPressAndHold: function(mouse) {
+		    moduleMenu.popOrigin = Qt.point(mouse.x,mouse.y)
+		    moduleMenu.popup()
+		}
             }
         }
 
@@ -113,6 +116,7 @@ Item {
             id: moduleMenu
             title: "Add Module"
             width: 95
+	    property point popOrigin: Qt.point(content.width/2, content.height/2)
             contents:  ListView {
                 id: moduleList
                 width: moduleMenu.width
@@ -145,9 +149,9 @@ Item {
                                 if (fileName == "..") folderModel.folder = folderModel.parentFolder;
                                 else folderModel.folder += "/" + fileName;
                             } else {
-                                var pos = moduleMenu.contentItem.mapToItem(pView, 0, 0);
-                                pos.x -= pView.width/2; pos.y -= pView.height/2;
-                                pView.patch.addModule(fileURL, pos.x, pos.y);
+                                pView.patch.addModule(
+				    fileURL, moduleMenu.popOrigin.x - content.width/2,
+				    moduleMenu.popOrigin.y - content.height/2);
                                 moduleMenu.close();
                             }
                         }

@@ -50,13 +50,7 @@ ApplicationWindow {
             y: 50; x: parent.width - width + radius - 3
             text: "New Patch"
             onClicked: {
-                var c = Qt.createComponent("Patch.qml");
-                var newPatch = c.createObject(window, {name: "new patch", modules: [], cables: []});
-                if (activePatch.item) {
-                    console.error('destroying active patch');
-                    activePatch.item.patch.destroy()
-                }
-                activePatch.setSource("PatchView.qml", {patch: newPatch});
+		loadPatch('import ohm 1.0; Patch { modules: []; cables: [] }')
                 setup.close();
             }
         }
@@ -119,20 +113,24 @@ ApplicationWindow {
             }
         }
     }
-
+    
     function loadPatchQML(url) {
         var rawdata = Fn.readFile(url);
 	if (!rawdata) return false
-	
-        try {
-            var obj = Qt.createQmlObject(rawdata, window, url);
-        } catch(err) {
-            console.error("could not load " + url + "\n" + err);
-            return false;
-        }
-        if (activePatch.item) {
+	return loadPatch(rawdata)
+    }
+
+    function loadPatch(raw,url) {
+	if (!url) url="dynamic"
+	if (activePatch.item) {
             console.log('destroying active patch');
             activePatch.item.patch.destroy()
+	}
+        try {
+            var obj = Qt.createQmlObject(raw, window, url);
+        } catch(err) {
+            console.error("could not load ",url,":",err);
+            return false;
         }
         activePatch.setSource("PatchView.qml", {patch: obj});
         return true;

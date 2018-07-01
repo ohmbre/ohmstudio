@@ -5,6 +5,7 @@ Module {
     id: codec
     objectName: 'AudioCodecModule'
     label: 'Audio Codec'
+    property bool started: false
 
     outJacks: [
         OutJack {
@@ -29,14 +30,18 @@ Module {
         interval: 100; running: false; repeat: false
         onTriggered: {
             engine.codec.msg({cmd:'set', key:'streams', val:[outL,outR]})
+	    if (!started) {
+		engine.codec.msg({cmd:'set', key:'audioEnabled', val:true})
+		started = true
+	    }
         }
     }
 
     onOutLChanged: streamSender.restart()
     onOutRChanged: streamSender.restart()
 
-    Component.onCompleted: engine.codec.msg({cmd:'set', key:'audioEnabled', val:true})
     Component.onDestruction: engine.codec.msg({cmd:'set', key:'audioEnabled', val:false})
+
 }
 
 
