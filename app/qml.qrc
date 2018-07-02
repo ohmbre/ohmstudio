@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
+        <file>ohm.js6</file>
+	<file>math.min.js</file>
         <file>Cable.qml</file>
         <file>Patch.qml</file>
         <file>Module.qml</file>
