@@ -1,3 +1,0 @@
-[submodule "mathjs"]
-	path = engine/mathjs
-	url = https://github.com/ohmbre/mathjs.git

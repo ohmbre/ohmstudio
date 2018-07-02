@@ -1,9 +1,0 @@
-build/
-Debug/
-Release/
-ipch/
-Test/
-node_modules/
-NodeCoreAudio.suo
-NodeCoreAudio.opensdf
-NodeCoreAudio.sdf

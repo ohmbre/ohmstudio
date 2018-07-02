@@ -111,7 +111,7 @@ Item {
         transitions: Transition {
             ParallelAnimation {
                 id: controlAnim
-                NumberAnimation { target: outline; properties: "size.width,size.height,radius";
+                NumberAnimation { target: outline; properties: "sz.width,sz.height,radius";
                     duration: 500; easing.type: Easing.InOutQuad }
                 NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
                     duration: 500; easing.type: Easing.InOutQuad }
