@@ -1,4 +1,0 @@
-module ohm
-singleton Constants Constants.qml
-singleton Style Style.qml
-singleton Fn Fn.qml
