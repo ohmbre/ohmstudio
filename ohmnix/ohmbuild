@@ -1,0 +1,5 @@
+#!/bin/bash
+mkdir -p build
+cd build
+~/qt/5.11.1/gcc_64/bin/qmake ../../app
+make
