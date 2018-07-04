@@ -104,8 +104,8 @@ Item {
                 onReleased: propagateComposedEvents = true
                 onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
                 onPressAndHold: function(mouse) {
-		    moduleMenu.popOrigin = Qt.point(mouse.x,mouse.y)
-		    moduleMenu.popup()
+		    mMenu.popOrigin = Qt.point(mouse.x,mouse.y)
+		    mMenu.popup()
 		}
             }
         }
@@ -113,46 +113,54 @@ Item {
 
 
         OhmPopup {
-            id: moduleMenu
+            id: mMenu
             title: "Add Module"
             width: 95
+	    scale: window.width / overlay.width * .7
+	    transformOrigin: Item.TopLeft
 	    property point popOrigin: Qt.point(content.width/2, content.height/2)
+	    property string folder: 'modules'
             contents:  ListView {
                 id: moduleList
-                width: moduleMenu.width
-                height: (count-1) * 14
+                width: mMenu.width
+                height: model.length * 14
                 keyNavigationEnabled: true
-                model: FolderListModel {
-                    id: folderModel
-                    folder: 'file:./modules'
-                    rootFolder: 'file:./modules'
-                    nameFilters: ["*?Module.qml",".."]
-                    showDirs: true
-                    showDirsFirst: true
-                    showHidden: true
-                    showDotAndDotDot: true
-                    showFiles: true
-                }
+                model: FileIO.listDir(mMenu.folder,"*Module.qml")
                 delegate: OhmText {
-                    width: moduleMenu.width
-                    height: fileName == "." ? 0 : 14
-                    visible: fileName != "."
-                    text: fileName.replace(/\.qml$/,'') + (fileIsDir ? " ▶" : "  ")
+		    
+                    width: mMenu.width
+                    height: 14
+		    property bool isDir: leaf.slice(-4) != '.qml'
+		    property var parts: modelData.split('/')
+		    property string leaf: parts[parts.length-1]
+		    property string stem: parts.slice(0,-1).join('/')
+                    text: isDir ? leaf : leaf.slice(0,-10)
                     color: "black"
                     horizontalAlignment: Text.AlignRight
                     padding: 2
+		    rightPadding: 14
+		    Image {
+			source: 'ui/icons/arrow.svg'
+			width: 11
+			height: 5
+			visible: isDir
+			horizontalAlignment: Text.AlignRight
+			y: 5.5
+			x: parent.width - 12
+		    }
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            if (fileIsDir) {
-                                if (fileName == "..") folderModel.folder = folderModel.parentFolder;
-                                else folderModel.folder += "/" + fileName;
+                            if (isDir) {
+                                if (leaf=="..")
+				    mMenu.folder = parts.slice(0,-2).join('/')
+                                else mMenu.folder = modelData
                             } else {
-                                pView.patch.addModule(
-				    fileURL, moduleMenu.popOrigin.x - content.width/2,
-				    moduleMenu.popOrigin.y - content.height/2);
-                                moduleMenu.close();
+                                pView.patch.addModule(modelData,
+						      mMenu.popOrigin.x - content.width/2,
+						      mMenu.popOrigin.y - content.height/2);
+                                mMenu.close();
                             }
                         }
                     }
@@ -161,19 +169,20 @@ Item {
                     color: Style.menuLitColor
                 }
                 clip: true
-                onCountChanged: moduleMenu.height = (count-1) * 14 + 13
+		onModelChanged: mMenu.height = model.length * 14 + 13
+		
             }
-
         }
 
         OhmPopup {
             id: delModuleMenu
             title: "Delete?"
-            height: 45
-            width: 39
+            height: 50
+            width: 46
+	    scale: window.width / overlay.width * 0.7
             contents: OhmButton {
                 x: Fn.centerInX(this,delModuleMenu)
-                y: Fn.centerInY(this,delModuleMenu.body)
+                y: Fn.centerInY(this,delModuleMenu.body) - 5
                 width: 45; height: 45
                 imageUrl: "../ui/icons/delete.svg"
                 border: 0

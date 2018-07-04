@@ -12,40 +12,43 @@ Menu {
     Rectangle {
         id: header
         width:parent.width
-        height: 13
+        height: 12.2
         color: "#00000000"
+	z: 2
+	x: 0
         Label {
             id: label
-            height: 20
+            height: 15
             color: "white"
             text: menuHolder.title;
             font.bold: true
             font.pixelSize: 9
-            verticalAlignment: Text.AlignBottom
+            verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignRight
             anchors.right: header.right; anchors.top: header.top
             leftPadding: 4; rightPadding: 4;
-            bottomPadding: 6;
+            bottomPadding: 0;
             background: Rectangle {
                 color: "#000000";
                 border.color: "white";  border.width: 1
                 anchors.fill: parent
-                radius: 6;
+                radius: 3;
             }
         }
     }
 
+
     Rectangle {
         id: body
-        color: "white";
-        y: header.height
-        height: menuHolder.height - y;
+        color: "#AAFFFFFF";
+        height: menuHolder.height;
         width: menuHolder.width;
-        clip: true
+	radius: 3
         Loader {
             sourceComponent: menuHolder.contents
         }
     }
+
     property alias body: body
 
 }

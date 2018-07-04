@@ -23,6 +23,6 @@ RoundButton {
         anchors.fill: control
         color: control.imageUrl ? "#00000000" : (control.down ? Style.buttonOverColor : Style.buttonColor)
         border.width: control.border
-        border.color: '#'+Style.paletteDim.medium
+        border.color: Style.buttonBorderColor
     }
 }

@@ -29,18 +29,16 @@ QtObject {
     }
 
     property var readFile: function (fileUrl) {
-	var request = new XMLHttpRequest();
-	request.open("GET", fileUrl, false);
-	request.send(null);
-	return request.responseText;
+	if (fileUrl.startsWith('file:'))
+	    fileUrl = fileUrl.substr(5)
+	if (fileUrl.startsWith('./'))
+	    fileUrl = fileUrl.substr(2)
+	return FileIO.read(fileUrl)
     }
 
     property var writeFile: function (fileUrl, contents) {
-	var request = new XMLHttpRequest();
-	request.open("PUT", fileUrl, false);
-	request.send(contents);
+	return FileIO.write(fileUrl, contents)
     }
-
 
     property var dDump: function (obj) {
 	console.error(obj);

@@ -6,13 +6,14 @@ Rectangle {
     id: fileChooseDialog
     visible: false
     opacity: 0
-    width: setup.width*0.65;
+    width: setup.width*0.65/scale;
     Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
-    height: window.height*0.8;
+    height: window.height*0.8/scale;
     color: Style.fileChooseBgColor
     x:15
     y: header.height+13
-
+    transformOrigin: Item.TopLeft
+    property real contentScale: 1
     property string directory
     property string extension
     property bool forLoading: false
@@ -35,40 +36,43 @@ Rectangle {
         keyNavigationEnabled: true
         highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
         focus: fileChooseDialog.visible
-        model: FolderListModel {
-            id: fileChooseModel
-            folder: fileChooseDialog.directory
-            rootFolder: fileChooseDialog.directory
-            nameFilters: ["*."+fileChooseDialog.extension, ".."]
-            showDirs: true
-            showDirsFirst: true
-            showHidden: false
-            showDotAndDotDot: true
-            showOnlyReadable: true
-            showFiles: true
-        }
+	property string folder: fileChooseDialog.directory
+        model: FileIO.listDir(folder,"*."+fileChooseDialog.extension)
         delegate: OhmText {
             leftPadding: 5
-            rightPadding:5
+            rightPadding: 5
             topPadding: 2
             bottomPadding: 2
-            text: fileName == '.' ? '' : fileName
+	    property var parts: modelData.split('/')
+	    property string leaf: parts[parts.length-1]
+	    property bool isDir: leaf.slice(-4) != ('.'+fileChooseDialog.extension)
+	    property string stem: parts.slice(0,-1).join('/')
+            text: leaf
             color: Style.fileChooseTextColor
             width: parent.width
-            height: fileName == '.' ? 0 : 13
+            height: 13
             horizontalAlignment: Text.AlignLeft
+	    Image {
+		source: 'ui/icons/arrow.svg'
+		visible: isDir
+		width: 11
+		height: 5
+		horizontalAlignment: Image.AlignRight
+		y: 4.5
+		x: parent.width - width - 4
+	    }
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    fileChoose.currentIndex = index
-                    if (fileIsDir) {
-                        if (fileName == '..') fileChooseModel.folder = fileChooseModel.parentFolder;
-                        else fileChooseModel.folder += '/' + fileName;
+                    if (isDir) {
+                        if (leaf == '..')
+			    fileChoose.folder = parts.slice(0,-2).join('/')
+                        else fileChoose.folder = modelData
                     } else {
                         if (fileChooseDialog.forLoading)
-                            fileChooseDialog.fileChosen(fileURL)
+                            fileChooseDialog.fileChosen(modelData)
                         else if (fileChooseDialog.forSaving)
-                            fileChoose.footerItem.text = fileName
+                            fileChoose.footerItem.text = leaf
                     }
                 }
             }
@@ -77,6 +81,7 @@ Rectangle {
             width: parent.width
             height:17
             OhmText {
+
                 text: "Patch File"
                 color: Style.fileChooseTextColor
                 font.pixelSize: 11
@@ -85,21 +90,12 @@ Rectangle {
                 leftPadding: 4
                 horizontalAlignment: Text.AlignLeft
             }
-            OhmText {
-                width: parent.width
-                text: "Saved"
-                color: Style.fileChooseTextColor
-                font.weight: Font.Bold
-                padding: 2
-                rightPadding: 4
-                font.pixelSize: 11
-                horizontalAlignment: Text.AlignRight
-            }
             color: Style.buttonBorderColor
         }
         footer: forSaving ? saveBox: emptyFooter
         property Component emptyFooter: Item {}
         property Component saveBox: TextField {
+
             placeholderText: qsTr("Enter filename")
             font.family: asapFont.name
             font.pixelSize: 11

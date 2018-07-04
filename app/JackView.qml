@@ -158,7 +158,7 @@ Item {
         }
 
         Image {
-            source: "../ui/icons/squiggle.svg"
+            source: "ui/icons/squiggle.svg"
             x: 0; y: 1.5
             width: Style.jackExtension
             height: 5

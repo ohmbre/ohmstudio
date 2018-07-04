@@ -7,5 +7,5 @@ QtObject {
         property string dirOut: "out"
     }
     property string savedPatchDir: 'file:./patches'
-    property string autoSavePath: savedPatchDir + '/autosave.qml'
+    property string autoSavePath: 'patches/autosave.qml'
 }

@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>ohm.js6</file>
-	<file>math.min.js</file>
         <file>Cable.qml</file>
         <file>Patch.qml</file>
         <file>Module.qml</file>
@@ -30,8 +28,6 @@
         <file>AttenuverterCV.qml</file>
         <file>CableView.qml</file>
         <file>CableDragView.qml</file>
-        <file>OhmSocket.qml</file>
-        <file>OhmEngine.qml</file>
         <file>Model.qml</file>
         <file>Constants.qml</file>
         <file>qmldir</file>
@@ -40,5 +36,26 @@
         <file>ui/icons/squiggle.svg</file>
         <file>ui/icons/knob.png</file>
         <file>ui/icons/delete.svg</file>
+        <file>ui/icons/logo.svg</file>
+        <file>ui/icons/arrow.svg</file>
+	<file>modules/multiple/MultipleModule.qml</file>
+        <file>modules/noise/RandomNoiseModule.qml</file>
+        <file>modules/modulation/SlideModule.qml</file>
+        <file>modules/modulation/ADModule.qml</file>
+        <file>modules/modulation/VCAModule.qml</file>
+        <file>modules/output/OscopeModule.qml</file>
+        <file>modules/output/AudioCodecModule.qml</file>
+        <file>modules/clock/ClockDividerModule.qml</file>
+        <file>modules/clock/ClockModule.qml</file>
+        <file>modules/mix/MixModule.qml</file>
+        <file>modules/logic/NotModule.qml</file>
+        <file>modules/logic/FlipFlopModule.qml</file>
+        <file>modules/osc/PwmOscModule.qml</file>
+        <file>modules/osc/SawOscModule.qml</file>
+        <file>modules/osc/SineOscModule.qml</file>
+        <file>modules/sequencer/RandSeqModule.qml</file>
+	<file>patches/autosave.qml</file>
+	<file>patches/sine.qml</file>
+	<file>patches/bootsnpants.qml</file>
     </qresource>
 </RCC>

@@ -4,7 +4,10 @@ import QtQuick.Shapes 1.11
 Shape {
     id: rect
     containsMode: Shape.FillContains
-    layer.enabled: true
+    layer.enabled: {
+	return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
+	    Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
+    }
     layer.samples: 16
     layer.smooth: true
     layer.mipmap: true

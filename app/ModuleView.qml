@@ -166,6 +166,7 @@ Item {
                             focus: true
                             padding: 0
                             parent: Overlay.overlay
+			    scale: overlay.scale
                             x: Math.round((parent.width - width) / 2)
                             y: Math.round((parent.height - height) / 2.2)
                             width: 215

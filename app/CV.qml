@@ -11,10 +11,9 @@ Model {
 	_uuid = Fn.uniqId()
 	return _uuid
     }
-
     	
     property double controlVolts: 0
-    onControlVoltsChanged: engine.updateControl(uuid(), controlVolts);
+    onControlVoltsChanged: engine.updateControl(uuid(),controlVolts)
 
     property var inVolts: 0
     property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(uuid())

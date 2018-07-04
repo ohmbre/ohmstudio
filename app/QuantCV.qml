@@ -4,7 +4,7 @@ CV {
     property var choices
     onControlVoltsChanged: {
         controlVolts = Math.round(((controlVolts+10)/20)*choices.length)/choices.length*20-10
-        engine.updateControl(uuid(), controlVolts)
+	engine.updateControl(uuid(), controlVolts)
     }
     knobReading: stream
 
