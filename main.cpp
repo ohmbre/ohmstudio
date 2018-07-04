@@ -7,31 +7,29 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QJsonObject>
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/html5.h>
-extern "C" {
-  void msg_engine(const char *msg) {
-    EM_ASM_({
-	     var jstr = Pointer_stringify($0);
-	     window.ohmengine.handle(jstr);
-      }, msg);
-  }
-}   
+#include "ohmwasm/platform.h"
+#else 
+#include "ohmnix/platform.h"
+#endif
+
 class OhmEngine : public QObject {
   Q_OBJECT
 public:
   Q_INVOKABLE void msg(QString json) {
-    msg_engine(json.toUtf8().data());
+    platform_enginemsg(json.toUtf8().data());
   }
 };
-#endif /* EMSCRIPTEN */
+
 
 class FileIO : public QObject {
   Q_OBJECT
+
 public:
-  Q_INVOKABLE bool write(QString fname, QString content) {
+  static bool qwrite(QString fname, QString content) {
+    qDebug() << content;
     QFile f(fname);
     if (!f.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text))
       return false;
@@ -39,6 +37,13 @@ public:
     out << content << endl;
     return true;
   }
+  
+  Q_INVOKABLE bool write(QString fname, QString content) {
+    bool ret = qwrite(fname, content);
+    platform_save(fname.toLatin1().data(), content.toUtf8().data());
+    return ret;
+  }
+  
   Q_INVOKABLE QString read(QString fname) {
     QFile f(fname);
     if (!f.open(QIODevice::ReadOnly)) return "";
@@ -73,7 +78,6 @@ int main(int argc, char *argv[]) {
 		     QDir::Files, QDirIterator::Subdirectories);
   while (qrcIt.hasNext()) {
     QString fname = qrcIt.next();
-    
     if (fname.startsWith(":/modules/") || fname.startsWith(":/patches/")) {
       QDir cwd("");
       cwd.mkpath(fname.section('/',1,-2));
@@ -83,9 +87,21 @@ int main(int argc, char *argv[]) {
 			    QFileDevice::ReadGroup | QFileDevice::ReadOther);
     } else 
       qmlRegisterType("qrc" + fname, "ohm", 1, 0,
-		      fname.section('/',-1).chopped(4).toLatin1().data());  
+		      fname.section('/',-1).chopped(4).toLatin1().data());
   }
 
+  QJsonDocument storage = platform_loadstorage(); 
+  if (!storage.isEmpty() && storage.isObject()) {
+    QJsonObject json = storage.object();
+    for (QJsonObject::iterator it = json.begin(); it != json.end(); it++) {
+      QString fname = it.key();
+      QDir cwd("");
+      cwd.mkpath(fname.section('/',0,-1));
+      QString contents = it.value().toString();
+      FileIO::qwrite(fname,contents);
+    }
+  }
+  
   QDirIterator modIt("modules", QStringList() << "*.qml",
 		     QDir::Files, QDirIterator::Subdirectories);
   while (modIt.hasNext()) {
@@ -93,11 +109,8 @@ int main(int argc, char *argv[]) {
     qmlRegisterType(QUrl::fromLocalFile(fname), "modules", 1, 0,
 		    fname.split('/').last().chopped(4).toLatin1().data());
   }
-
-#ifdef __EMSCRIPTEN__
+ 
   engine.rootContext()->setContextProperty("ohmengine", new OhmEngine());  
-#endif
-
   engine.rootContext()->setContextProperty("FileIO", new FileIO());
   engine.load(QUrl(QStringLiteral("qrc:/OhmStudio.qml")));
 

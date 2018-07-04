@@ -139,13 +139,11 @@ ApplicationWindow {
 	    id: engine
 	    
 	    function set(key, val) {
-		if (Qt.platform.os != 'unix') return
 		var msg = { cmd: 'set', key: key, val: val }
 		ohmengine.msg(JSON.stringify(msg))
 	    }
 	    
 	    function setsubkey(key,subkey,val) {
-		if (Qt.platform.os != 'unix') return
 		var msg = { cmd: 'set', key: key, subkey: subkey, val: val }
 		ohmengine.msg(JSON.stringify(msg))
 	    }

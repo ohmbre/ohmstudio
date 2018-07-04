@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
-import Qt.labs.folderlistmodel 2.11
 
 Rectangle {
     id: fileChooseDialog
@@ -28,7 +27,7 @@ Rectangle {
         fileChooseDialog.opacity = 0;
     }
 
-    property string saveFile: fileChoose.model.folder + '/' + fileChoose.footerItem.text
+    property string saveFile: fileChoose.folder + '/' + fileChoose.footerItem.text
     ListView {
         id: fileChoose
         anchors.fill: parent

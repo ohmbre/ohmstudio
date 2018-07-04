@@ -18,7 +18,7 @@ Module {
         },
         InJack {
             label: 'in'
-            defaultStream: '5'
+            stream: 5
         }
     ]
 

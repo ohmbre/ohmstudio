@@ -46,11 +46,11 @@ QtObject {
             console.error("      "+prop+": "+obj[prop]);
     }
 
-    property var uniqCnt: 1
-    property var uniqId: function () {
-	var ret = uniqCnt.toString()
-	uniqCnt = uniqCnt + 1
-	return ret
+    property var uuids: ({})
+    property var uuid: function (cv) {
+	if (!uuids[cv])
+	    uuids[cv] = Object.keys(uuids).length + 1
+	return uuids[cv];
     }
 
     property var clip: function (min,v,max) {

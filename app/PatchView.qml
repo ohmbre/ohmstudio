@@ -1,8 +1,6 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 import QtQml 2.11
-import QtQml.Models 2.2
-import Qt.labs.folderlistmodel 2.2
 
 Item {
     id: pView

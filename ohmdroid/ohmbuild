@@ -8,9 +8,9 @@ export QTDIR=~/qt/5.11.1/android_armv7/bin
 export QMAKE=$QTDIR/qmake
 mkdir -p build
 cd build
-$QMAKE -spec android-g++ ..
+$QMAKE -spec android-g++ ../..
 $MAKE
 $MAKE install INSTALL_ROOT=dist
 $QTDIR/androiddeployqt \
-    --input android-libohmdroid.so-deployment-settings.json \
+    --input android-libohmstudio.so-deployment-settings.json \
     --output dist --android-platform android-28 --jdk $JDK_ROOT --gradle

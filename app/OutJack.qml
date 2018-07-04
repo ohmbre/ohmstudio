@@ -1,6 +1,7 @@
 Jack {
     objectName: "OutJack"
     dir: "out"
+    property var stream: 0
     property string parsedStream: {
         var match, parsed=stream;
         while (match = (/@[a-zA-z][a-zA-Z0-9]*/g).exec(parsed))

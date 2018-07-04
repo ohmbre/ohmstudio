@@ -3,15 +3,20 @@ Jack {
     objectName: "InJack"
     dir: "inp"
 
-    property string defaultStream: '0'
-    stream: defaultStream
+    property var initStream: null
+    property var stream: 0
 
     signal cableRemoved(OutJack outJack)
-    onCableRemoved: stream = defaultStream
+    onCableRemoved: stream = (initStream === null) ? 0 : initStream
+    
 
     signal cableAdded(OutJack outJack)
-    onCableAdded: stream = Qt.binding(function() {
-        return outJack.parsedStream
-    });
+    onCableAdded: {
+	if (initStream == null)
+	    initStream = stream
+	stream = Qt.binding(function() {
+            return outJack.parsedStream
+	})
+    }
 
 }

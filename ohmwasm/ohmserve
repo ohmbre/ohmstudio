@@ -1,0 +1,4 @@
+#!/bin/bash
+#npm i -g http-server
+cd build
+http-server -a localhost -c-1
