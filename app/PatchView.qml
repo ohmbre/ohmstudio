@@ -122,10 +122,10 @@ Item {
                 id: moduleList
                 width: mMenu.width
                 height: model.length * 14
-                keyNavigationEnabled: true
+                keyNavigationEnabled: mMenu.opened
+		focus: true
                 model: FileIO.listDir(mMenu.folder,"*Module.qml")
                 delegate: OhmText {
-		    
                     width: mMenu.width
                     height: 14
 		    property bool isDir: leaf.slice(-4) != '.qml'
@@ -165,6 +165,7 @@ Item {
                 }
                 highlight: Rectangle {
                     color: Style.menuLitColor
+		    radius: 2
                 }
                 clip: true
 		onModelChanged: mMenu.height = model.length * 14 + 13
@@ -176,11 +177,11 @@ Item {
             id: delModuleMenu
             title: "Delete?"
             height: 50
-            width: 46
+            width: 40
 	    scale: window.width / overlay.width * 0.7
             contents: OhmButton {
                 x: Fn.centerInX(this,delModuleMenu)
-                y: Fn.centerInY(this,delModuleMenu.body) - 5
+                y: Fn.centerInY(this,delModuleMenu.body)
                 width: 45; height: 45
                 imageUrl: "../ui/icons/delete.svg"
                 border: 0

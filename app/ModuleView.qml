@@ -140,7 +140,7 @@ Item {
                         id: knobIcon
                         anchors.horizontalCenter: labelText.horizontalCenter
                         width: 6; height: 1.14*width;
-                        source: "../ui/icons/knob.png"
+                        source: "../ui/icons/knob.svg"
                         mipmap: true
                         smooth: true
 

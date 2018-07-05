@@ -12,7 +12,7 @@ Rectangle {
     x:15
     y: header.height+13
     transformOrigin: Item.TopLeft
-
+    clip: true
     property real contentScale: 1
     property string directory
     property string extension
@@ -33,18 +33,19 @@ Rectangle {
 	property bool open: fileChooseDialog.open
 	onOpenChanged: {
 	    folder = fileChooseDialog.directory
-	    listing = FileIO.listDir(folder,"*."+fileChooseDialog.extension)
+	    model = FileIO.listDir(folder,match)
 	}
         focus: fileChooseDialog.open
-	property var folder: fileChooseDialog.directory
-	property var listing: FileIO.listDir(folder,"*."+fileChooseDialog.extension)
-	model: listing.length
+	property string folder: fileChooseDialog.directory
+	property string ext: '*.'+fileChooseDialog.extension
+	property string match: '*'+ext
+	model: FileIO.listDir(folder,match)
 	delegate: OhmText {
-	    property var path: fileChoose.listing[index]
             leftPadding: 5
             rightPadding: 5
             topPadding: 2
             bottomPadding: 2
+	    property string path: modelData
 	    property var parts: path.split('/')
 	    property string leaf: parts[parts.length-1]
 	    property bool isDir: leaf.slice(-4) != ('.'+fileChooseDialog.extension)
@@ -64,7 +65,7 @@ Rectangle {
 		x: parent.width - width - 4
 	    }
             MouseArea {
-		enabled: fileChooseDialog.open
+		enabled: open
                 anchors.fill: parent
                 onClicked: {
                     if (isDir) {
@@ -101,6 +102,7 @@ Rectangle {
 	    width: parent.width
 	    color: Style.drawerColor
 	    height: 0
+	    clip: true
 	    OhmButton {
 		y: -5
 		x: parent.width/4-border
@@ -112,11 +114,12 @@ Rectangle {
 		onClicked: {
 		    FileIO.upload(fileChoose.folder)
 		    fileChooseDialog.fileUploaded()
-		    fileChoose.model = 0
 		}
 	    }
 	}
         property Component saveBox: TextField {
+	    clip: true
+	    z:2
             placeholderText: qsTr("Enter filename")
             font.family: asapFont.name
             font.pixelSize: 11

@@ -7,13 +7,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   viewBox="0 0 32 32"
+   viewBox="0 0 64 64"
    version="1.1"
    id="svg22"
    sodipodi:docname="delete.svg"
-   width="32"
-   height="32"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+   width="64"
+   height="64"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata26">
     <rdf:RDF>
@@ -40,8 +40,8 @@
      id="namedview24"
      showgrid="false"
      inkscape:zoom="19.4375"
-     inkscape:cx="12.474668"
-     inkscape:cy="22.216387"
+     inkscape:cx="30.018076"
+     inkscape:cy="31.991307"
      inkscape:window-x="795"
      inkscape:window-y="350"
      inkscape:window-maximized="0"
@@ -85,7 +85,7 @@
   <g
      id="g20"
      style="stroke-linecap:round;stroke-linejoin:round"
-     transform="matrix(0.55640562,0,0,0.55640585,-20.166365,-2.361393)">
+     transform="matrix(1.0432605,0,0,1.043261,-35.81193,-2.4276138)">
     <path
        d="m 92.504,33 a 27.504,27.504 0 1 1 -55.008,0 27.504,27.504 0 1 1 55.008,0 z"
        id="path14"

@@ -12,6 +12,8 @@ ApplicationWindow {
     
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
+    //onActiveFocusItemChanged: print(activeFocusItem)
+
 
     Drawer {
         id: setup

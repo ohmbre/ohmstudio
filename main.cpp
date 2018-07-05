@@ -75,19 +75,24 @@ public:
     QString ret = in.readAll();
     return ret;
   }
-  Q_INVOKABLE QStringList listDir(QString dname, QString match) {
-    QDirIterator modIt(dname, QStringList() << match,
-		       QDir::Files | QDir::AllDirs | QDir::NoDot | QDir::NoDotDot,
-		       QDirIterator::FollowSymlinks);
+  Q_INVOKABLE QVariant listDir(QString dname, QString match) {
     transfer_from_storage();
-    QStringList fnames;  
-    if (dname.contains('/')) fnames << dname + "/..";
+    QDirIterator modIt(dname, QStringList() << match,
+		       QDir::Files | QDir::AllDirs | QDir::NoDot |
+		       QDir::NoDotDot, QDirIterator::FollowSymlinks);
+    QStringList fnames,subnames;
+    if (dname.contains('/')) subnames << dname + "/..";
     while (modIt.hasNext()) {
       QString fname = modIt.next();
-      fnames << fname;
       QFileInfo finfo(fname);
+      if (finfo.isDir())
+	subnames << fname;
+      else fnames << fname;
     }
-    return fnames;
+    for (QString name : fnames)
+      subnames << name;
+    
+    return QVariant::fromValue(subnames);
   }
 
   Q_INVOKABLE bool canUpload() {
