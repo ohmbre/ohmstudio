@@ -11,6 +11,7 @@ EM_JS(void, platform_save, (const char* fname, const char* contents), {
     var jfname = UTF8ToString(fname);
     var jcontents = UTF8ToString(contents);
     window.localStorage.setItem(jfname, jcontents);
+    if (jfname == 'patches/autosave.qml') return;
     var link = document.createElement('a');
     link.setAttribute('href','data:text/plain;charset=utf-8,'+encodeURIComponent(jcontents));
     link.setAttribute('download', jfname);

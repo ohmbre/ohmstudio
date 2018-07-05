@@ -53,7 +53,7 @@ Menu {
             sourceComponent: menuHolder.contents
         }
     }
-    onOpened: body.contentLoader.item.forceActiveFocus()
+    
     property alias body: body
 
 }

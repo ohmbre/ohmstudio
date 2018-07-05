@@ -118,10 +118,17 @@ Item {
 	    transformOrigin: Item.TopLeft
 	    property point popOrigin: Qt.point(content.width/2, content.height/2)
 	    property string folder: 'modules'
+	    onOpened: {
+		body.contentLoader.item.forceActiveFocus()
+		folder = 'modules'
+		body.contentLoader.item.model = FileIO.listDir(folder,"*Module.qml")
+	    }
+		    
             contents:  ListView {
                 id: moduleList
-                width: mMenu.width
-                height: model.length * 14
+		width: mMenu.width
+		contentHeight: model.length * 13
+		height: contentHeight 
                 keyNavigationEnabled: mMenu.opened
 		focus: true
                 model: FileIO.listDir(mMenu.folder,"*Module.qml")
@@ -167,8 +174,28 @@ Item {
                     color: Style.menuLitColor
 		    radius: 2
                 }
+		property Component emptyFooter: Item {}
+		property Component uploadFooter: OhmButton {
+		    id: mFooter
+		    label.font.pixelSize: 6
+		    border: 2; padding: 6
+		    x: (parent.width - width)/2
+		    height: 13; z: 3
+		    clip: true
+		    text: 'Upload New'
+		    onClicked: {
+			FileIO.upload(mMenu.folder)
+			mMenu.close()
+		    }
+		}
+		property real footerHeight: FileIO.canUpload() ? 13 : 0
+		footer: FileIO.canUpload() ? uploadFooter : emptyFooter
+		footerPositioning: ListView.OverlayFooter
                 clip: true
-		onModelChanged: mMenu.height = model.length * 14 + 13
+		onModelChanged: {
+		    mMenu.height = model.length * 14 + 13 + footerHeight
+		    mMenu.body.height =  model.length * 14
+		}
 		
             }
         }
