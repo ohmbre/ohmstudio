@@ -1,7 +1,7 @@
 window.ohmengine = (function() {   
 
     const sampleRate = 48000
-    
+    const samplePeriod = 512
     const ConstantNode = math.expression.node.ConstantNode
     const FunctionNode = math.expression.node.FunctionNode
     const SymbolNode = math.expression.node.SymbolNode
@@ -145,7 +145,8 @@ window.ohmengine = (function() {
 	}
     }
 
-    o.ctx = new AudioContext({sampleRate: o.sampleRate, latencyHint:0.2})
+    o.ctx = new AudioContext({ sampleRate: o.sampleRate,
+			       latencyHint: samplePeriod/sampleRate*2 })
     o.ctx.audioWorklet.addModule('audio.js').then(() => {
 	const options = {numberOfOutputs: 1, outputChannelCount: [2]}
 	o.worklet = new AudioWorkletNode(o.ctx,'ohm', options)
