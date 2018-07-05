@@ -3,8 +3,8 @@ import QtQuick.Controls 2.4
 
 Rectangle {
     id: fileChooseDialog
-    visible: false
-    opacity: 0
+    opacity: open ? 1 : 0
+    visible: opacity > 0
     width: setup.width*0.65/scale;
     Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
     height: window.height*0.8/scale;
@@ -12,37 +12,40 @@ Rectangle {
     x:15
     y: header.height+13
     transformOrigin: Item.TopLeft
+
     property real contentScale: 1
     property string directory
     property string extension
     property bool forLoading: false
     property bool forSaving: false
+    property bool open
+	
     signal fileChosen(string fileURL)
-    function open() {
-        fileChooseDialog.visible = true;
-        fileChooseDialog.opacity = 1.0;
-    }
-    function close() {
-        fileChooseDialog.visible = false;
-        fileChooseDialog.opacity = 0;
-    }
+    signal fileUploaded()
 
     property string saveFile: fileChoose.folder + '/' + fileChoose.footerItem.text
     ListView {
         id: fileChoose
         anchors.fill: parent
         footerPositioning: ListView.OverlayFooter
-        keyNavigationEnabled: true
+        keyNavigationEnabled: fileChooseDialog.open
         highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
-        focus: fileChooseDialog.visible
-	property string folder: fileChooseDialog.directory
-        model: FileIO.listDir(folder,"*."+fileChooseDialog.extension)
-        delegate: OhmText {
+	property bool open: fileChooseDialog.open
+	onOpenChanged: {
+	    folder = fileChooseDialog.directory
+	    listing = FileIO.listDir(folder,"*."+fileChooseDialog.extension)
+	}
+        focus: fileChooseDialog.open
+	property var folder: fileChooseDialog.directory
+	property var listing: FileIO.listDir(folder,"*."+fileChooseDialog.extension)
+	model: listing.length
+	delegate: OhmText {
+	    property var path: fileChoose.listing[index]
             leftPadding: 5
             rightPadding: 5
             topPadding: 2
             bottomPadding: 2
-	    property var parts: modelData.split('/')
+	    property var parts: path.split('/')
 	    property string leaf: parts[parts.length-1]
 	    property bool isDir: leaf.slice(-4) != ('.'+fileChooseDialog.extension)
 	    property string stem: parts.slice(0,-1).join('/')
@@ -61,15 +64,16 @@ Rectangle {
 		x: parent.width - width - 4
 	    }
             MouseArea {
+		enabled: fileChooseDialog.open
                 anchors.fill: parent
                 onClicked: {
                     if (isDir) {
                         if (leaf == '..')
 			    fileChoose.folder = parts.slice(0,-2).join('/')
-                        else fileChoose.folder = modelData
+                        else fileChoose.folder = path
                     } else {
                         if (fileChooseDialog.forLoading)
-                            fileChooseDialog.fileChosen(modelData)
+                            fileChooseDialog.fileChosen(path)
                         else if (fileChooseDialog.forSaving)
                             fileChoose.footerItem.text = leaf
                     }
@@ -80,7 +84,6 @@ Rectangle {
             width: parent.width
             height:17
             OhmText {
-
                 text: "Patch File"
                 color: Style.fileChooseTextColor
                 font.pixelSize: 11
@@ -91,10 +94,29 @@ Rectangle {
             }
             color: Style.buttonBorderColor
         }
-        footer: forSaving ? saveBox: emptyFooter
+        footer: forSaving ? saveBox: (FileIO.canUpload() ? uploadBtn : emptyFooter)
         property Component emptyFooter: Item {}
+	property Component uploadBtn: Rectangle {
+	    id: uploadBtn
+	    width: parent.width
+	    color: Style.drawerColor
+	    height: 0
+	    OhmButton {
+		y: -5
+		x: parent.width/4-border
+		height: 20
+		width: parent.width / 2
+		text: "upload new"
+		label.font.pixelSize: 7
+		border: 3
+		onClicked: {
+		    FileIO.upload(fileChoose.folder)
+		    fileChooseDialog.fileUploaded()
+		    fileChoose.model = 0
+		}
+	    }
+	}
         property Component saveBox: TextField {
-
             placeholderText: qsTr("Enter filename")
             font.family: asapFont.name
             font.pixelSize: 11

@@ -9,6 +9,10 @@
 #include <QDebug>
 #include <QJsonObject>
 
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
 #ifdef __EMSCRIPTEN__
 #include "ohmwasm/platform.h"
 #else 
@@ -24,18 +28,37 @@ public:
 };
 
 
+
+
 class FileIO : public QObject {
   Q_OBJECT
 
 public:
+
   static bool qwrite(QString fname, QString content) {
-    qDebug() << content;
     QFile f(fname);
     if (!f.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text))
       return false;
     QTextStream out(&f);
     out << content << endl;
+    f.close();
+    QFile::setPermissions(fname, QFileDevice::ReadOwner | QFileDevice::WriteOwner
+			  | QFileDevice::ReadGroup | QFileDevice::ReadOther);
     return true;
+  }
+
+  static void transfer_from_storage() {
+    QJsonDocument storage = platform_loadstorage(); 
+    if (!storage.isEmpty() && storage.isObject()) {
+      QJsonObject json = storage.object();
+      for (QJsonObject::iterator it = json.begin(); it != json.end(); it++) {
+	QString fname = it.key();
+	QDir cwd("");
+	cwd.mkpath(fname.section('/',0,-2));
+	QString contents = it.value().toString();
+	FileIO::qwrite(fname,contents);
+      }
+    }
   }
   
   Q_INVOKABLE bool write(QString fname, QString content) {
@@ -46,26 +69,40 @@ public:
   
   Q_INVOKABLE QString read(QString fname) {
     QFile f(fname);
-    if (!f.open(QIODevice::ReadOnly)) return "";
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+      return "";
     QTextStream in(&f);
-    return in.readAll();
+    QString ret = in.readAll();
+    return ret;
   }
   Q_INVOKABLE QStringList listDir(QString dname, QString match) {
     QDirIterator modIt(dname, QStringList() << match,
 		       QDir::Files | QDir::AllDirs | QDir::NoDot | QDir::NoDotDot,
 		       QDirIterator::FollowSymlinks);
+    transfer_from_storage();
     QStringList fnames;  
     if (dname.contains('/')) fnames << dname + "/..";
     while (modIt.hasNext()) {
       QString fname = modIt.next();
       fnames << fname;
+      QFileInfo finfo(fname);
     }
     return fnames;
-  }	
+  }
+
+  Q_INVOKABLE bool canUpload() {
+    return platform_canupload;
+  }
+
+  Q_INVOKABLE void upload(QString dir) {
+    platform_upload(dir.toLatin1().data());
+  }
+     
 }; 
 
-
 #include "main.moc"
+
+
 
 int main(int argc, char *argv[]) {
 
@@ -90,17 +127,7 @@ int main(int argc, char *argv[]) {
 		      fname.section('/',-1).chopped(4).toLatin1().data());
   }
 
-  QJsonDocument storage = platform_loadstorage(); 
-  if (!storage.isEmpty() && storage.isObject()) {
-    QJsonObject json = storage.object();
-    for (QJsonObject::iterator it = json.begin(); it != json.end(); it++) {
-      QString fname = it.key();
-      QDir cwd("");
-      cwd.mkpath(fname.section('/',0,-1));
-      QString contents = it.value().toString();
-      FileIO::qwrite(fname,contents);
-    }
-  }
+  FileIO::transfer_from_storage();
   
   QDirIterator modIt("modules", QStringList() << "*.qml",
 		     QDir::Files, QDirIterator::Subdirectories);

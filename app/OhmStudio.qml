@@ -15,12 +15,12 @@ ApplicationWindow {
 
     Drawer {
         id: setup
-	property real extension: 0
+	property real extension: (saveFileChoose.open || loadFileChoose.open)
         width: 0.3*(1 + extension) * overlay.width * overlay.scale
         height: overlay.height * overlay.scale
 	dragMargin: 15*overlay.scale
 	
-	Behavior on width { SmoothedAnimation { velocity: 300 } }
+	Behavior on width { SmoothedAnimation { velocity: 500 } }
 	
         background: Rectangle {
             height: setup.height + border.width * 2
@@ -47,6 +47,11 @@ ApplicationWindow {
 		width: parent.height*.8
 	    }
         }
+
+	onClosed: {
+	    saveFileChoose.open = false
+	    loadFileChoose.open = false
+	}
 	
         OhmButton {
 	    scale: overlay.scale
@@ -63,37 +68,30 @@ ApplicationWindow {
 	    y: 100*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
 	    text: "Load Patch"
 	    onClicked: {
-                setup.open()
-		setup.extension = 1
-                saveFileChoose.close();
-                loadFileChoose.open();
+                saveFileChoose.open = false
+                loadFileChoose.open = true;
+		saveBtn.label.color = Style.buttonTextColor
 	    }
         }
 	
         OhmButton {
+	    id: saveBtn
 	    scale: overlay.scale
 	    y: 150*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
 	    visible: activePatch.status === Loader.Ready
 	    text: "Save Patch"
 	    onClicked: {
-                if (!saveFileChoose.visible) {
-		    setup.extension = 1
-		    setup.open()
-		    loadFileChoose.close();
-		    saveFileChoose.open();
+                if (!saveFileChoose.open) {
+		    loadFileChoose.open = false;
+		    saveFileChoose.open = true;
 		    label.color = Style.fileChooseLitColor
                 } else {
 		    saveFileChoose.fileChosen(saveFileChoose.saveFile)
 		    label.color = Style.buttonTextColor
-                }
+		}
 	    }
         }
 	
-        onClosed: function() {
-	    loadFileChoose.close()
-	    saveFileChoose.close()
-	    setup.extension = 0
-        }
 	
         OhmFileChoose {
 	    id: loadFileChoose
@@ -103,10 +101,11 @@ ApplicationWindow {
 	    extension: 'qml'
 	    onFileChosen: function(fileURL) {
                 if (overlay.loadPatchQML(fileURL)) {
-		    loadFileChoose.close()
-		    setup.close();
-		    setup.extension = 0
+		    setup.close()
                 }
+	    }
+	    onFileUploaded: {
+		setup.close()
 	    }
         }
 	
@@ -118,9 +117,7 @@ ApplicationWindow {
 	    extension: 'qml'
 	    onFileChosen: function(fileURL) {
                 activePatch.item.patch.saveTo(fileURL);
-                saveFileChoose.close()
                 setup.close()
-		setup.extension = 0
 	    }
         }
     }
