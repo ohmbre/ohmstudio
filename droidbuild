@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export ANDROID_SDK_ROOT=~/Android/Sdk
-export ANDROID_NDK_ROOT=~/Android/Sdk/ndk-bundle
+export ANDROID_SDK_ROOT=~/android-sdk
+export ANDROID_NDK_ROOT=~/android-sdk/ndk-bundle
 export MAKE=$ANDROID_NDK_ROOT/prebuilt/linux-x86_64/bin/make
-export JDK_ROOT=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.172-12.b11.fc29.x86_64
+export JDK_ROOT=/usr/lib/jvm/java-1.8.0-openjdk-1.11.0-openjdk-amd64
 export QTDIR=~/qt/5.11.1/android_armv7/bin
 export QMAKE=$QTDIR/qmake
-mkdir -p build
-cd build
-$QMAKE -spec android-g++ ../..
+mkdir -p build-droid
+cd build-droid
+$QMAKE -spec android-g++ ..
 $MAKE
 $MAKE install INSTALL_ROOT=dist
 $QTDIR/androiddeployqt \

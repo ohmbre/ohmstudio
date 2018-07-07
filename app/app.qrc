@@ -38,7 +38,7 @@
         <file>ui/icons/delete.svg</file>
         <file>ui/icons/logo.svg</file>
         <file>ui/icons/arrow.svg</file>
-	<file>modules/multiple/MultipleModule.qml</file>
+        <file>modules/multiple/MultipleModule.qml</file>
         <file>modules/noise/RandomNoiseModule.qml</file>
         <file>modules/modulation/SlideModule.qml</file>
         <file>modules/modulation/ADModule.qml</file>
@@ -54,8 +54,10 @@
         <file>modules/osc/SawOscModule.qml</file>
         <file>modules/osc/SineOscModule.qml</file>
         <file>modules/sequencer/RandSeqModule.qml</file>
-	<file>patches/autosave.qml</file>
-	<file>patches/sine.qml</file>
-	<file>patches/bootsnpants.qml</file>
+        <file>patches/autosave.qml</file>
+        <file>patches/sine.qml</file>
+        <file>patches/bootsnpants.qml</file>
+        <file>EngineCourier.qml</file>
+        <file>NativeEngine.qml</file>
     </qresource>
 </RCC>

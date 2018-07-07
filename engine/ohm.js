@@ -1,4 +1,4 @@
-window.ohmengine = (function() {   
+window.ohmengine = (function() {
 
     const sampleRate = 48000
     const samplePeriod = 512
@@ -8,10 +8,10 @@ window.ohmengine = (function() {
 
     const assign = Object.assign
     const o = {}
-    
+
     const ratioVoct = (ratio) => Math.log(ratio) / Math.log(2)
     o.consts = {
-	v: 1,
+    v: 1,
         vScale: 0.1,
         s: sampleRate,
         ms: sampleRate / 1000,
@@ -38,7 +38,7 @@ window.ohmengine = (function() {
     assign(o.consts, o.consts.scales)
     assign(o, o.consts)
 
-    
+
     o.addMathFn = (name, fn, sig = 'number,number') => {
         const type = {}
         const sigobj = {}; sigobj[sig] = fn
@@ -47,14 +47,14 @@ window.ohmengine = (function() {
         assign(o, type)
     }
     o.addMathFn('notehz', (name, octave) =>
-		0.057595865 * 1.059463094 ** (12 * (octave - 4) + name))
+        0.057595865 * 1.059463094 ** (12 * (octave - 4) + name))
 
     o.ohmrules = [...math.simplify.rules]
     o.ohmrules.push('n/(n1/n2) -> (n*n2)/n1')
     o.ohmrules.push('n^n1(n2/n3) -> (n2/n3)*n^n1')
     o.ohmrules.push('c/(c1*n) -> (c/c1)/n')
     o.ohmrules.push('c*(c1*n+c2*n1) -> (c*c1)*n+(c*c2)*n1')
-    
+
     o.mapConstants = (node, path, parent) => {
         if (node.isSymbolNode && node.name in o.consts)
             return new ConstantNode(o.consts[node.name]);
@@ -102,14 +102,14 @@ window.ohmengine = (function() {
             return clone
         })
         let uniqified = topnode.transform(symbolTransform)
-        
+
         return [uniqified, symbols]
     }
 
     o.handle = function (msg) {
 	msg = JSON.parse(msg)
         if (msg.cmd == 'set' && msg.key == 'streams') {
-	    const simplified = msg.val.map(
+            const simplified = msg.val.map(
 		sval => math.simplify(
 		    math.parse(sval)
 			.transform(o.mapConstants)
@@ -121,87 +121,88 @@ window.ohmengine = (function() {
 		}))
 	    
             const combo = new FunctionNode('separator',simplified)
-            let [uniqified, symbols] = o.uniqify(combo)           
-
+            let [uniqified, symbols] = o.uniqify(combo)
+	    
             //o.debug(uniqified, symbols)
-	    o.processed = {stream:uniqified,symbols: symbols}
-	    o.worklet.port.postMessage(o.processed)
-            
+            o.processed = {stream:uniqified,symbols: symbols}
+            o.worklet.port.postMessage(o.processed)
         } else if (msg.cmd == 'set' && msg.key == 'control') {
             let val = parseFloat(msg.val)
-	    o.worklet.port.postMessage({control: msg.subkey, val: val})
+            o.worklet.port.postMessage({control: msg.subkey, val: val})
         } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
-	    if (msg.val == false) {
+            if (msg.val == false)
 		o.worklet.port.postMessage({stream:{nodes:[0,0]},symbols:[]})
-	        console.log('audio disabled')
-	    }
 	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
-	    if (msg.val == true && !o.scopeEnabled) {
+            if (msg.val == true && !o.scopeEnabled) {
 		o.scopeEnabled = true
 		setTimeout(o.runScope,500)
-	    } else if (msg.val == false && o.scopeEnabled) {
+            } else if (msg.val == false && o.scopeEnabled) {
 		o.scopeEnabled = false
-	    }
+            }
 	}
     }
-
+    
     o.ctx = new AudioContext({ sampleRate: o.sampleRate,
 			       latencyHint: samplePeriod/sampleRate*2 })
-    o.ctx.audioWorklet.addModule('audio.js').then(() => {
-	const options = {numberOfOutputs: 1, outputChannelCount: [2]}
-	o.worklet = new AudioWorkletNode(o.ctx,'ohm', options)
-	o.worklet.connect(o.ctx.destination)
-	navigator.mediaDevices.getUserMedia({ audio:true, video:false })
-	    .then((stream) => {
-		o.captureNode = o.ctx.createMediaStreamSource(stream)
-		o.captureNode.connect(o.worklet)
-	    }).catch((err) => {
-		console.log('couldnt get mic:',err);
-	    })
+    const workletUrl = window.urlPrefixOverride + 'audio.js'
+    o.ctx.audioWorklet.addModule(workletUrl).then(() => {
+        const options = {numberOfOutputs: 1, outputChannelCount: [2],
+			 numberOfInputs: 0, }
+        o.worklet = new AudioWorkletNode(o.ctx,'ohm', options)
+        o.worklet.connect(o.ctx.destination)
+        /*navigator.mediaDevices.getUserMedia({ audio:true, video:false })
+            .then((stream) => {
+                o.captureNode = o.ctx.createMediaStreamSource(stream)
+                o.captureNode.connect(o.worklet)
+            }).catch((err) => {
+                console.error('couldnt get mic:',err);
+            })*/
     }).catch((err) => {
-	console.log('couldnt create a worklet:',err);
+        console.error('couldnt create a worklet-');
+        console.error(err.name);
+        console.error(err.message);
     })
-
-    //o.scopeEnabled = false    
+    
+    //o.scopeEnabled = false
     //o.clip = (min,v,max) => (v > max) ? max : ((v < min) ? min : v)
     /*o.runScope = function() {
-	const samples = new Int8Array(2*o.sampleWindow)
-	let bufpos = 0
-	const start = performance.now()
-	let running = false
-	let prevch1 = 0
-	function loop() {
-	    for (let i = 0; i < o.samplePeriod; i++) {
-		const ch1 = +o.outstreams[0]
-		const ch2 = +o.outstreams[1]
-		const vtrig = +o.outstreams[2]
-		const window = Math.min(Math.round(o.outstreams[3]), o.scopeHistory) * 2
-		if (!running && prevch1 < vtrig && ch1 >= vtrig) {
-		    running = true
-		    bufpos = 0
-		} else if (running && bufpos > window) {
-		    running = false
-		    o.socket.send(new Int8Array(samples.buffer, 0, window))
-		    bufpos = 0
-		}
-		if (running) {
-		    samples[bufpos++] = o.clip(o.sampleMin,o.vScale * ch1,o.sampleMax) >> 24
-		    samples[bufpos++] = o.clip(o.sampleMin,o.vScale * ch2,o.sampleMax) >> 24
-		}
-		o.time.val++
-		prevch1 = ch1
-	    }    
-	    const delay = Math.max(o.time.val / 48 - (performance.now() - start),0)
-	    if (o.scopeEnabled)
-		setTimeout(loop,delay)
-	}
-	if (o.scopeEnabled)
-	    setTimeout(loop,0)
+    const samples = new Int8Array(2*o.sampleWindow)
+    let bufpos = 0
+    const start = performance.now()
+    let running = false
+    let prevch1 = 0
+    function loop() {
+        for (let i = 0; i < o.samplePeriod; i++) {
+        const ch1 = +o.outstreams[0]
+        const ch2 = +o.outstreams[1]
+        const vtrig = +o.outstreams[2]
+        const window = Math.min(Math.round(o.outstreams[3]), o.scopeHistory) * 2
+        if (!running && prevch1 < vtrig && ch1 >= vtrig) {
+            running = true
+            bufpos = 0
+        } else if (running && bufpos > window) {
+            running = false
+            o.socket.send(new Int8Array(samples.buffer, 0, window))
+            bufpos = 0
+        }
+        if (running) {
+            samples[bufpos++] = o.clip(o.sampleMin,o.vScale * ch1,o.sampleMax) >> 24
+            samples[bufpos++] = o.clip(o.sampleMin,o.vScale * ch2,o.sampleMax) >> 24
+        }
+        o.time.val++
+        prevch1 = ch1
+        }
+        const delay = Math.max(o.time.val / 48 - (performance.now() - start),0)
+        if (o.scopeEnabled)
+        setTimeout(loop,delay)
+    }
+    if (o.scopeEnabled)
+        setTimeout(loop,0)
     }*/
 
     o.test = function() {
-	o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
-	o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
+    o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
+    o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
         o.handle('{"cmd":"set","key":"streams","val":["(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))","(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))"]}')
         o.handle('{"cmd":"set","key":"audioEnabled","val":true}')
     }

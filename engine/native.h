@@ -1,5 +1,7 @@
 #include <QJsonDocument>
 
+
+QString platform_name = "native";
 extern "C" {
   void platform_enginemsg(const char *) {
     //    printf("enginemsg: %s\n", msg);
