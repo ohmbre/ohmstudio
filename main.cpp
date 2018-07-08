@@ -118,6 +118,7 @@ public:
         QObject::connect(this,SIGNAL(newConnection()),
                          this,SLOT(handleConnection()));
     }
+    ~StupidHTTPServer() {}
 public slots:
     void handleRead() {
         QTcpSocket *socket = qobject_cast<QTcpSocket*>(QObject::sender());
@@ -146,8 +147,6 @@ public slots:
         QTcpSocket *socket = nextPendingConnection();
         connect(socket, SIGNAL(readyRead()), this, SLOT(handleRead()));
     }
-protected:
-    ~StupidHTTPServer() {}
 };
 
 #include "main.moc"
