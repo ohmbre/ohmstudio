@@ -100,13 +100,12 @@ Rectangle {
         property Component emptyFooter: Item {}
 	property Component uploadBtn: Rectangle {
 	    id: uploadBtn
-	    width: parent.width
+	    height: 15; width: parent.width
+	    z: 2
 	    color: Style.drawerColor
-	    height: 0
-	    clip: true
 	    OhmButton {
-		y: -5
-		x: parent.width/4-border
+		z: 3; y: -5; x: parent.width/4-border
+		clip: true
 		height: 20
 		width: parent.width / 2
 		text: "upload new"
