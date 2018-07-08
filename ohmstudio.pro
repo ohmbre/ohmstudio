@@ -6,9 +6,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp
 RESOURCES += app/app.qrc engine/engine.qrc
 
+QML_IMPORT_PATH =
+QML_DESIGNER_IMPORT_PATH =
+QMAKE_MAC_SDK = macosx10.14
+
 linux|macx|android|ios {
-  message(WEBVIEW)
   QT += webview
+  HEADERS += engine/native.h
+} else {
+  HEADERS += engine/wasm.h
 }
 
 android {

@@ -8,10 +8,13 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QJsonObject>
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
 
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
 
 #ifdef __EMSCRIPTEN__
 #include "engine/wasm.h"
@@ -59,13 +62,13 @@ public:
     }
   }
 
-  Q_INVOKABLE bool write(QString fname, QString content) {
+  Q_INVOKABLE static bool write(QString fname, QString content) {
     bool ret = qwrite(fname, content);
     platform_save(fname.toLatin1().data(), content.toUtf8().data());
     return ret;
   }
 
-  Q_INVOKABLE QString read(QString fname) {
+  Q_INVOKABLE static QString read(QString fname) {
     QFile f(fname);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
       return "";
@@ -73,7 +76,7 @@ public:
     QString ret = in.readAll();
     return ret;
   }
-  Q_INVOKABLE QVariant listDir(QString dname, QString match) {
+  Q_INVOKABLE static QVariant listDir(QString dname, QString match) {
     transfer_from_storage();
     QDirIterator modIt(dname, QStringList() << match,
                QDir::Files | QDir::AllDirs | QDir::NoDot |
@@ -93,20 +96,19 @@ public:
     return QVariant::fromValue(subnames);
   }
 
-  Q_INVOKABLE bool canUpload() {
+  Q_INVOKABLE static bool canUpload() {
     return platform_canupload;
   }
 
-  Q_INVOKABLE void upload(QString dir) {
+  Q_INVOKABLE static void upload(QString dir) {
     platform_upload(dir.toLatin1().data());
   }
 
+protected:
+    ~FileIO() {}
 };
 
 
-#include <QtNetwork/QTcpServer>
-#include <QtNetwork/QTcpSocket>
-#include <QDataStream>
 
 class StupidHTTPServer : public QTcpServer {
     Q_OBJECT
@@ -116,28 +118,24 @@ public:
         QObject::connect(this,SIGNAL(newConnection()),
                          this,SLOT(handleConnection()));
     }
-
 public slots:
     void handleRead() {
         QTcpSocket *socket = qobject_cast<QTcpSocket*>(QObject::sender());
         if (socket->canReadLine()) {
-            QStringList tokens = QString(socket->readLine()).split(" ");
-            if (tokens[0] == "GET") {
-                QString fname = ":"+ tokens[1];
-                QFile f(fname);
-                QTextStream out(socket);
-                if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                    QString size = QString::number(f.size());
-                    QString ext = fname.split('.').last();
-                    QString header = "HTTP/1.0 200 Ok\r\n";
-                    header += "Content-Type: text/";
-                    header += ((ext == "js") ? "javascript" : ext) + ";\r\n";
-                    header += "Content-Length: "+size+";\r\n\r\n";
-                    out << header;
-                    QString body = f.readAll();
-                    out << body;
-                    f.close();
-                }
+            QString fname = ":"+ QString(socket->readLine()).split(" ")[1];
+            QFile f(fname);
+            QTextStream out(socket);
+            if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QString size = QString::number(f.size());
+                QString ext = fname.split('.').last();
+                QString header = "HTTP/1.0 200 Ok\r\n";
+                header += "Content-Type: text/";
+                header += ((ext == "js") ? "javascript" : ext) + ";\r\n";
+                header += "Content-Length: "+size+";\r\n\r\n";
+                out << header;
+                QString body = f.readAll();
+                out << body;
+                f.close();
             }
         }
         socket->close();
@@ -148,6 +146,8 @@ public slots:
         QTcpSocket *socket = nextPendingConnection();
         connect(socket, SIGNAL(readyRead()), this, SLOT(handleRead()));
     }
+protected:
+    ~StupidHTTPServer() {}
 };
 
 #include "main.moc"
@@ -158,9 +158,11 @@ int main(int argc, char *argv[]) {
 
   QGuiApplication app(argc, argv);
   QQmlApplicationEngine engine;
+
 #ifndef __EMSCRIPTEN__
   QtWebView::initialize();
 #endif
+
   QDirIterator qrcIt(":", QStringList() << "*.qml",
              QDir::Files, QDirIterator::Subdirectories);
   while (qrcIt.hasNext()) {

@@ -1,13 +1,11 @@
 #include <QJsonDocument>
+#include <QString>
 
+static QString platform_name = "native";
+static bool platform_canupload = false;
 
-QString platform_name = "native";
-extern "C" {
-  void platform_enginemsg(const char *) {
-    //    printf("enginemsg: %s\n", msg);
-  }
-  void platform_save(const char *, const char *) {}
-  QJsonDocument platform_loadstorage() { return QJsonDocument(); }
-  bool platform_canupload = false;
-  void platform_upload(const char *) {}
-}
+extern "C" void platform_enginemsg(const char *) {}
+extern "C" void platform_save(const char *, const char *) {}
+QJsonDocument platform_loadstorage() { return QJsonDocument(); }
+extern "C" void platform_upload(const char *) {}
+
