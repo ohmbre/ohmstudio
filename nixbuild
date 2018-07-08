@@ -1,12 +1,11 @@
 #!/bin/bash
-mkdir -p build-nix
-cd build-nix
-/opt/qt/bin/qmake CONFIG+=release ..
+mkdir -p build/nix
+cd build/nix
+/opt/qt/bin/qmake CONFIG+=release ../..
 make
 
 export QSG_RENDER_LOOP=basic
 export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false; qt.*.info=true; qt.qml.gc.allocatorStats=false; qt.qml.gc.statistics=false; qt.quick.focus=false; qt.quick.hover.trace=false; qt.qml.diskcache=false; qt.quick.dirty=false; qt.quick.itemview.lifecycle=false; qt.qml.binding.removal=false; qt.scenegraph.time.renderloop=false"
 #export QSG_INFO=1
 
-cd build-nix
 ./ohmstudio -platform wayland

@@ -125,13 +125,13 @@ window.ohmengine = (function() {
 	    
             //o.debug(uniqified, symbols)
             o.processed = {stream:uniqified,symbols: symbols}
-            o.worklet.port.postMessage(o.processed)
+	    o.msgWorklet(o.processed)
         } else if (msg.cmd == 'set' && msg.key == 'control') {
             let val = parseFloat(msg.val)
-            o.worklet.port.postMessage({control: msg.subkey, val: val})
+            o.msgWorklet({control: msg.subkey, val: val})
         } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
             if (msg.val == false)
-		o.worklet.port.postMessage({stream:{nodes:[0,0]},symbols:[]})
+		o.msgWorklet({stream:{nodes:[0,0]},symbols:[]})
 	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
             if (msg.val == true && !o.scopeEnabled) {
 		o.scopeEnabled = true
@@ -141,15 +141,22 @@ window.ohmengine = (function() {
             }
 	}
     }
-    
+
+    o.workletBacklog = []
+    o.msgWorklet = function(msg) {
+	if (o.worklet) o.worklet.port.postMessage(msg)
+	else o.workletBacklog.push(msg)
+    }
+	
     o.ctx = new AudioContext({ sampleRate: o.sampleRate,
 			       latencyHint: samplePeriod/sampleRate*2 })
-    const workletUrl = window.urlPrefixOverride + 'audio.js'
-    o.ctx.audioWorklet.addModule(workletUrl).then(() => {
+    o.ctx.audioWorklet.addModule('audio.js').then(() => {
         const options = {numberOfOutputs: 1, outputChannelCount: [2],
 			 numberOfInputs: 0, }
         o.worklet = new AudioWorkletNode(o.ctx,'ohm', options)
         o.worklet.connect(o.ctx.destination)
+	while (o.workletBacklog.length > 0)
+	    o.worklet.port.postMessage(o.workletBacklog.shift())
         /*navigator.mediaDevices.getUserMedia({ audio:true, video:false })
             .then((stream) => {
                 o.captureNode = o.ctx.createMediaStreamSource(stream)

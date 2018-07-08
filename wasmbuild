@@ -7,14 +7,13 @@ export QMAKE=$QTDIR/qmake
 
 source $EMDIR/emsdk_env.sh
 
-mkdir -p build-wasm
-cd build-wasm
-$QMAKE CONFIG+=release ..
+mkdir -p build/wasm
+cd build/wasm
+$QMAKE CONFIG+=release ../..
 make clean
 make -j20
-cd ..
-cp engine/ohm.js engine/audio.js engine/math.min.js engine/math.min.map web/index.html web/ohmblack.png web/favicon.ico build-wasm/
-#npm i -g http-server
-cd build-wasm
+cp ../../engine/ohm.js ../../engine/audio.js ../../engine/math.min.js .
+cp ../../web/index.html ../../web/ohmblack.png ../../web/favicon.ico .
+npm install http-server
 http-server -a localhost -c-1
 
