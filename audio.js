@@ -21,7 +21,7 @@ const mathOps = {
 class ohm {
     getArgNames() {
         let argmatch = this.constructor.toString().match(/constructor\((.*)\)/)
-        if (!argmatch) 
+        if (!argmatch)
             argmatch = this.__proto__.__proto__.constructor.toString().match(/constructor\((.*)\)/)
         if (!argmatch) return []
         return argmatch[1].split(',').map(arg => arg.trim()).map(arg=>arg.slice(0,3)== '...' ? arg.slice(3) : arg)
@@ -99,15 +99,15 @@ class composite extends ohm {
     constructor(func, ...args) {
         super()
         this.args = args
-	this.func = func
-	if (typeof func == 'function')
-	    this.fn = func
-	else if (func in mathOps)
-	    this.fn = mathOps[func]
-	else
+    this.func = func
+    if (typeof func == 'function')
+        this.fn = func
+    else if (func in mathOps)
+        this.fn = mathOps[func]
+    else
             throw new Error(`composite func not a function: ${func}`)
-        
-        this[Symbol.toPrimitive] = this.fn.bind(this, ...args)        
+
+        this[Symbol.toPrimitive] = this.fn.bind(this, ...args)
     }
 }
 
@@ -125,7 +125,7 @@ class randsample extends ohm {
         let intseed = Math.round(this.seed)
         let intnsamples = Math.round(this.nsamples)
         if (intseed == this.lastseed && intnsamples == this.lastnsamples
-	    && this.val !== undefined) return this.val
+        && this.val !== undefined) return this.val
         this.lastseed = intseed
         this.lastnsamples = intnsamples
         const val = []
@@ -139,21 +139,21 @@ class randsample extends ohm {
 
 class noise extends ohm {
     constructor(seed) {
-	super()
-	this.seed = seed
-	this.lastseed = 1
+    super()
+    this.seed = seed
+    this.lastseed = 1
     }
     [Symbol.toPrimitive]() {
-	const seed = +this.seed
-	if (seed != this.lastseed) {
-	    this.lastseed = seed
-	    this.state = seed
-	}
-	this.state = (this.state * 279470273) % 4294967291
-	return this.state / 2147483645 - 1
+    const seed = +this.seed
+    if (seed != this.lastseed) {
+        this.lastseed = seed
+        this.state = seed
+    }
+    this.state = (this.state * 279470273) % 4294967291
+    return this.state / 2147483645 - 1
     }
 }
-	    
+
 
 class sequence extends ohm {
     constructor(clock, values) {
@@ -161,8 +161,8 @@ class sequence extends ohm {
         this.clock = clock
         this.values = values
         this.lastvalues = this.values[Symbol.toPrimitive]()
-	if (this.lastvalues === undefined)
-	    throw new Error('could not get primitive from: '+values)
+    if (this.lastvalues === undefined)
+        throw new Error('could not get primitive from: '+values)
         this.position = 0
         this.gate = false
     }
@@ -229,7 +229,7 @@ class slew extends ohm {
         this.lag = lag
         this.shape = shape
         this.val = 0
-        this.target = 0    
+        this.target = 0
     }
     [Symbol.toPrimitive]() {
         const tdiff = time.val - this.tstart, lag = +this.lag, shape = +this.shape
@@ -237,7 +237,7 @@ class slew extends ohm {
             return this.val
         this.target = +this.signal
         this.tstart = time.val
-	
+
         let delta = (this.val-this.target)*(shape+1)*(-1/lag)**3 + (this.val-this.target)*shape*(-1/this.lag)**2
         if (isNaN(delta)) delta = 0
         else delta = Math.min(Math.max(delta,-0.1),0.1)
@@ -247,12 +247,12 @@ class slew extends ohm {
 
 class clkdiv extends ohm {
     constructor(clock,div,shift) {
-	super()
-	this.clock = clock
-	this.div = div
-	this.shift = shift
-	this.count = 0
-	this.ingate = false
+    super()
+    this.clock = clock
+    this.div = div
+    this.shift = shift
+    this.count = 0
+    this.ingate = false
     }
     [Symbol.toPrimitive]() {
         const clklvl = +this.clock
@@ -261,12 +261,12 @@ class clkdiv extends ohm {
             this.count++
         } else if (this.ingate && clklvl <= 1)
             this.ingate = false
-	if ((this.count-this.shift) % this.div == 0)
-	    return clklvl
+    if ((this.count-this.shift) % this.div == 0)
+        return clklvl
         return 0
     }
 }
-	    
+
 class sinusoid extends ohm {
     constructor(freq) {
         super()
@@ -307,7 +307,7 @@ class pwm extends ohm {
 class separator extends ohm {
     constructor(...nodes) {
         super()
-	this.nodes = nodes
+    this.nodes = nodes
     }
     [Symbol.toPrimitive]() {
         throw new Exception("not supposed to execute this")
@@ -315,7 +315,7 @@ class separator extends ohm {
 }
 
 const ohms = {ohm,mutval,cached,timekeep,capture,control,composite,randsample,noise,sequence,
-	      ramps,slew,clkdiv,sinusoid,sawtooth,pwm,separator}
+          ramps,slew,clkdiv,sinusoid,sawtooth,pwm,separator}
 
 const mapOhms = (node, symbols) => {
     if (node.name && node.name.slice(0, 1) == 'f') {
@@ -324,7 +324,7 @@ const mapOhms = (node, symbols) => {
             symbols[n] = mapOhms(symbols[n], symbols)
         return symbols[n]
     }
-        
+
     if (node.fn && node.fn.name in ohms)
         return new ohms[node.fn.name](...node.args.map(arg => mapOhms(arg, symbols)))
 
@@ -333,62 +333,62 @@ const mapOhms = (node, symbols) => {
 
     if (node.condition)
         return new composite((a, b, c) => (+a) ? (+b) : (+c), mapOhms(node.condition, symbols),
-			     mapOhms(node.trueExpr, symbols), mapOhms(node.falseExpr, symbols))
+                 mapOhms(node.trueExpr, symbols), mapOhms(node.falseExpr, symbols))
 
     if (node.isArrayNode) // TODO: fix
-	return new mutval(node.items.map(it => mapOhms(it)))
+    return new mutval(node.items.map(it => mapOhms(it)))
 
     if (node.fn)
         return new composite(node.fn.name, ...node.args.map(arg => mapOhms(arg, symbols)))
-	
+
     if ('value' in node)
         return node.value
-    
+
     return node;
 }
 
-const time = new timekeep(0)	
+const time = new timekeep(0)
 const streams = {in: {left: new capture(0,true), right: new capture(0,true)},
-		 out: {left: new mutval(0), right: new mutval(0)}}
+         out: {left: new mutval(0), right: new mutval(0)}}
 const controls = {}
 
 class OhmAudioProcessor extends AudioWorkletProcessor {
-    constructor() {
-	super();
+    constructor(options) {
+	super(options);
 	this.port.onmessage = this.newMsg
     }
 
     newMsg(msg) {
 	const data = msg.data
 	if (data.stream) {
-	    const mapped = mapOhms(data.stream, data.symbols)
-	    streams.out.left = mapped.nodes[0]
-	    streams.out.right = mapped.nodes[1]
+            const mapped = mapOhms(data.stream, data.symbols)
+            streams.out.left = mapped.nodes[0]
+            streams.out.right = mapped.nodes[1]
 	} else if (data.control) {
-	    if (data.control in controls && typeof controls[data.control] != 'number')
+            if (data.control in controls && typeof controls[data.control] != 'number')
 		controls[data.control].val = data.val
-	    else controls[data.control] = data.val
+            else controls[data.control] = data.val
 	}
     }
-
+    
     
     process(inputs, outputs, parameters) {
-	const inL = inputs[0][0], inR = inputs[0][1]
+	//const inL = inputs[0][0], inR = inputs[0][1]
 	const outL = outputs[0][0], outR = outputs[0][1]
-	const nIn = inL.length, nOut = outL.length
+	const nOut = outL.length //, nIn = inL.length
 	const sol = streams.out.left, sor = streams.out.right
-	const sil = streams.in.left, sir = streams.in.right
-	let icnt = 0, ocnt = 0
-	while (icnt < nIn || ocnt < nOut) {
-	    if (icnt < nIn) {
+	//const sil = streams.in.left, sir = streams.in.right
+	let ocnt = 0 //, icnt = 0
+	while (ocnt < nOut /*|| icnt < nIn*/) {
+            /*if (icnt < nIn) {
 		sil.val = inL[icnt] * 10
 		sir.val = inR[icnt++] * 10
-	    }
-	    if (ocnt < nOut) {
+            }*/
+            //if (ocnt < nOut) {
 		outL[ocnt] = sol/10
 		outR[ocnt++] = sor/10
-	    }
-	    time.val++
+            //}
+            time.val++
 	}
 	return true
     }
