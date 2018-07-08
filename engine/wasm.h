@@ -3,19 +3,11 @@
 
 QString platform_name = "web";
 
-class WasmEngine : public QObject {
-  Q_OBJECT
-public:
-  Q_INVOKABLE void msg(QString json) {
-    platform_enginemsg(json.toUtf8().data());
-  }
-};
-
 EM_JS(void, platform_enginemsg, (const char* msg), {
     var jmsg = UTF8ToString(msg);
     window.ohmengine.handle(jmsg);
   });
-  
+
 EM_JS(void, platform_save, (const char* fname, const char* contents), {
     var jfname = UTF8ToString(fname);
     var jcontents = UTF8ToString(contents);

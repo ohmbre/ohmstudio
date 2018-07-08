@@ -117,11 +117,12 @@ Item {
 	    scale: window.width / overlay.width * .7
 	    transformOrigin: Item.TopLeft
 	    property point popOrigin: Qt.point(content.width/2, content.height/2)
-	    property string folder: 'modules'
+	    property string directory: 'modules'
+	    property string match: '*Module.qml'
 	    onOpened: {
 		body.contentLoader.item.forceActiveFocus()
-		folder = 'modules'
-		body.contentLoader.item.model = FileIO.listDir(folder,"*Module.qml")
+		body.contentLoader.item.folder = mMenu.directory
+		body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match)
 	    }
 		    
             contents:  ListView {
@@ -131,15 +132,18 @@ Item {
 		height: contentHeight 
                 keyNavigationEnabled: mMenu.opened
 		focus: true
-                model: FileIO.listDir(mMenu.folder,"*Module.qml")
+		property string folder: mMenu.directory
+		property string match: mMenu.match
+                model: FileIO.listDir(folder,match)
                 delegate: OhmText {
                     width: mMenu.width
                     height: 14
-		    property bool isDir: leaf.slice(-4) != '.qml'
+		    property string path: modelData
 		    property var parts: modelData.split('/')
 		    property string leaf: parts[parts.length-1]
+		    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
 		    property string stem: parts.slice(0,-1).join('/')
-                    text: isDir ? leaf : leaf.slice(0,-10)
+                    text: isDir ? leaf : leaf.replace(/Module\.qml$/,'')
                     color: "black"
                     horizontalAlignment: Text.AlignRight
                     padding: 2
@@ -158,11 +162,13 @@ Item {
                         hoverEnabled: true
                         onClicked: {
                             if (isDir) {
+				console.log('dir',leaf,modelData)
                                 if (leaf=="..")
-				    mMenu.folder = parts.slice(0,-2).join('/')
-                                else mMenu.folder = modelData
+				    moduleList.folder = parts.slice(0,-2).join('/')
+                                else moduleList.folder = path
+				moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match)
                             } else {
-                                pView.patch.addModule(modelData,
+                                pView.patch.addModule(path,
 						      mMenu.popOrigin.x - content.width/2,
 						      mMenu.popOrigin.y - content.height/2);
                                 mMenu.close();

@@ -48,7 +48,7 @@ Rectangle {
 	    property string path: modelData
 	    property var parts: path.split('/')
 	    property string leaf: parts[parts.length-1]
-	    property bool isDir: leaf.slice(-4) != ('.'+fileChooseDialog.extension)
+	    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
 	    property string stem: parts.slice(0,-1).join('/')
             text: leaf
             color: Style.fileChooseTextColor
@@ -72,6 +72,7 @@ Rectangle {
                         if (leaf == '..')
 			    fileChoose.folder = parts.slice(0,-2).join('/')
                         else fileChoose.folder = path
+			fileChoose.model = FileIO.listDir(fileChoose.folder,fileChoose.match)
                     } else {
                         if (fileChooseDialog.forLoading)
                             fileChooseDialog.fileChosen(path)

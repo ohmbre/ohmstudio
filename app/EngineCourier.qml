@@ -25,8 +25,8 @@ Item {
 
     Component.onCompleted: {
         if (platform_name === 'web')
-            backend = WasmCourier
-        else backend = Qt.createQmlObject("NativeEngine {}", courier, "dyn");
+            backend = WasmEngine
+        else backend = Qt.createQmlObject("NativeEngine {}", courier, "dyn")
     }
 
 }

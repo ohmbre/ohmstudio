@@ -8,7 +8,6 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QJsonObject>
-#include <QtWebEngine>
 
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +15,15 @@
 
 #ifdef __EMSCRIPTEN__
 #include "engine/wasm.h"
+class WasmEngine : public QObject {
+  Q_OBJECT
+public:
+  Q_INVOKABLE void msg(QString json) {
+    platform_enginemsg(json.toUtf8().data());
+  }
+};
 #else
+#include <QtWebView>
 #include "engine/native.h"
 #endif
 
@@ -152,7 +159,7 @@ int main(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
   QQmlApplicationEngine engine;
 #ifndef __EMSCRIPTEN__
-  QtWebEngine::initialize();
+  QtWebView::initialize();
 #endif
   QDirIterator qrcIt(":", QStringList() << "*.qml",
              QDir::Files, QDirIterator::Subdirectories);
