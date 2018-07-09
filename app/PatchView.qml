@@ -162,7 +162,6 @@ Item {
                         hoverEnabled: true
                         onClicked: {
                             if (isDir) {
-				console.log('dir',leaf,modelData)
                                 if (leaf=="..")
 				    moduleList.folder = parts.slice(0,-2).join('/')
                                 else moduleList.folder = path

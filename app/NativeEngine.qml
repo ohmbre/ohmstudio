@@ -1,22 +1,32 @@
 import QtQuick 2.11
 import QtWebView 1.1
 
-WebView {
-
-    url: "http://localhost:60600/native.html"
-
+Item {
+    visible: false
+    
     property var backlog: []
+
     property var msg: function(jsonStr) {
         backlog.push(jsonStr)
     }
-
-    onLoadingChanged: {
-      if (loadRequest.status != WebView.LoadSucceededStatus) return
-      msg = function(jsonStr) {
-	  runJavaScript("ohmengine.handle('%1')".arg(jsonStr))
-      }
-      while (backlog.length)
-        msg(backlog.shift())
+    
+    function handleLoad(status) {
+	if (status != WebView.LoadSucceededStatus) return
+	msg = function(jsonStr) {
+	    engineload.item.runJavaScript("ohmengine.handle('%1')".arg(jsonStr))
+	}
+	while (backlog.length)
+	    msg(backlog.shift())	    
     }
 
+    Loader {
+	id: engineload
+	source: (Qt.platform.os == 'ios' || Qt.platform.os == 'android') ?
+	    'MobileEngine.qml' : 'DesktopEngine.qml'
+    }
+
+    Connections {
+	target: engineload.item
+	onLoadingChanged: handleLoad(loadRequest.status)
+    }
 }

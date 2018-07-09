@@ -88,10 +88,9 @@ window.ohmengine = (function() {
             node.forEach((node, path, parent) => { queue.push(node) });
         }
 
-        const symbolTransform = (node, path, parent) => {
-            if (node.redirect) return new SymbolNode(node.redirect)
-            return node
-        }
+        const symbolTransform = (node, path, parent) =>
+              node.redirect ? new SymbolNode(node.redirect) : node
+
         let symbols = [...symbolmap.entries()]
         symbols.sort((a, b) => parseInt(a[0].slice(1)) - parseInt(b[0].slice(1)))
         symbols = symbols.map(sym => {
@@ -144,30 +143,29 @@ window.ohmengine = (function() {
 
     o.workletBacklog = []
     o.msgWorklet = function(msg) {
-	if (o.worklet) o.worklet.port.postMessage(msg)
+	if (o.outWorklet) o.outWorklet.port.postMessage(msg)
 	else o.workletBacklog.push(msg)
     }
 	
     o.ctx = new AudioContext({ sampleRate: o.sampleRate,
 			       latencyHint: samplePeriod/sampleRate*2 })
     o.ctx.audioWorklet.addModule('audio.js').then(() => {
-        const options = {numberOfOutputs: 1, outputChannelCount: [2],
-			 numberOfInputs: 0, }
-        o.worklet = new AudioWorkletNode(o.ctx,'ohm', options)
-        o.worklet.connect(o.ctx.destination)
+        o.outWorklet = new AudioWorkletNode(o.ctx,'ohmOut',
+					    {numberOfOutputs: 1,
+					     outputChannelCount:[2],
+					     numberOfInputs: 0, })
+        o.outWorklet.connect(o.ctx.destination)
 	while (o.workletBacklog.length > 0)
-	    o.worklet.port.postMessage(o.workletBacklog.shift())
-        /*navigator.mediaDevices.getUserMedia({ audio:true, video:false })
+	    o.outWorklet.port.postMessage(o.workletBacklog.shift())
+	o.inWorklet = new AudioWorkletNode(o.ctx,'ohmIn', {numberOfOutputs: 1,
+							   numberOfInputs: 1})
+        navigator.mediaDevices.getUserMedia({ audio:true, video:false })
             .then((stream) => {
                 o.captureNode = o.ctx.createMediaStreamSource(stream)
-                o.captureNode.connect(o.worklet)
+                o.captureNode.connect(o.inWorklet)
             }).catch((err) => {
-                console.error('couldnt get mic:',err);
-            })*/
-    }).catch((err) => {
-        console.error('couldnt create a worklet-');
-        console.error(err.name);
-        console.error(err.message);
+                console.error(err.toString());
+            })
     })
     
     //o.scopeEnabled = false
@@ -208,8 +206,8 @@ window.ohmengine = (function() {
     }*/
 
     o.test = function() {
-    o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
-    o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
+	o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
+	o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
         o.handle('{"cmd":"set","key":"streams","val":["(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))","(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))"]}')
         o.handle('{"cmd":"set","key":"audioEnabled","val":true}')
     }

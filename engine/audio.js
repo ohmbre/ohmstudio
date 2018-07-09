@@ -1,4 +1,3 @@
-
 const samplePeriod = 512
 const sampleRate = 48000
 
@@ -77,8 +76,9 @@ class timekeep extends mutval {
 
 class capture extends mutval {
     constructor(channel, create = false) {
-        if (!create) return instreams[channel]
-        super(0)
+        if (!create) return streams.in[channel]
+	super(0)
+	this.buf = new Float32Array(128)
         this.channel = channel
     }
 }
@@ -335,8 +335,8 @@ const mapOhms = (node, symbols) => {
         return new composite((a, b, c) => (+a) ? (+b) : (+c), mapOhms(node.condition, symbols),
                  mapOhms(node.trueExpr, symbols), mapOhms(node.falseExpr, symbols))
 
-    if (node.isArrayNode) // TODO: fix
-    return new mutval(node.items.map(it => mapOhms(it)))
+    if (node.isArrayNode)
+	return new mutval(node.items.map(it => mapOhms(it)))
 
     if (node.fn)
         return new composite(node.fn.name, ...node.args.map(arg => mapOhms(arg, symbols)))
@@ -348,11 +348,11 @@ const mapOhms = (node, symbols) => {
 }
 
 const time = new timekeep(0)
-const streams = {in: {left: new capture(0,true), right: new capture(0,true)},
-         out: {left: new mutval(0), right: new mutval(0)}}
+const streams = {in: [new capture(0,true), new capture(0,true)],
+		 out: [new mutval(0), new mutval(0)]}
 const controls = {}
 
-class OhmAudioProcessor extends AudioWorkletProcessor {
+class OutAudioProcessor extends AudioWorkletProcessor {
     constructor(options) {
 	super(options);
 	this.port.onmessage = this.newMsg
@@ -362,36 +362,44 @@ class OhmAudioProcessor extends AudioWorkletProcessor {
 	const data = msg.data
 	if (data.stream) {
             const mapped = mapOhms(data.stream, data.symbols)
-            streams.out.left = mapped.nodes[0]
-            streams.out.right = mapped.nodes[1]
+            streams.out[0] = mapped.nodes[0]
+            streams.out[1] = mapped.nodes[1]
 	} else if (data.control) {
             if (data.control in controls && typeof controls[data.control] != 'number')
 		controls[data.control].val = data.val
             else controls[data.control] = data.val
 	}
     }
-    
-    
+        
     process(inputs, outputs, parameters) {
-	//const inL = inputs[0][0], inR = inputs[0][1]
 	const outL = outputs[0][0], outR = outputs[0][1]
-	const nOut = outL.length //, nIn = inL.length
-	const sol = streams.out.left, sor = streams.out.right
-	//const sil = streams.in.left, sir = streams.in.right
-	let ocnt = 0 //, icnt = 0
-	while (ocnt < nOut /*|| icnt < nIn*/) {
-            /*if (icnt < nIn) {
-		sil.val = inL[icnt] * 10
-		sir.val = inR[icnt++] * 10
-            }*/
-            //if (ocnt < nOut) {
-		outL[ocnt] = sol/10
-		outR[ocnt++] = sor/10
-            //}
+	const sol = streams.out[0], sor = streams.out[1]
+	const sil = streams.in[0], sir = streams.in[1]
+	const silbuf = sil.buf, sirbuf = sir.buf
+	let cnt = 0, nSamp =  outL.length
+	while (cnt < nSamp) {
+	    sil.val = silbuf[cnt]*10
+	    outL[cnt] = sol/10
+	    sir.val = sirbuf[cnt]*10
+	    outR[cnt] = sor/10
+            cnt++
             time.val++
 	}
 	return true
     }
 }
+registerProcessor('ohmOut',OutAudioProcessor)
 
-registerProcessor('ohm',OhmAudioProcessor)
+class InAudioProcessor extends AudioWorkletProcessor {
+    constructor(options) {
+	super(options);
+	this.bufl = streams.in[0].buf
+	this.bufr = streams.in[1].buf
+    }
+    process(inputs, outputs, parameters) {
+	this.bufl.set(inputs[0][0])
+	this.bufr.set(inputs[0][1])
+	return true
+    }
+}
+registerProcessor('ohmIn', InAudioProcessor)

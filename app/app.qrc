@@ -32,6 +32,8 @@
         <file>Constants.qml</file>
         <file>EngineCourier.qml</file>
         <file>NativeEngine.qml</file>
+	<file>DesktopEngine.qml</file>
+	<file>MobileEngine.qml</file>
         <file>qmldir</file>
         <file>ui/fonts/Asap-Medium.ttf</file>
         <file>ui/fonts/Asap-License.txt</file>

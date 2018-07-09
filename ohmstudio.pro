@@ -1,4 +1,4 @@
-QT += quickcontrols2 qml svg
+QT += quickcontrols2 svg
 CONFIG += c++11
 
 DEFINES += QT_DEPRECATED_WARNINGS
