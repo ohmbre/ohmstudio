@@ -150,19 +150,17 @@ window.ohmengine = (function() {
     o.ctx = new AudioContext({ sampleRate: o.sampleRate,
 			       latencyHint: samplePeriod/sampleRate*2 })
     o.ctx.audioWorklet.addModule('audio.js').then(() => {
-        o.outWorklet = new AudioWorkletNode(o.ctx,'ohmOut',
+        o.outWorklet = new AudioWorkletNode(o.ctx,'ohm',
 					    {numberOfOutputs: 1,
 					     outputChannelCount:[2],
-					     numberOfInputs: 0, })
+					     numberOfInputs: 1, })
         o.outWorklet.connect(o.ctx.destination)
 	while (o.workletBacklog.length > 0)
 	    o.outWorklet.port.postMessage(o.workletBacklog.shift())
-	o.inWorklet = new AudioWorkletNode(o.ctx,'ohmIn', {numberOfOutputs: 1,
-							   numberOfInputs: 1})
         navigator.mediaDevices.getUserMedia({ audio:true, video:false })
             .then((stream) => {
                 o.captureNode = o.ctx.createMediaStreamSource(stream)
-                o.captureNode.connect(o.inWorklet)
+                o.captureNode.connect(o.outWorklet)
             }).catch((err) => {
                 console.error(err.toString());
             })

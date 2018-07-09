@@ -78,7 +78,6 @@ class capture extends mutval {
     constructor(channel, create = false) {
         if (!create) return streams.in[channel]
 	super(0)
-	this.buf = new Float32Array(128)
         this.channel = channel
     }
 }
@@ -372,15 +371,16 @@ class OutAudioProcessor extends AudioWorkletProcessor {
     }
         
     process(inputs, outputs, parameters) {
+	const inL = inputs[0][0];
+	const inR = inputs[0].length > 1 ? inputs[0][1] : inL
 	const outL = outputs[0][0], outR = outputs[0][1]
 	const sol = streams.out[0], sor = streams.out[1]
 	const sil = streams.in[0], sir = streams.in[1]
-	const silbuf = sil.buf, sirbuf = sir.buf
 	let cnt = 0, nSamp =  outL.length
 	while (cnt < nSamp) {
-	    sil.val = silbuf[cnt]*10
+	    sil.val = inL[cnt]*10
 	    outL[cnt] = sol/10
-	    sir.val = sirbuf[cnt]*10
+	    sir.val = inR[cnt]*10
 	    outR[cnt] = sor/10
             cnt++
             time.val++
@@ -388,18 +388,6 @@ class OutAudioProcessor extends AudioWorkletProcessor {
 	return true
     }
 }
-registerProcessor('ohmOut',OutAudioProcessor)
+registerProcessor('ohm',OutAudioProcessor)
 
-class InAudioProcessor extends AudioWorkletProcessor {
-    constructor(options) {
-	super(options);
-	this.bufl = streams.in[0].buf
-	this.bufr = streams.in[1].buf
-    }
-    process(inputs, outputs, parameters) {
-	this.bufl.set(inputs[0][0])
-	this.bufr.set(inputs[0][1])
-	return true
-    }
-}
-registerProcessor('ohmIn', InAudioProcessor)
+
