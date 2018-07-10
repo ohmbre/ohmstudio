@@ -61,5 +61,6 @@
         <file>patches/autosave.qml</file>
         <file>patches/sine.qml</file>
         <file>patches/bootsnpants.qml</file>
+	<file>patches/peterepeat.qml</file>
     </qresource>
 </RCC>
