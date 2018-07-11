@@ -1,3 +1,4 @@
+
 window.ohmengine = (function() {
 
     const sampleRate = 48000
@@ -106,66 +107,67 @@ window.ohmengine = (function() {
     }
 
     o.handle = function (msg) {
-	msg = JSON.parse(msg)
+    msg = JSON.parse(msg)
         if (msg.cmd == 'set' && msg.key == 'streams') {
             const simplified = msg.val.map(
-		sval => math.simplify(
-		    math.parse(sval)
-			.transform(o.mapConstants)
-			.transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules
-		).transform((node, parent, path) => {
-		    if (node.isOperatorNode)
-			return new FunctionNode(node.fn, node.args)
-		    return node
-		}))
-	    
+        sval => math.simplify(
+            math.parse(sval)
+            .transform(o.mapConstants)
+            .transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules
+        ).transform((node, parent, path) => {
+            if (node.isOperatorNode)
+            return new FunctionNode(node.fn, node.args)
+            return node
+        }))
+
             const combo = new FunctionNode('separator',simplified)
             let [uniqified, symbols] = o.uniqify(combo)
-	    
+
             //o.debug(uniqified, symbols)
             o.processed = {stream:uniqified,symbols: symbols}
-	    o.msgWorklet(o.processed)
+        o.msgWorklet(o.processed)
         } else if (msg.cmd == 'set' && msg.key == 'control') {
             let val = parseFloat(msg.val)
             o.msgWorklet({control: msg.subkey, val: val})
         } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
             if (msg.val == false)
-		o.msgWorklet({stream:{nodes:[0,0]},symbols:[]})
-	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
+        o.msgWorklet({stream:{nodes:[0,0]},symbols:[]})
+    } else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
             if (msg.val == true && !o.scopeEnabled) {
-		o.scopeEnabled = true
-		setTimeout(o.runScope,500)
+        o.scopeEnabled = true
+        setTimeout(o.runScope,500)
             } else if (msg.val == false && o.scopeEnabled) {
-		o.scopeEnabled = false
+        o.scopeEnabled = false
             }
-	}
+    }
     }
 
     o.workletBacklog = []
     o.msgWorklet = function(msg) {
-	if (o.outWorklet) o.outWorklet.port.postMessage(msg)
-	else o.workletBacklog.push(msg)
+    if (o.outWorklet) o.outWorklet.port.postMessage(msg)
+    else o.workletBacklog.push(msg)
     }
-	
+
     o.ctx = new AudioContext({ sampleRate: o.sampleRate,
-			       latencyHint: samplePeriod/sampleRate*2 })
-    o.ctx.audioWorklet.addModule('audio.js').then(() => {
-        o.outWorklet = new AudioWorkletNode(o.ctx,'ohm',
-					    {numberOfOutputs: 1,
-					     outputChannelCount:[2],
-					     numberOfInputs: 1, })
-        o.outWorklet.connect(o.ctx.destination)
-	while (o.workletBacklog.length > 0)
-	    o.outWorklet.port.postMessage(o.workletBacklog.shift())
-        navigator.mediaDevices.getUserMedia({ audio:true, video:false })
-            .then((stream) => {
-                o.captureNode = o.ctx.createMediaStreamSource(stream)
-                o.captureNode.connect(o.outWorklet)
-            }).catch((err) => {
-                console.error(err.toString());
-            })
+                                 latencyHint: samplePeriod/sampleRate*2 })
+    o.ctx.audioWorklet.addModule('audio.js')
+    .then(() => {
+              o.outWorklet = new AudioWorkletNode(o.ctx,'ohm',
+                                                  {numberOfOutputs: 1,
+                                                      outputChannelCount:[2],
+                                                      numberOfInputs: 1, })
+              o.outWorklet.connect(o.ctx.destination)
+              while (o.workletBacklog.length > 0)
+                  o.outWorklet.port.postMessage(o.workletBacklog.shift())
+              navigator.mediaDevices.getUserMedia({ audio:true, video:false })
+              .then((stream) => {
+                        o.captureNode = o.ctx.createMediaStreamSource(stream)
+                        o.captureNode.connect(o.outWorklet)
+                    }).catch((err) => {
+                                 console.error(err.toString());
+                    })
     })
-    
+
     //o.scopeEnabled = false
     //o.clip = (min,v,max) => (v > max) ? max : ((v < min) ? min : v)
     /*o.runScope = function() {
@@ -204,8 +206,8 @@ window.ohmengine = (function() {
     }*/
 
     o.test = function() {
-	o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
-	o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
+    o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
+    o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
         o.handle('{"cmd":"set","key":"streams","val":["(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))","(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))"]}')
         o.handle('{"cmd":"set","key":"audioEnabled","val":true}')
     }

@@ -15,7 +15,8 @@ Item {
     OhmRect {
         id: outline
         x:0; y:0; z: 0
-        sz: Qt.size(parent.width, parent.height)
+        wb: parent.width
+        hb: parent.height
         radius: height/2
         color: Style.moduleColor
         border: Style.moduleBorderWidth
@@ -93,10 +94,10 @@ Item {
                 name: "controlMode"
                 StateChangeScript { script: { collapseAll(); displayLoader.item.enter(); }}
                 PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
-                    topPadding:-92; leftPadding: -20; rightPadding: -20 }
+                    topPadding:-92; leftPadding: -40; rightPadding: -40 }
                 PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
-                PropertyChanges { target: outline; radius: outline.height/10; eventsEnabled: false
-                    sz.width: pView.width/scaler.max; sz.height: pView.height/scaler.max
+                PropertyChanges { target: outline; radius: outline.height/10; pad.enabled: false
+                    wb: pView.width/scaler.max; hb: pView.height/scaler.max
                     dragTarget: null }
                 PropertyChanges { target: controller; opacity: 1.0; visible: true }
                 PropertyChanges { target: displayLoader; sourceComponent: module.display }
@@ -105,13 +106,22 @@ Item {
             State {
                 name: "patchMode"
                 StateChangeScript { script: { collapseAll(); displayLoader.item.exit() }}
+                PropertyChanges { target: mousePinch; drag.target: content;
+                    onPressAndHold: function(mouse) {
+                        mMenu.popup(mouse.x,mouse.y)
+                    }
+                }
+                PropertyChanges {
+                    target: outline
+                    dragTarget: mView
+                }
             }
         ]
 
         transitions: Transition {
             ParallelAnimation {
                 id: controlAnim
-                NumberAnimation { target: outline; properties: "sz.width,sz.height,radius";
+                NumberAnimation { target: outline; properties: "wb,hb,radius";
                     duration: 500; easing.type: Easing.InOutQuad }
                 NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
                     duration: 500; easing.type: Easing.InOutQuad }
@@ -157,7 +167,7 @@ Item {
                             id: knobClick
                             enabled: controller.visible
                             anchors.fill: parent
-                            onClicked: knobControl.open()
+                onClicked: knobControl.open()
                         }
 
                         Popup {
@@ -166,7 +176,7 @@ Item {
                             focus: true
                             padding: 0
                             parent: Overlay.overlay
-			    scale: overlay.scale
+                scale: overlay.scale
                             x: Math.round((parent.width - width) / 2)
                             y: Math.round((parent.height - height) / 2.2)
                             width: 215
@@ -290,24 +300,24 @@ Item {
     property double perim: tstart + mView.width/2 - mView.height/2
 
 
-    function computeJackPos(jacks) {
+	function computeJackPos(jacks) {
 	var sweep = perim / jacks.length
-        var shapeData = {}
-        for (var j = 0, start = 0; j < jacks.length; j++, start += sweep) {
-            var center = start + sweep/2
-	    var sdelta = (j == 0) ? (sweep/2) : (sweep/2-0.35)
-	    var edelta = (j == jacks.length-1) ? (sweep/2) : (sweep/2-0.35)
-            shapeData[jacks[j]] = {
+		var shapeData = {}
+		for (var j = 0, start = 0; j < jacks.length; j++, start += sweep) {
+			var center = start + sweep/2
+		var sdelta = (j == 0) ? (sweep/2) : (sweep/2-0.35)
+		var edelta = (j == jacks.length-1) ? (sweep/2) : (sweep/2-0.35)
+			shapeData[jacks[j]] = {
 		start: center - Math.min(sdelta, Style.maxJackSweep),
 		center: center,
 		end: center + Math.min(edelta, Style.maxJackSweep),
 		theta: Fn.clip(-Math.PI/2,
-			       2*(center-cstart)/mView.height - Math.PI/2,
-			       Math.PI/2)
-	    }
-        }
-        return shapeData
-    }
+				   2*(center-cstart)/mView.height - Math.PI/2,
+				   Math.PI/2)
+		}
+		}
+		return shapeData
+	}
 
 
     property var inJackPos: computeJackPos(module.inJacks)

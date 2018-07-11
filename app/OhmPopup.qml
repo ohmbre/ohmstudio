@@ -14,12 +14,12 @@ Menu {
         width:parent.width
         height: 12.2
         color: "#00000000"
-	smooth: true
-	z: 2
-	x: 0
+    smooth: true
+    z: 2
+    x: 0
         Label {
             id: label
-	    smooth: true
+        smooth: true
             height: 15
             color: "white"
             text: menuHolder.title;
@@ -44,16 +44,16 @@ Menu {
         color: "#CAFFFFFF";
         height: menuHolder.height-header.height;
         width: menuHolder.width;
-	radius: 3
-	smooth: true
-	property alias contentLoader: contentLoader
+    radius: 3
+    smooth: true
+    property alias contentLoader: contentLoader
         Loader {
-	    id: contentLoader
-	    focus: true
+        id: contentLoader
+        focus: true
             sourceComponent: menuHolder.contents
         }
     }
-    
+
     property alias body: body
 
 }

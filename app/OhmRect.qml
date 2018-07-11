@@ -5,15 +5,16 @@ Shape {
     id: rect
     containsMode: Shape.FillContains
     layer.enabled: {
-	return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
-	    Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
+    return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
+        Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
     }
     layer.samples: 16
     layer.smooth: true
     layer.mipmap: true
-    width: sz.width*10
-    height: sz.height*10
-    property size sz
+    width: wb*10
+    height: hb*10
+    property double wb
+    property double hb
     property bool eventsEnabled: true
     property double radius
     property double border
@@ -57,32 +58,21 @@ Shape {
     signal clicked
     signal pressAndHold
 
-
+    property alias pad: pad
     MouseArea {
         id: pad
+        enabled: true
         anchors.fill: parent
         drag.target: parent.dragTarget
         drag.smoothed: true
-        drag.threshold: 5
         propagateComposedEvents: true
         preventStealing: true
+        scrollGestureEnabled: false
         hoverEnabled: true
-
-        function inside(event) {
-            return rect.contains(Qt.point(event.x, event.y)) && rect.eventsEnabled
-        }
-
+        containmentMask: rect
         pressAndHoldInterval: 800
-        onPressAndHold: function(e) {
-            if (inside(e)) rect.pressAndHold(e)
-            else e.accepted = false
-        }
-
-        onClicked: function(e) {
-            if (inside(e)) rect.clicked(e)
-            else e.accepted = false
-        }
-
+        onPressAndHold: rect.pressAndHold(mouse)
+        onClicked: rect.clicked(mouse)
     }
 }
 

@@ -11,6 +11,7 @@
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
 
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -197,8 +198,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("FileIO", new FileIO());
   engine.load(QUrl(QStringLiteral("qrc:/OhmStudio.qml")));
 
-  if (engine.rootObjects().isEmpty())
-    return -1;
 
   return app.exec();
 }

@@ -17,21 +17,26 @@ Item {
         ParallelAnimation {
             id: zoomPanAnim
             running: false
-            NumberAnimation {id: xAnim; property: 'x'; target: content; duration: 400}
-            NumberAnimation {id: yAnim; property: 'y'; target: content; duration: 400}
-            NumberAnimation {property: 'zoom'; target: scaler; duration: 400; to: scaler.max}
+            NumberAnimation {id: xAnim; property: 'x';
+                target: content; duration: 400}
+            NumberAnimation {id: yAnim; property: 'y';
+                target: content; duration: 400}
+            NumberAnimation {property: 'zoom'; target: scaler;
+                duration: 400; to: scaler.max}
         }
         onXChanged: {
             var topleft = content.mapFromItem(pView,0,0);
             var bottright = content.mapFromItem(pView,pView.width,pView.height);
             if (topleft.x < 0) content.x += topleft.x*scaler.zoom;
-            else if (bottright.x > content.width) content.x -= (content.width-bottright.x)*scaler.zoom;
+            else if (bottright.x > content.width)
+                content.x -= (content.width-bottright.x)*scaler.zoom;
         }
         onYChanged: {
             var topleft = content.mapFromItem(pView,0,0);
             var bottright = content.mapFromItem(pView,pView.width,pView.height);
             if (topleft.y < 0) content.y += topleft.y*scaler.zoom;
-            else if (bottright.y > content.height) content.y -= (content.height-bottright.y)*scaler.zoom;
+            else if (bottright.y > content.height)
+                content.y -= (content.height-bottright.y)*scaler.zoom;
         }
 
         transform: Scale {
@@ -45,10 +50,10 @@ Item {
             property real min: 0.5
 
             function zoomContent(zoomDelta, center) {
-                if (zoomPanAnim.running) return;
+                if (zoomPanAnim.running) return false;
                 var oldZoom = zoom;
                 var newZoom = zoom * (1 + zoomDelta);
-                if (newZoom < min || newZoom > max) return;
+                if (newZoom < min || newZoom > max) return false;
                 zoom = newZoom;
                 content.x += center.x*(oldZoom-zoom);
                 content.y += center.y*(oldZoom-zoom);
@@ -70,106 +75,107 @@ Item {
                             return -1;
                         }
                     });
+                return true
             }
         }
 
-        Repeater {
-            model: patch.modules
-            ModuleView {
-                module: modelData
-            }
-        }
 
-        Repeater {
-            model: patch.cables
-            CableView {
-                cable: modelData
-            }
-        }
 
         PinchArea {
             anchors.fill: parent
-            onPinchUpdated: scaler.zoomContent(pinch.scale-pinch.previousScale,
-                                               Qt.point(pinch.startCenter.x, pinch.startCenter.y))
+            onPinchUpdated: {
+                pinch.accepted = scaler.zoomContent(
+                            pinch.scale-pinch.previousScale,
+                            Qt.point(pinch.startCenter.x, pinch.startCenter.y))
+            }
             MouseArea {
                 id: mousePinch
                 hoverEnabled: true
                 anchors.fill: parent
                 drag.target: content
-                drag.filterChildren: true
-                drag.threshold: 1
                 propagateComposedEvents: false
-                onReleased: propagateComposedEvents = true
-                onWheel: scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
+                onWheel: wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
                 onPressAndHold: function(mouse) {
-		    mMenu.popOrigin = Qt.point(mouse.x,mouse.y)
-		    mMenu.popup()
-		}
+                    mMenu.popup(mouse.x,mouse.y)
+                }
+
+                Repeater {
+                    model: patch.modules
+                    ModuleView {
+                        module: modelData
+                    }
+                }
+
+                Repeater {
+                    model: patch.cables
+                    CableView {
+                        cable: modelData
+                    }
+                }
+
+                CableDragView {id: childCableDragView; }
+
             }
         }
-
-
 
         OhmPopup {
             id: mMenu
             title: "Add Module"
             width: 95
-	    scale: window.width / overlay.width * .7
-	    transformOrigin: Item.TopLeft
-	    property point popOrigin: Qt.point(content.width/2, content.height/2)
-	    property string directory: 'modules'
-	    property string match: '*Module.qml'
-	    onOpened: {
-		body.contentLoader.item.forceActiveFocus()
-		body.contentLoader.item.folder = mMenu.directory
-		body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match)
-	    }
-		    
-            contents:  ListView {
+            scale: window.width / overlay.width * .7
+            transformOrigin: Item.TopLeft
+            property point popOrigin: Qt.point(content.width/2, content.height/2)
+            property string directory: 'modules'
+            property string match: '*Module.qml'
+            onOpened: {
+                body.contentLoader.item.forceActiveFocus()
+                body.contentLoader.item.folder = mMenu.directory
+                body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match)
+            }
+            contents: ListView {
                 id: moduleList
-		width: mMenu.width
-		contentHeight: model.length * 13
-		height: contentHeight 
+                width: mMenu.width
+                contentHeight: model.length * 13
+                height: contentHeight
                 keyNavigationEnabled: mMenu.opened
-		focus: true
-		property string folder: mMenu.directory
-		property string match: mMenu.match
+                focus: true
+                property string folder: mMenu.directory
+                property string match: mMenu.match
                 model: FileIO.listDir(folder,match)
                 delegate: OhmText {
                     width: mMenu.width
                     height: 14
-		    property string path: modelData
-		    property var parts: modelData.split('/')
-		    property string leaf: parts[parts.length-1]
-		    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
-		    property string stem: parts.slice(0,-1).join('/')
+                    property string path: modelData
+                    property var parts: modelData.split('/')
+                    property string leaf: parts[parts.length-1]
+                    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
+                    property string stem: parts.slice(0,-1).join('/')
                     text: isDir ? leaf : leaf.replace(/Module\.qml$/,'')
                     color: "black"
                     horizontalAlignment: Text.AlignRight
                     padding: 2
-		    rightPadding: 14
-		    Image {
-			source: 'ui/icons/arrow.svg'
-			width: 11
-			height: 5
-			visible: isDir
-			horizontalAlignment: Text.AlignRight
-			y: 5.5
-			x: parent.width - 12
-		    }
+                    rightPadding: 14
+                    Image {
+                        source: 'ui/icons/arrow.svg'
+                        width: 11
+                        height: 5
+                        visible: isDir
+                        horizontalAlignment: Text.AlignRight
+                        y: 5.5
+                        x: parent.width - 12
+                    }
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
                             if (isDir) {
                                 if (leaf=="..")
-				    moduleList.folder = parts.slice(0,-2).join('/')
+                                    moduleList.folder = parts.slice(0,-2).join('/')
                                 else moduleList.folder = path
-				moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match)
+                                moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match)
                             } else {
-                                pView.patch.addModule(path,
-						      mMenu.popOrigin.x - content.width/2,
-						      mMenu.popOrigin.y - content.height/2);
+                                pView.patch.addModule(path, mMenu.x - content.width/2,
+                                                      mMenu.y - content.height/2);
                                 mMenu.close();
                             }
                         }
@@ -177,31 +183,30 @@ Item {
                 }
                 highlight: Rectangle {
                     color: Style.menuLitColor
-		    radius: 2
+                    radius: 2
                 }
-		property Component emptyFooter: Item {}
-		property Component uploadFooter: OhmButton {
-		    id: mFooter
-		    label.font.pixelSize: 6
-		    border: 2; padding: 6
-		    x: (parent.width - width)/2
-		    height: 13; z: 3
-		    clip: true
-		    text: 'Upload New'
-		    onClicked: {
-			FileIO.upload(mMenu.folder)
-			mMenu.close()
-		    }
-		}
-		property real footerHeight: FileIO.canUpload() ? 13 : 0
-		footer: FileIO.canUpload() ? uploadFooter : emptyFooter
-		footerPositioning: ListView.OverlayFooter
+                property Component emptyFooter: Item {}
+                property Component uploadFooter: OhmButton {
+                    id: mFooter
+                    label.font.pixelSize: 6
+                    border: 2; padding: 6
+                    x: (parent.width - width)/2
+                    height: 13; z: 3
+                    clip: true
+                    text: 'Upload New'
+                    onClicked: {
+                        FileIO.upload(mMenu.folder)
+                        mMenu.close()
+                    }
+                }
+                property real footerHeight: FileIO.canUpload() ? 13 : 0
+                footer: FileIO.canUpload() ? uploadFooter : emptyFooter
+                footerPositioning: ListView.OverlayFooter
                 clip: true
-		onModelChanged: {
-		    mMenu.height = model.length * 14 + 13 + footerHeight
-		    mMenu.body.height =  model.length * 14
-		}
-		
+                onModelChanged: {
+                    mMenu.height = model.length * 14 + 13 + footerHeight
+                    mMenu.body.height =  model.length * 14
+                }
             }
         }
 
@@ -209,8 +214,8 @@ Item {
             id: delModuleMenu
             title: "Delete?"
             height: 50
-            width: 40
-	    scale: window.width / overlay.width * 0.7
+            width: 46
+            scale: window.width / overlay.width * 0.7
             contents: OhmButton {
                 x: Fn.centerInX(this,delModuleMenu)
                 y: Fn.centerInY(this,delModuleMenu.body)
@@ -238,7 +243,6 @@ Item {
             }
         }
 
-        CableDragView {id: childCableDragView; }
     }
 
     property Component moduleDisplay: Item {
