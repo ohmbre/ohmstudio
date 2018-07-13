@@ -143,142 +143,38 @@ Item {
             interactive: false
             scale: 6.75/scaler.max
             model: module.cvs
-            delegate: Component {
-                Column {
-                    id: knobView
-                    Image {
-                        id: knobIcon
-                        anchors.horizontalCenter: labelText.horizontalCenter
-                        width: 6; height: 1.14*width;
-                        source: "../ui/icons/knob.svg"
-                        mipmap: true
-                        smooth: true
-
-                        Rectangle {
-                            height: 1.65;
-                            width: .4;
-                            x: 2.55
-                            color: '#3b3b3b';
-                            radius: .2
-                            rotation: 14*controlVolts
-                            transformOrigin: Item.Bottom
-                        }
-                        MouseArea {
-                            id: knobClick
-                            enabled: controller.visible
-                            anchors.fill: parent
-                onClicked: knobControl.open()
-                        }
-
-                        Popup {
-                            id: knobControl
-                            modal: true
-                            focus: true
-                            padding: 0
-                            parent: Overlay.overlay
-                scale: overlay.scale
-                            x: Math.round((parent.width - width) / 2)
-                            y: Math.round((parent.height - height) / 2.2)
-                            width: 215
-                            height: 107
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: 'transparent'
-                                radius: 10
-                            }
-                            OhmText {
-                                x:knobControl.background.width-70
-                                y:knobControl.background.height-30
-                                text: controlVolts.toFixed(3)+' V'
-                                font.pixelSize: 12
-                                font.weight: Font.Bold
-                                horizontalAlignment: Text.AlignLeft
-                                color: Style.sliderColor
-                            }
-                            OhmText {
-                                x:35
-                                y:20
-                                text: knobReading
-                                font.pixelSize: 12
-                                font.weight: Font.Bold
-                                horizontalAlignment: Text.AlignLeft
-                                color: Style.sliderColor
-                            }
-                            Slider {
-                                id: knob
-                                rotation: -26
-                                value: controlVolts;
-                                from: -10; to: 10
-                                onValueChanged: {
-                                    controlVolts = value
-                                }
-                                anchors.fill: parent
-                                background: Rectangle {
-                                    x: knob.leftPadding; y: knob.topPadding + knob.availableHeight/2 - height / 2
-                                    implicitWidth: 5
-                                    implicitHeight: 100
-                                    width: knob.availableWidth
-                                    height: 5
-                                    color: Style.sliderColor
-                                    radius: 2
-                                    Rectangle {
-                                        x: ((knob.visualPosition > .5) ? .5 : (knob.visualPosition+.02))*parent.width
-                                        width: ((knob.visualPosition > .5) ? (knob.position-0.5) :
-                                                                             (0.47-knob.visualPosition)) * parent.width
-                                        height: parent.height
-                                        color: Style.sliderLitColor
-                                        radius: 2
-                                    }
-                                    Rectangle {
-                                        x: parent.width/2-3; y:-3
-                                        width: 4
-                                        height:10
-                                        color: Style.darkText
-                                        radius: 2
-                                    }
-                                    Repeater {
-                                        model: 11
-                                        OhmText {
-                                            text: (index - 5)*2 + ((index==0||index==10)? 'V':'')
-                                            x: knob.leftPadding+2+index*parent.width/10.9-contentWidth/2
-                                            y: knob.topPadding
-                                            font.pixelSize: 7
-                                            color: Style.sliderColor
-                                        }
-                                    }
-
-                                }
-                                handle: Rectangle {
-                                    x: knob.leftPadding + knob.visualPosition * (knob.availableWidth - width)
-                                    y: knob.topPadding + knob.availableHeight / 2 - height / 2
-                                    implicitWidth: 22
-                                    implicitHeight: 22
-                                    radius: 11
-                                    color: knob.pressed ? Style.sliderHandleLitColor: Style.sliderHandleColor
-                                    border.color: Style.buttonBorderColor
-                                }
-                            }
-                        }
-                    }
-                    OhmText {
-                        id: labelText
-                        width: knobIcon.width
-                        text: label
-                        color: Style.moduleLabelColor
-                        font.pixelSize: 1
-                        scale: 1.5
-                    }
+            delegate: Column {
+                id: knobView
+                width: 10
+                height: 8
+                Loader {
+                    width: parent.width
+                    height: 7.5
+                    id: cvLoader
+                    sourceComponent: control
+                    active: controller.visible
                 }
+                OhmText {
+                    id: labelText
+                    width: parent.width
+                    height: 1.2
+                    color: Style.moduleLabelColor
+                    font.pixelSize: 1
+                    scale: 1.5
+                    text: label
+                }
+
             }
+
             pathItemCount: undefined
             offset: .5
             path: Path {
                 startX: .13*controller.width; startY: .2*controller.height
-                PathLine { x: .13*controller.width; y: .95*controller.height }
+                PathLine { x: .13*controller.width; y: .93*controller.height }
                 PathPercent { value: .333 }
-                PathLine { x: .88*controller.width; y: .95*controller.height }
+                PathLine { x: .89*controller.width; y: .93*controller.height }
                 PathPercent { value: .667 }
-                PathLine { x: .88*controller.width; y: .2*controller.height }
+                PathLine { x: .89*controller.width; y: .2*controller.height }
                 PathPercent { value: 1 }
             }
         }

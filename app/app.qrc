@@ -32,8 +32,8 @@
         <file>Constants.qml</file>
         <file>EngineCourier.qml</file>
         <file>NativeEngine.qml</file>
-	<file>DesktopEngine.qml</file>
-	<file>MobileEngine.qml</file>
+        <file>DesktopEngine.qml</file>
+        <file>MobileEngine.qml</file>
         <file>qmldir</file>
         <file>ui/fonts/Asap-Medium.ttf</file>
         <file>ui/fonts/Asap-License.txt</file>
@@ -61,6 +61,8 @@
         <file>patches/autosave.qml</file>
         <file>patches/sine.qml</file>
         <file>patches/bootsnpants.qml</file>
-	<file>patches/peterepeat.qml</file>
+        <file>patches/peterepeat.qml</file>
+        <file>Knob.qml</file>
+        <file>Control.qml</file>
     </qresource>
 </RCC>
