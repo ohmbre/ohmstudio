@@ -4,7 +4,7 @@ CV {
 
     property var logBase: 2
     property var from
-    knobReading: {
+    reading: {
         var fromVal = parseFloat(from)
         var fromStr = fromVal.toString()
         if (fromStr === 'NaN') return ''

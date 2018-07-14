@@ -93,13 +93,13 @@ Item {
             State {
                 name: "controlMode"
                 StateChangeScript { script: { collapseAll(); displayLoader.item.enter(); }}
-                PropertyChanges { target: moduleLabel; scale: 0.25*controller.scale;
+                PropertyChanges { target: moduleLabel; scale: 0.25*controllers.scale;
                     topPadding:-92; leftPadding: -40; rightPadding: -40 }
                 PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
                 PropertyChanges { target: outline; radius: outline.height/10; pad.enabled: false
                     wb: pView.width/scaler.max; hb: pView.height/scaler.max
                     dragTarget: null }
-                PropertyChanges { target: controller; opacity: 1.0; visible: true }
+                PropertyChanges { target: controllers; opacity: 1.0; visible: true }
                 PropertyChanges { target: displayLoader; sourceComponent: module.display }
                 PropertyChanges { target: display; opacity: 1.0; visible: true }
             },
@@ -125,7 +125,7 @@ Item {
                     duration: 500; easing.type: Easing.InOutQuad }
                 NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
                     duration: 500; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: controller; properties: "opacity";
+                NumberAnimation { target: controllers; properties: "opacity";
                     duration: 500; easing.type: Easing.InOutQuad }
                 NumberAnimation { target: display; properties: "opacity";
                     duration: 500; easing.type: Easing.InOutQuad }
@@ -135,7 +135,7 @@ Item {
         property alias controlAnim: controlAnim
 
         PathView {
-            id: controller
+            id: controllers
             width: parent.width / scale; height: parent.height / scale
             anchors.centerIn: parent
             opacity: 0
@@ -151,8 +151,8 @@ Item {
                     width: parent.width
                     height: 7.5
                     id: cvLoader
-                    sourceComponent: control
-                    active: controller.visible
+                    sourceComponent: controller
+                    active: controllers.visible
                 }
                 OhmText {
                     id: labelText
@@ -169,12 +169,12 @@ Item {
             pathItemCount: undefined
             offset: .5
             path: Path {
-                startX: .13*controller.width; startY: .2*controller.height
-                PathLine { x: .13*controller.width; y: .93*controller.height }
+                startX: .13*controllers.width; startY: .2*controllers.height
+                PathLine { x: .13*controllers.width; y: .93*controllers.height }
                 PathPercent { value: .333 }
-                PathLine { x: .89*controller.width; y: .93*controller.height }
+                PathLine { x: .89*controllers.width; y: .93*controllers.height }
                 PathPercent { value: .667 }
-                PathLine { x: .89*controller.width; y: .2*controller.height }
+                PathLine { x: .89*controllers.width; y: .2*controllers.height }
                 PathPercent { value: 1 }
             }
         }

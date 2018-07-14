@@ -10,8 +10,8 @@ Model {
 
     property var inVolts: 0
     property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(Fn.uuid(cv))
-    property string knobReading: ''
-    property Component control: Knob {}
+    property string reading: ''
+    property Component controller: KnobController {}
 
     function toQML(indent) {
         return controlVolts.toString();

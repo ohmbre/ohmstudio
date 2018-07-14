@@ -1,7 +1,7 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 
-Control {
+Controller {
     id: knob
     anchors.fill: parent
     indicator: Image {
@@ -35,7 +35,7 @@ Control {
         OhmText {
             x:parent.width/5
             y:parent.height/4
-            text: knobReading
+            text: reading
             font.pixelSize: 12
             font.weight: Font.Bold
             horizontalAlignment: Text.AlignLeft

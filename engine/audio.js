@@ -14,7 +14,12 @@ const mathOps = {
     unaryMinus: (a) => -a,
     add: (a, b) => a + b,
     multiply: (a, b) => a * b,
-    divide: (a, b) => a / b
+    divide: (a, b) => a / b,
+    max: (a,b) => {
+	const ap = +a
+	const bp = +b 
+	return ap > bp ? ap : bp
+    }
 }
 
 class ohm {
@@ -77,7 +82,7 @@ class timekeep extends mutval {
 class capture extends mutval {
     constructor(channel, create = false) {
         if (!create) return streams.in[channel]
-	super(0)
+    super(0)
         this.channel = channel
     }
 }
@@ -306,7 +311,7 @@ class pwm extends ohm {
 class separator extends ohm {
     constructor(...nodes) {
         super()
-    this.nodes = nodes
+	this.nodes = nodes
     }
     [Symbol.toPrimitive]() {
         throw new Exception("not supposed to execute this")
@@ -334,7 +339,7 @@ const mapOhms = (node, symbols) => {
         return new composite((a, b, c) => (+a) ? (+b) : (+c), mapOhms(node.condition, symbols),
                  mapOhms(node.trueExpr, symbols), mapOhms(node.falseExpr, symbols))
 
-    if (node.isArrayNode)
+	if (node.isArrayNode)
 	return new mutval(node.items.map(it => mapOhms(it)))
 
     if (node.fn)
@@ -360,16 +365,16 @@ class OutAudioProcessor extends AudioWorkletProcessor {
     newMsg(msg) {
 	const data = msg.data
 	if (data.stream) {
-            const mapped = mapOhms(data.stream, data.symbols)
-            streams.out[0] = mapped.nodes[0]
-            streams.out[1] = mapped.nodes[1]
+	    const mapped = mapOhms(data.stream, data.symbols)
+	    streams.out[0] = mapped.nodes[0]
+	    streams.out[1] = mapped.nodes[1]
 	} else if (data.control) {
-            if (data.control in controls && typeof controls[data.control] != 'number')
+	    if (data.control in controls && typeof controls[data.control] != 'number')
 		controls[data.control].val = data.val
-            else controls[data.control] = data.val
+	    else controls[data.control] = data.val
 	}
     }
-        
+    
     process(inputs, outputs, parameters) {
 	const inL = inputs[0][0];
 	const inR = inputs[0].length > 1 ? inputs[0][1] : inL
@@ -382,8 +387,8 @@ class OutAudioProcessor extends AudioWorkletProcessor {
 	    outL[cnt] = sol/10
 	    sir.val = inR[cnt]*10
 	    outR[cnt] = sor/10
-            cnt++
-            time.val++
+	    cnt++
+	    time.val++
 	}
 	return true
     }

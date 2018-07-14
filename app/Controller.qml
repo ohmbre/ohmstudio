@@ -2,17 +2,22 @@ import QtQuick 2.0
 import QtQuick.Controls 2.4
 
 Item {
-    id: controlView
     property Component indicator
     property Component editor
     width: parent.width
     Loader {
+        id: indicatorLoader
         sourceComponent: indicator
+    }
+    property alias indicatorItem: indicatorLoader.item
+    property var clickHandler: function(mouse) {
+        if (editor) editCtrl.open()
+        print('clicked')
     }
     MouseArea {
         id: inidicatorClick
         anchors.fill: parent
-        onClicked: editCtrl.open()
+        onClicked: clickHandler(mouse)
     }
     Popup {
         id: editCtrl

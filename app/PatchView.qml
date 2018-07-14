@@ -78,7 +78,7 @@ Item {
                 return true
             }
         }
-
+        property alias scaler: scaler
 
 
         PinchArea {

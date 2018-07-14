@@ -1,14 +1,14 @@
 CV {
     id: quantcv
-    
+
     objectName: "QuantCV"
 
     property var choices
     onControlVoltsChanged: {
         controlVolts = Math.round(((controlVolts+10)/20)*choices.length)/choices.length*20-10
-	engine.updateControl(Fn.uuid(quantcv), controlVolts)
+    engine.updateControl(Fn.uuid(quantcv), controlVolts)
     }
-    knobReading: stream
+    reading: stream
 
     stream: choices[
                 Math.max(Math.min(Math.round(((controlVolts+10)/20)*choices.length),choices.length-1),0)

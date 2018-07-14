@@ -62,7 +62,12 @@
         <file>patches/sine.qml</file>
         <file>patches/bootsnpants.qml</file>
         <file>patches/peterepeat.qml</file>
-        <file>Knob.qml</file>
-        <file>Control.qml</file>
+        <file>KnobController.qml</file>
+        <file>Controller.qml</file>
+        <file>ToggleController.qml</file>
+        <file>BinaryCV.qml</file>
+        <file>ui/icons/togglebase.png</file>
+        <file>ui/icons/toggletip.png</file>
+        <file>modules/controls/ToggleModule.qml</file>
     </qresource>
 </RCC>
