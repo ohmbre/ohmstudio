@@ -23,6 +23,7 @@
         <file>Jack.qml</file>
         <file>Fn.qml</file>
         <file>LogScaleCV.qml</file>
+        <file>MultiLogCV.qml</file>
         <file>LinearCV.qml</file>
         <file>CV.qml</file>
         <file>AttenuverterCV.qml</file>
@@ -58,16 +59,19 @@
         <file>modules/osc/SawOscModule.qml</file>
         <file>modules/osc/SineOscModule.qml</file>
         <file>modules/sequencer/RandSeqModule.qml</file>
+	<file>modules/sequencer/StepSeqModule.qml</file>
         <file>patches/autosave.qml</file>
         <file>patches/sine.qml</file>
         <file>patches/bootsnpants.qml</file>
         <file>patches/peterepeat.qml</file>
         <file>KnobController.qml</file>
+        <file>MultiController.qml</file>
         <file>Controller.qml</file>
         <file>ToggleController.qml</file>
         <file>BinaryCV.qml</file>
         <file>ui/icons/togglebase.png</file>
         <file>ui/icons/toggletip.png</file>
+	<file>ui/icons/multiknob.png</file>
         <file>modules/controls/ToggleModule.qml</file>
     </qresource>
 </RCC>

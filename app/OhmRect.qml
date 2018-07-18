@@ -5,8 +5,8 @@ Shape {
     id: rect
     containsMode: Shape.FillContains
     layer.enabled: {
-    return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
-        Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
+	return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
+            Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
     }
     layer.samples: 16
     layer.smooth: true

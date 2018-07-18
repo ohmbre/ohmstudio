@@ -1,7 +1,8 @@
 #!/bin/bash
+rm -rf build/nix
 mkdir -p build/nix
 cd build/nix
-/opt/qt/bin/qmake CONFIG+=release ../..
+~/qt/5.12.0/gcc_64/bin/qmake CONFIG+=release ../..
 make
 
 export QSG_RENDER_LOOP=basic
