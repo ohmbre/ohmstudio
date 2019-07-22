@@ -10,12 +10,17 @@ QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =
 QMAKE_MAC_SDK = macosx10.14
 
-linux|macx|android|ios {
-  QT += webview
-  HEADERS += engine/native.h
-} else {
-  HEADERS += engine/wasm.h
-}
+#linux|macx {
+#  QT += webengine
+#} android|ios {
+#  QT += webview
+#  HEADERS += engine/native.h
+#} else {
+#  HEADERS += engine/wasm.h
+#}
+
+QT += webview
+HEADERS += engine/native.h
 
 android {
   DISTFILES += \

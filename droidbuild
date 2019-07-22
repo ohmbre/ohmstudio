@@ -1,17 +1,18 @@
 #!/bin/bash
 
-export ANDROID_SDK_ROOT=~/android-sdk
-export ANDROID_NDK_ROOT=~/android-sdk/ndk-bundle
+export ANDROID_SDK_ROOT=~/Android/Sdk
+export ANDROID_NDK_ROOT=~/Android/Sdk/ndk-bundle
 export MAKE=$ANDROID_NDK_ROOT/prebuilt/linux-x86_64/bin/make
-export JDK_ROOT=/usr/lib/jvm/java-1.8.0-openjdk-amd64
-export QTDIR=~/qt/5.11.1/android_armv7/bin
-export QMAKE=$QTDIR/qmake
+export JDK_ROOT=/usr/lib/jvm/java-8-openjdk
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
+export QTDIR=/opt/qt/5.13.0/android_arm64_v8a
+export QMAKE=$QTDIR/bin/qmake
 mkdir -p build/droid
 cd build/droid
-$QMAKE -spec android-g++ ../..
+$QMAKE -spec android-clang ../..
 $MAKE
 $MAKE install INSTALL_ROOT=android-build
-$QTDIR/androiddeployqt \
+$QTDIR/bin/androiddeployqt \
     --input android-libohmstudio.so-deployment-settings.json \
-    --output android-build --android-platform android-28 --jdk $JDK_ROOT \
-    --gradle --install
+    --output android-build --android-platform android-29 \
+    --install --gradle --jdk $JDK_ROOT

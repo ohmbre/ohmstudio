@@ -188,7 +188,7 @@ Item {
                 property Component emptyFooter: Item {}
                 property Component uploadFooter: OhmButton {
                     id: mFooter
-                    label.font.pixelSize: 6
+		    font.pixelSize: 6
                     border: 2; padding: 6
                     x: (parent.width - width)/2
                     height: 13; z: 3
@@ -220,7 +220,9 @@ Item {
                 x: Fn.centerInX(this,delModuleMenu)
                 y: Fn.centerInY(this,delModuleMenu.body)
                 width: 45; height: 45
-                imageUrl: "../ui/icons/delete.svg"
+		padding: 0
+                icon.source: "../ui/icons/delete.svg"
+		display: AbstractButton.IconOnly
                 border: 0
                 onClicked: {
                     patch.deleteModule(delModuleMenu.candidate);

@@ -19,7 +19,9 @@ const mathOps = {
 	const ap = +a
 	const bp = +b 
 	return ap > bp ? ap : bp
-    }
+    },
+    atan: Math.atan,
+    exp: Math.exp,
 }
 
 class ohm {
@@ -182,6 +184,20 @@ class sequence extends ohm {
     }
 }
 
+class stopwatch extends ohm {
+    constructor(trig) {
+	super()
+	this.trig = trig
+	this.timer = 0
+    }
+    [Symbol.toPrimitive]() {
+	const siglvl = +this.trig
+	if (siglvl >= 3) this.timer = 0;
+	else this.timer++;
+	return this.timer;
+    }
+}
+
 class ramps extends ohm {
     constructor(trig, initval, ...args) {
         super()
@@ -295,6 +311,20 @@ class sawtooth extends ohm {
     }
 }
 
+class sawsin extends ohm {
+    constructor(freq, decay, timer) {
+        super()
+        this.freq = freq
+        this.phase = 0
+	this.decay = decay
+	this.timer = timer	
+    }
+    [Symbol.toPrimitive]() {
+        this.phase += this.freq;
+        return Math.atan(Math.sin(this.phase)/(Math.cos(this.phase)+Math.exp(this.decay*this.timer)))
+    }
+}
+
 class pwm extends ohm {
     constructor(freq, duty) {
         super()
@@ -319,7 +349,7 @@ class separator extends ohm {
 }
 
 const ohms = {ohm,mutval,cached,timekeep,capture,control,composite,randsample,noise,sequence,
-          ramps,slew,clkdiv,sinusoid,sawtooth,pwm,separator}
+              stopwatch,ramps,slew,clkdiv,sinusoid,sawtooth,sawsin,pwm,separator}
 
 const mapOhms = (node, symbols) => {
     if (node.name && node.name.slice(0, 1) == 'f') {

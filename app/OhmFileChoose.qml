@@ -109,7 +109,7 @@ Rectangle {
 		height: 20
 		width: parent.width / 2
 		text: "upload new"
-		label.font.pixelSize: 7
+		font.pixelSize: 7
 		border: 3
 		onClicked: {
 		    FileIO.upload(fileChoose.folder)

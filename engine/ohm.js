@@ -164,7 +164,7 @@ window.ohmengine = (function() {
                         o.captureNode = o.ctx.createMediaStreamSource(stream)
                         o.captureNode.connect(o.outWorklet)
                     }).catch((err) => {
-                                 console.error(err.toString());
+                        console.error("Could not create audio input node.",err.toString());
                     })
     })
 

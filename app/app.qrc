@@ -58,6 +58,7 @@
         <file>modules/osc/PwmOscModule.qml</file>
         <file>modules/osc/SawOscModule.qml</file>
         <file>modules/osc/SineOscModule.qml</file>
+        <file>modules/osc/HarmoOscModule.qml</file>
         <file>modules/sequencer/RandSeqModule.qml</file>
 	<file>modules/sequencer/StepSeqModule.qml</file>
         <file>patches/autosave.qml</file>

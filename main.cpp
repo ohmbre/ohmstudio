@@ -27,6 +27,7 @@ public:
   }
 };
 #else
+//include <QtWebEngine>
 #include <QtWebView>
 #include "engine/native.h"
 #endif
@@ -160,7 +161,8 @@ int main(int argc, char *argv[]) {
   QQmlApplicationEngine engine;
 
 #ifndef __EMSCRIPTEN__
-  QtWebView::initialize();
+  //  QtWebEngine::initialize();
+    QtWebView::initialize();
 #endif
 
   QDirIterator qrcIt(":", QStringList() << "*.qml",
