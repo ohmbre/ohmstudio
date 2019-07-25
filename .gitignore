@@ -1,5 +1,5 @@
 *~
-*.qbs.user*
+*.pro.user*
 *.qmlproject.user*
 .qmake.stash
 node_modules
