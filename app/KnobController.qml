@@ -6,7 +6,7 @@ Controller {
     anchors.fill: parent
     indicator: Image {
         width: 6; height: 1.14*width;
-        source: "ui/icons/knob.svg"
+        source: "qrc:/app/ui/icons/knob.svg"
         mipmap: true
         smooth: true
         x: (knob.width-width)/2

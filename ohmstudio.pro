@@ -1,26 +1,21 @@
-QT += quickcontrols2 svg
+QT += quickcontrols2 svg multimedia qml qml-private
 CONFIG += c++11
   
 DEFINES += QT_DEPRECATED_WARNINGS
 
-SOURCES += main.cpp
-RESOURCES += app/app.qrc engine/engine.qrc
+SOURCES += main.cpp soundworker.cpp
+HEADERS += soundworker.h platform/native.h
+RESOURCES += $$files(app/*.qml, true) \
+             $$files(app/*.js, true) \
+             $$files(app/*qmldir, true) \
+             $$files(app/*.mjs, true) \
+             $$files(app/*.png, true) \
+             $$files(app/*.svg, true) \
+             $$files(app/*.ttf, true)             
 
 QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =
 QMAKE_MAC_SDK = macosx10.14
-
-#linux|macx {
-#  QT += webengine
-#} android|ios {
-#  QT += webview
-#  HEADERS += engine/native.h
-#} else {
-#  HEADERS += engine/wasm.h
-#}
-
-QT += webview
-HEADERS += engine/native.h
 
 android {
   DISTFILES += \

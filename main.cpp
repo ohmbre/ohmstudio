@@ -11,27 +11,12 @@
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
 
-
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
-
-#ifdef __EMSCRIPTEN__
-#include "engine/wasm.h"
-class WasmEngine : public QObject {
-  Q_OBJECT
-public:
-  Q_INVOKABLE void msg(QString json) {
-    platform_enginemsg(json.toUtf8().data());
-  }
-};
-#else
-//include <QtWebEngine>
-#include <QtWebView>
-#include "engine/native.h"
-#endif
-
+#include "platform/native.h"
+#include "soundworker.h"
 
 class FileIO : public QObject {
   Q_OBJECT
@@ -160,20 +145,15 @@ int main(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
   QQmlApplicationEngine engine;
 
-#ifndef __EMSCRIPTEN__
-  //  QtWebEngine::initialize();
-    QtWebView::initialize();
-#endif
-
-  QDirIterator qrcIt(":", QStringList() << "*.qml",
+  QDirIterator qrcIt(":/app", QStringList() << "*.qml",
              QDir::Files, QDirIterator::Subdirectories);
   while (qrcIt.hasNext()) {
     QString fname = qrcIt.next();
-    if (fname.startsWith(":/modules/") || fname.startsWith(":/patches/")) {
+    if (fname.startsWith(":/app/modules/") || fname.startsWith(":/app/patches/")) {
       QDir cwd("");
-      cwd.mkpath(fname.section('/',1,-2));
-      QFile::copy(fname, fname.section('/',1,-1));
-      QFile::setPermissions(fname.section('/',1,-1),
+      cwd.mkpath(fname.section('/',2,-2));
+      QFile::copy(fname, fname.section('/',2,-1));
+      QFile::setPermissions(fname.section('/',2,-1),
                 QFileDevice::ReadOwner | QFileDevice::WriteOwner |
                 QFileDevice::ReadGroup | QFileDevice::ReadOther);
     } else
@@ -181,6 +161,8 @@ int main(int argc, char *argv[]) {
               fname.section('/',-1).chopped(4).toLatin1().data());
   }
 
+  qmlRegisterType<SoundWorker>("org.ohm.audio", 1, 0, "SoundWorker");
+    
   FileIO::transfer_from_storage();
 
   QDirIterator modIt("modules", QStringList() << "*.qml",
@@ -191,14 +173,8 @@ int main(int argc, char *argv[]) {
             fname.split('/').last().chopped(4).toLatin1().data());
   }
 
-  engine.rootContext()->setContextProperty("platform_name", platform_name);
-#ifdef __EMSCRIPTEN__
-    engine.rootContext()->setContextProperty("WasmEngine", new WasmEngine());
-#else
-  StupidHTTPServer lameness;
-#endif
   engine.rootContext()->setContextProperty("FileIO", new FileIO());
-  engine.load(QUrl(QStringLiteral("qrc:/OhmStudio.qml")));
+  engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
 
 
   return app.exec();

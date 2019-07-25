@@ -73,10 +73,8 @@
     <!-- %%INSERT_PERMISSIONS -->
     <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MICROPHONE"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
 
 
     <!-- The following comment will be replaced upon deployment with default features based on the dependencies of the application.
@@ -84,6 +82,6 @@
     <!-- %%INSERT_FEATURES -->
     <uses-feature android:name="android.hardware.audio.low_latency"/>
     <uses-feature android:name="android.hardware.audio.pro"/>
-    <uses-feature android:name="android.hardware.microphone"/>
+
 
 </manifest>

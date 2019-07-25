@@ -41,7 +41,7 @@ ApplicationWindow {
             height: 18 * overlay.scale
             color: Style.buttonBorderColor
             Image {
-                source: "ui/icons/logo.svg"
+                source: "qrc:/app/ui/icons/logo.svg"
                 x: Fn.centerInX(this,parent)
                 y: Fn.centerInY(this,parent)
                 mipmap: true
@@ -132,9 +132,9 @@ ApplicationWindow {
         height: width * window.height / window.width
         scale: window.width / width
         transformOrigin: Item.TopLeft
-        FontLoader { id: asapFont; source: "ui/fonts/Asap-Medium.ttf" }
+        FontLoader { id: asapFont; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
 
-        EngineCourier {
+        Engine {
             id: engine
         }
 

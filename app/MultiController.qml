@@ -6,7 +6,7 @@ Controller {
     anchors.fill: parent
     indicator: Image {
         width: 5; height: width;
-        source: "ui/icons/multiknob.png"
+        source: "qrc:/app/ui/icons/multiknob.png"
         mipmap: true
         smooth: true
         x: (multiknob.width-width)/2

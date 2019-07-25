@@ -1,9 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>ohm.js</file>
-        <file>audio.js</file>
-        <file>math.min.js</file>
-        <file>math.min.map</file>
-        <file>native.html</file>
-    </qresource>
-</RCC>

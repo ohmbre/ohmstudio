@@ -56,7 +56,7 @@ Rectangle {
             height: 13
             horizontalAlignment: Text.AlignLeft
 	    Image {
-		source: 'ui/icons/arrow.svg'
+		source: 'qrc:/app/ui/icons/arrow.svg'
 		visible: isDir
 		width: 11
 		height: 5

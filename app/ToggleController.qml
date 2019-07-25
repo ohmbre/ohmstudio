@@ -12,7 +12,7 @@ Controller {
         property alias toggleTip: toggleTip
         Image {
             width: 3.5; height: 3.1
-            source: "ui/icons/togglebase.png"
+            source: "qrc:/app/ui/icons/togglebase.png"
             mipmap: true
             smooth: true
             x: (sw.width-width)/2
@@ -21,7 +21,7 @@ Controller {
                 id: toggleTip
                 width: 2.3
                 height: 3.5
-                source: "ui/icons/toggletip.png"
+                source: "qrc:/app/ui/icons/toggletip.png"
                 x: (parent.width-width)/2*1.8
                 y: (parent.height/2-height)*.85
                 property bool flip: controlVolts < 1

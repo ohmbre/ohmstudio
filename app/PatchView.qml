@@ -156,7 +156,7 @@ Item {
                     padding: 2
                     rightPadding: 14
                     Image {
-                        source: 'ui/icons/arrow.svg'
+                        source: 'qrc:/app/ui/icons/arrow.svg'
                         width: 11
                         height: 5
                         visible: isDir
@@ -221,7 +221,7 @@ Item {
                 y: Fn.centerInY(this,delModuleMenu.body)
                 width: 45; height: 45
 		padding: 0
-                icon.source: "../ui/icons/delete.svg"
+                icon.source: "qrc:/app/ui/icons/delete.svg"
 		display: AbstractButton.IconOnly
                 border: 0
                 onClicked: {
