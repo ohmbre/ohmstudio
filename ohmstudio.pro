@@ -1,17 +1,17 @@
-QT += quickcontrols2 svg multimedia qml qml-private
+QT += quickcontrols2 svg multimedia qml
 CONFIG += c++11
-  
+
 DEFINES += QT_DEPRECATED_WARNINGS
 
-SOURCES += main.cpp soundworker.cpp
-HEADERS += soundworker.h platform/native.h
+SOURCES += main.cpp
+
 RESOURCES += $$files(app/*.qml, true) \
              $$files(app/*.js, true) \
              $$files(app/*qmldir, true) \
              $$files(app/*.mjs, true) \
              $$files(app/*.png, true) \
              $$files(app/*.svg, true) \
-             $$files(app/*.ttf, true)             
+             $$files(app/*.ttf, true)
 
 QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =

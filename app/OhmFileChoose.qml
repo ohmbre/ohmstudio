@@ -19,9 +19,8 @@ Rectangle {
     property bool forLoading: false
     property bool forSaving: false
     property bool open
-	
+
     signal fileChosen(string fileURL)
-    signal fileUploaded()
 
     property string saveFile: fileChoose.folder + '/' + fileChoose.footerItem.text
     ListView {
@@ -30,49 +29,49 @@ Rectangle {
         footerPositioning: ListView.OverlayFooter
         keyNavigationEnabled: fileChooseDialog.open
         highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
-	property bool open: fileChooseDialog.open
-	onOpenChanged: {
-	    folder = fileChooseDialog.directory
-	    model = FileIO.listDir(folder,match)
-	}
+        property bool open: fileChooseDialog.open
+        onOpenChanged: {
+            folder = fileChooseDialog.directory
+            model = FileIO.listDir(folder,match)
+        }
         focus: fileChooseDialog.open
-	property string folder: fileChooseDialog.directory
-	property string ext: '*.'+fileChooseDialog.extension
-	property string match: '*'+ext
-	model: FileIO.listDir(folder,match)
-	delegate: OhmText {
+        property string folder: fileChooseDialog.directory
+        property string ext: '*.'+fileChooseDialog.extension
+        property string match: '*'+ext
+        model: FileIO.listDir(folder,match)
+        delegate: OhmText {
             leftPadding: 5
             rightPadding: 5
             topPadding: 2
             bottomPadding: 2
-	    property string path: modelData
-	    property var parts: path.split('/')
-	    property string leaf: parts[parts.length-1]
-	    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
-	    property string stem: parts.slice(0,-1).join('/')
+            property string path: modelData
+            property var parts: path.split('/')
+            property string leaf: parts[parts.length-1]
+            property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
+            property string stem: parts.slice(0,-1).join('/')
             text: leaf
             color: Style.fileChooseTextColor
             width: parent.width
             height: 13
             horizontalAlignment: Text.AlignLeft
-	    Image {
-		source: 'qrc:/app/ui/icons/arrow.svg'
-		visible: isDir
-		width: 11
-		height: 5
-		horizontalAlignment: Image.AlignRight
-		y: 4.5
-		x: parent.width - width - 4
-	    }
+            Image {
+                source: 'qrc:/app/ui/icons/arrow.svg'
+                visible: isDir
+                width: 11
+                height: 5
+                horizontalAlignment: Image.AlignRight
+                y: 4.5
+                x: parent.width - width - 4
+            }
             MouseArea {
-		enabled: open
+                enabled: open
                 anchors.fill: parent
                 onClicked: {
                     if (isDir) {
                         if (leaf == '..')
-			    fileChoose.folder = parts.slice(0,-2).join('/')
+                            fileChoose.folder = parts.slice(0,-2).join('/')
                         else fileChoose.folder = path
-			fileChoose.model = FileIO.listDir(fileChoose.folder,fileChoose.match)
+                        fileChoose.model = FileIO.listDir(fileChoose.folder,fileChoose.match)
                     } else {
                         if (fileChooseDialog.forLoading)
                             fileChooseDialog.fileChosen(path)
@@ -96,30 +95,12 @@ Rectangle {
             }
             color: Style.buttonBorderColor
         }
-        footer: forSaving ? saveBox: (FileIO.canUpload() ? uploadBtn : emptyFooter)
+        footer: forSaving ? saveBox : emptyFooter
         property Component emptyFooter: Item {}
-	property Component uploadBtn: Rectangle {
-	    id: uploadBtn
-	    height: 15; width: parent.width
-	    z: 2
-	    color: Style.drawerColor
-	    OhmButton {
-		z: 3; y: -5; x: parent.width/4-border
-		clip: true
-		height: 20
-		width: parent.width / 2
-		text: "upload new"
-		font.pixelSize: 7
-		border: 3
-		onClicked: {
-		    FileIO.upload(fileChoose.folder)
-		    fileChooseDialog.fileUploaded()
-		}
-	    }
-	}
+
         property Component saveBox: TextField {
-	    clip: true
-	    z:2
+            clip: true
+            z:2
             placeholderText: qsTr("Enter filename")
             font.family: asapFont.name
             font.pixelSize: 11

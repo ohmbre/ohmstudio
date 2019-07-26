@@ -1,19 +1,18 @@
 "use strict;"
 
 import { math } from "mathjs/math.mjs"
-import audioif from "audio.mjs"
 
-export default function() {
-
-    const sampleRate = 48000
-    const samplePeriod = 512
+export function OhmEngine() {
 
     const assign = Object.assign
     const o = {}
 
+    const samplePeriod = 512
+    const sampleRate = 48000
+
     const ratioVoct = (ratio) => Math.log(ratio) / Math.log(2)
     o.consts = {
-    v: 1,
+        v: 1,
         vScale: 0.1,
         s: sampleRate,
         ms: sampleRate / 1000,
@@ -40,6 +39,394 @@ export default function() {
     assign(o.consts, o.consts.scales)
     assign(o, o.consts)
 
+    const pi = Math.PI
+    const tau = 2 * pi
+
+    const mathOps = {
+        mod: (a, b) => a % b,
+        pow: Math.pow,
+        smaller: (a, b) => a < b,
+        smallerEq: (a, b) => a <= b,
+        larger: (a, b) => a > b,
+        largerEq: (a, b) => a >= b,
+        unaryMinus: (a) => -a,
+        add: (a, b) => a + b,
+        multiply: (a, b) => a * b,
+        divide: (a, b) => a / b,
+        max: (a,b) => {
+            const ap = +a
+            const bp = +b
+            return ap > bp ? ap : bp
+        },
+        atan: Math.atan,
+        exp: Math.exp,
+    }
+
+    class ohm {
+        getArgNames() {
+            let argmatch = this.constructor.toString().match(/constructor\((.*)\)/)
+            if (!argmatch)
+            argmatch = this.__proto__.__proto__.constructor.toString().match(/constructor\((.*)\)/)
+            if (!argmatch) return []
+            return argmatch[1].split(',').map(arg => arg.trim()).map(arg=>arg.slice(0,3)== '...' ? arg.slice(3) : arg)
+            .filter(arg => Reflect.has(this, arg))
+        }
+        toString() {
+            const args = this.getArgNames().map(arg => {
+                                                    if (Array.isArray(this[arg]))
+                                                    return arg + '=' + this[arg].map(varg => varg.toString()).toString()
+                                                    return arg + '=' + this[arg].toString()
+                                                }).join(' ')
+            return `${this.constructor.name}(${args})`
+        }
+        toJSON() {
+            const children = this.getArgNames().map(arg => {
+                                                        if (Array.isArray(this[arg]))
+                                                        return { name: arg, children: this[arg].map(varg => varg.toJSON ? varg.toJSON() : varg.toString()) }
+                                                        return { name: arg, children: this[arg].toJSON ? this[arg].toJSON() : this[arg].toString() }
+                                                    })
+            return { name: this.constructor.name, children: children }
+        }
+        static get isOhm() { return true }
+    }
+
+    class mutval extends ohm {
+        constructor(vinitial) {
+            super()
+            this.val = vinitial
+        }
+        [Symbol.toPrimitive]() {
+            return this.val;
+        }
+    }
+
+    class cached extends mutval {
+        constructor(ohmo) {
+            super(ohmo)
+            this.t = o.time.val
+        }
+        [Symbol.toPrimitive]() {
+            const curtime = o.time.val
+            if (this.t != curtime || this.cachedval === undefined) {
+                this.t = o.time.val
+                this.cachedval = this.val[Symbol.toPrimitive]()
+            }
+            return this.cachedval
+        }
+    }
+
+    class timekeep extends mutval {
+        toString() { return "t" }
+    }
+
+    class capture extends mutval {
+        constructor(channel, create = false) {
+            if (!create) return streams.in[channel]
+            super(0)
+            this.channel = channel
+        }
+    }
+
+    class control extends mutval {
+        constructor(id) {
+            if (id in o.controls) {
+                if (typeof (o.controls[id]) == 'number')
+                super(o.controls[id])
+                else super(o.controls[id].val)
+            } else super(0)
+            this.id = id
+            o.controls[id] = this;
+        }
+    }
+
+    class composite extends ohm {
+        constructor(func, ...args) {
+            super()
+            this.args = args
+            this.func = func
+            if (typeof func == 'function')
+            this.fn = func
+            else if (func in mathOps)
+            this.fn = mathOps[func]
+            else
+            throw new Error(`composite func not a function: ${func}`)
+
+            this[Symbol.toPrimitive] = this.fn.bind(this, ...args)
+        }
+    }
+
+    class randsample extends ohm {
+        constructor(pool, nsamples, seed) {
+            super()
+            this.pool = pool
+            this.lastnsamples = 0
+            this.nsamples = nsamples
+            this.lastseed = 279470274
+            this.seed = (typeof seed == 'undefined') ? Math.floor(Math.random() * 279470273) : seed
+            this.val = undefined
+        }
+        [Symbol.toPrimitive]() {
+            let intseed = Math.round(this.seed)
+            let intnsamples = Math.round(this.nsamples)
+            if (intseed == this.lastseed && intnsamples == this.lastnsamples
+                && this.val !== undefined) return this.val
+            this.lastseed = intseed
+            this.lastnsamples = intnsamples
+            const val = []
+            while (val.length < intnsamples) {
+                val.push(this.pool[intseed % this.pool.length])
+                intseed = (intseed * 279470273) % 4294967291
+            }
+            return this.val = val
+        }
+    }
+
+    class noise extends ohm {
+        constructor(seed) {
+            super()
+            this.seed = seed
+            this.lastseed = 1
+        }
+        [Symbol.toPrimitive]() {
+            const seed = +this.seed
+            if (seed != this.lastseed) {
+                this.lastseed = seed
+                this.state = seed
+            }
+            this.state = (this.state * 279470273) % 4294967291
+            return this.state / 2147483645 - 1
+        }
+    }
+
+
+    class sequence extends ohm {
+        constructor(clock, values) {
+            super()
+            this.clock = clock
+            this.values = values
+            this.lastvalues = this.values[Symbol.toPrimitive]()
+            if (this.lastvalues === undefined)
+            throw new Error('could not get primitive from: '+values)
+            this.position = 0
+            this.gate = false
+        }
+        [Symbol.toPrimitive]() {
+            const clklvl = +this.clock
+            if (!this.gate && clklvl >= 3) {
+                this.lastvalues = this.values[Symbol.toPrimitive]()
+                this.gate = true
+                this.position = (this.position + 1) % this.lastvalues.length
+            } else if (this.gate && clklvl <= 1)
+            this.gate = false
+            return this.lastvalues[this.position]
+        }
+    }
+
+    class stopwatch extends ohm {
+        constructor(trig) {
+            super()
+            this.trig = trig
+            this.timer = 0
+        }
+        [Symbol.toPrimitive]() {
+            const siglvl = +this.trig
+            if (siglvl >= 3) this.timer = 0;
+            else this.timer++;
+            return this.timer;
+        }
+    }
+
+    class ramps extends ohm {
+        constructor(trig, initval, ...args) {
+            super()
+            this.trig = trig
+            this.gate = false
+            this.initval = initval
+            this.timer = 0
+            this.ramps = []
+            this.args = [...args]
+            this.val = initval
+            this.running = false
+        }
+        [Symbol.toPrimitive]() {
+            const siglvl = +this.trig
+            if (!this.gate && siglvl >= 3) {
+                this.gate = this.running = true
+                this.timer = 0
+                this.vstart = this.val
+                this.rampsleft = [...this.args]
+                const ramplist = this.rampsleft.splice(0, 3)
+                this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
+            } else if (this.gate && siglvl <= 1)
+            this.gate = false
+            if (!this.running) return this.val
+            this.timer++
+            let len = +this.len
+            if (this.timer > len) {
+                if (!this.rampsleft.length) {
+                    this.running = false
+                    return this.val
+                }
+                const ramplist = this.rampsleft.splice(0, 3)
+                this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
+                len = +this.len
+                this.vstart = this.val
+                this.timer = 1
+            }
+            const target = +this.target, shape = +this.shape
+            if (len == 0) return this.val = target
+            return this.val = target + (this.vstart - target) * (1 - this.timer / len) ** shape
+        }
+    }
+
+    class slew extends ohm {
+        constructor(signal, lag, shape) {
+            super()
+            this.tstart = o.time.val
+            this.signal = signal
+            this.lag = lag
+            this.shape = shape
+            this.val = 0
+            this.target = 0
+        }
+        [Symbol.toPrimitive]() {
+            const tdiff = o.time.val - this.tstart, lag = +this.lag, shape = +this.shape
+            if (tdiff < lag)
+            return this.val
+            this.target = +this.signal
+            this.tstart = o.time.val
+
+            let delta = (this.val-this.target)*(shape+1)*(-1/lag)**3 + (this.val-this.target)*shape*(-1/this.lag)**2
+            if (isNaN(delta)) delta = 0
+            else delta = Math.min(Math.max(delta,-0.1),0.1)
+            return this.val = this.val + delta
+        }
+    }
+
+    class clkdiv extends ohm {
+        constructor(clock,div,shift) {
+            super()
+            this.clock = clock
+            this.div = div
+            this.shift = shift
+            this.count = 0
+            this.ingate = false
+        }
+        [Symbol.toPrimitive]() {
+            const clklvl = +this.clock
+            if (!this.ingate && clklvl >= 3) {
+                this.ingate = true
+                this.count++
+            } else if (this.ingate && clklvl <= 1)
+            this.ingate = false
+            if ((this.count-this.shift) % this.div == 0)
+            return clklvl
+            return 0
+        }
+    }
+
+    class sinusoid extends ohm {
+        constructor(freq) {
+            super()
+            this.freq = freq
+            this.phase = 0
+        }
+        [Symbol.toPrimitive]() {
+            this.phase += this.freq;
+            return Math.sin(this.phase)
+        }
+    }
+
+    class sawtooth extends ohm {
+        constructor(freq) {
+            super()
+            this.freq = freq
+            this.phase = 0
+        }
+        [Symbol.toPrimitive]() {
+            this.phase += this.freq;
+            return (this.phase % tau) / pi - 1
+        }
+    }
+
+    class sawsin extends ohm {
+        constructor(freq, decay, timer) {
+            super()
+            this.freq = freq
+            this.phase = 0
+            this.decay = decay
+            this.timer = timer
+        }
+        [Symbol.toPrimitive]() {
+            this.phase += this.freq;
+            return Math.atan(Math.sin(this.phase)/(Math.cos(this.phase)+Math.exp(this.decay*this.timer)))
+        }
+    }
+
+    class pwm extends ohm {
+        constructor(freq, duty) {
+            super()
+            this.freq = freq
+            this.phase = 0
+            this.duty = duty
+        }
+        [Symbol.toPrimitive]() {
+            this.phase += this.freq;
+            return (((this.phase % tau) / tau) < this.duty) ? 1 : -1
+        }
+    }
+
+    class separator extends ohm {
+        constructor(...nodes) {
+            super()
+            this.nodes = nodes
+        }
+        [Symbol.toPrimitive]() {
+            throw new Exception("not supposed to execute this")
+        }
+    }
+
+    const ohms = {ohm,mutval,cached,timekeep,capture,control,composite,randsample,noise,sequence,
+        stopwatch,ramps,slew,clkdiv,sinusoid,sawtooth,sawsin,pwm,separator}
+
+    const mapOhms = (node, symbols) => {
+        if (node.name && node.name.slice(0, 1) == 'f') {
+            const n = parseInt(node.name.slice(1))
+            if (!symbols[n].isOhm)
+            symbols[n] = mapOhms(symbols[n], symbols)
+            return symbols[n]
+        }
+
+        if (node.fn && node.fn.name in ohms)
+        return new ohms[node.fn.name](...node.args.map(arg => mapOhms(arg, symbols)))
+
+        if (node.name && node.name == 't')
+        return o.time
+
+        if (node.condition)
+        return new composite((a, b, c) => (+a) ? (+b) : (+c), mapOhms(node.condition, symbols),
+                             mapOhms(node.trueExpr, symbols), mapOhms(node.falseExpr, symbols))
+
+        if (node.isArrayNode)
+        return new mutval(node.items.map(it => mapOhms(it)))
+
+        if (node.fn) {
+            if (node.fn.name)
+            return new composite(node.fn.name, ...node.args.map(arg => mapOhms(arg, symbols)))
+            else
+            return new composite(node.fn, ...node.args.map(arg => mapOhms(arg, symbols)))
+        }
+
+        if ('value' in node)
+        return node.value
+
+        return node;
+    }
+
+
+    o.time = new timekeep(0)
+    o.streams = {in: [new capture(0,true), new capture(0,true)], out: [new mutval(0), new mutval(0)]}
+    o.controls = {}
 
     o.addMathFn = (name, fn, sig = 'number,number') => {
         const type = {}
@@ -49,7 +436,7 @@ export default function() {
         assign(o, type)
     }
     o.addMathFn('notehz', (name, octave) =>
-        0.057595865 * 1.059463094 ** (12 * (octave - 4) + name))
+                0.057595865 * 1.059463094 ** (12 * (octave - 4) + name))
 
     o.ohmrules = [...math.simplify.rules]
     o.ohmrules.push('n/(n1/n2) -> (n*n2)/n1')
@@ -59,7 +446,7 @@ export default function() {
 
     o.mapConstants = (node, path, parent) => {
         if (node.isSymbolNode && node.name in o.consts)
-            return new math.ConstantNode(o.consts[node.name]);
+        return new math.ConstantNode(o.consts[node.name]);
         return node;
     }
 
@@ -77,7 +464,7 @@ export default function() {
             const other = seen.get(node.rep)
             if (other) {
                 if (other.redirect)
-                    node.redirect = other.redirect
+                node.redirect = other.redirect
                 else {
                     const symname = `f${symbolmap.size}`
                     other.redirect = symname
@@ -91,61 +478,64 @@ export default function() {
         }
 
         const symbolTransform = (node, path, parent) =>
-              node.redirect ? new math.SymbolNode(node.redirect) : node
+        node.redirect ? new math.SymbolNode(node.redirect) : node
 
         let symbols = [...symbolmap.entries()]
         symbols.sort((a, b) => parseInt(a[0].slice(1)) - parseInt(b[0].slice(1)))
         symbols = symbols.map(sym => {
-            let clone = sym[1].clone()
-            clone.redirect = false
-            clone = new math.FunctionNode("cached",[clone.transform(symbolTransform)])
-            clone.symbol = sym[0]
-            return clone
-        })
+                                  let clone = sym[1].clone()
+                                  clone.redirect = false
+                                  clone = new math.FunctionNode("cached",[clone.transform(symbolTransform)])
+                                  clone.symbol = sym[0]
+                                  return clone
+                              })
         let uniqified = topnode.transform(symbolTransform)
-	
+
         return [uniqified, symbols]
     }
 
-    o.handle = (msg) => {
-	msg = JSON.parse(msg)
+    o.handle = (msgstr) => {
+        const msg = JSON.parse(msgstr)
         if (msg.cmd == 'set' && msg.key == 'streams') {
-	    const vi = msg.val[1]
-	    const simplified = msg.val.map(
-		sval => math.simplify(
-		    math.parse(sval)
-			.transform(o.mapConstants)
-			.transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules
-		).transform((node, parent, path) => {
-		    if (node.isOperatorNode)
-			return new math.FunctionNode(node.fn, node.args)
-		    return node
-		}))
+            const simplified = msg.val.map(
+                sval => math.simplify(
+                    math.parse(sval)
+                    .transform(o.mapConstants)
+                    .transform((node, path, parent) => math.simplify(node, o.ohmrules)), o.ohmrules
+                    ).transform((node, parent, path) => {
+                                    if (node.isOperatorNode)
+                                    return new math.FunctionNode(node.fn, node.args)
+                                    return node
+                                }))
             const combo = new math.FunctionNode('separator',simplified)
-            let [uniqified, symbols] = o.uniqify(combo)	    
+            let [uniqified, symbols] = o.uniqify(combo)
             //o.debug(uniqified, symbols)
-            o.processed = {stream:uniqified,symbols: symbols}
-            o.audioif.postMsg(o.processed)
+            const mapped = mapOhms(uniqified, symbols)
+            o.streams.out[0] = mapped.nodes[0]
+            o.streams.out[1] = mapped.nodes[1]
+
         } else if (msg.cmd == 'set' && msg.key == 'control') {
             let val = parseFloat(msg.val)
-            o.audioif.postMsg({control: msg.subkey, val: val})
+            if (!o.controls[msg.subkey] || typeof(o.controls[msg.subkey]) == 'number')
+                o.controls[msg.subkey] = val
+            else
+                o.controls[msg.subkey].val = val
         } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
-            if (msg.val == false)
-		o.audioif.postMsg({stream:{nodes:[0,0]},symbols:[]})
-	} else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
-            if (msg.val == true && !o.scopeEnabled) {
-		o.scopeEnabled = true
-		setTimeout(o.runScope,500)
-            } else if (msg.val == false && o.scopeEnabled) {
-		o.scopeEnabled = false
+            if (msg.val == false) {
+                o.streams.out[0] = 0;
+                o.streams.out[1] = 0;
             }
-	}
+        } else if (msg.cmd == 'set' && msg.key == 'scopeEnabled') {
+            if (msg.val == true && !o.scopeEnabled) {
+                o.scopeEnabled = true
+                setTimeout(o.runScope,500)
+            } else if (msg.val == false && o.scopeEnabled) {
+                o.scopeEnabled = false
+            }
+        }
     }
 
-    o.audioif = audioif
-    
-
-  /*
+    /*
     o.scopeEnabled = false
     o.clip = (min,v,max) => (v > max) ? max : ((v < min) ? min : v)
     o.runScope = function() {
@@ -185,12 +575,12 @@ export default function() {
   */
 
     o.test = function() {
-	o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
-	o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
+        o.handle('{"cmd":"set","key":"controls","subkey":1,"val":-0.07448569444468056}')
+        o.handle('{"cmd":"set","key":"controls","subkey":2,"val":2.495575346116766}')
         o.handle('{"cmd":"set","key":"streams","val":["(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))","(((2 * (1.38)^((0)+control(2))))*sinusoid(((notehz(C,4) * (2)^((0)+control(1))))))"]}')
         o.handle('{"cmd":"set","key":"audioEnabled","val":true}')
     }
-    
+
     o.debug = (node, symbols) => {
         const fs = require('fs');
         let options = { parenthesis: 'auto', implicit: 'hide' }

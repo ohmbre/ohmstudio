@@ -188,7 +188,7 @@ Item {
                 property Component emptyFooter: Item {}
                 property Component uploadFooter: OhmButton {
                     id: mFooter
-		    font.pixelSize: 6
+                    font.pixelSize: 6
                     border: 2; padding: 6
                     x: (parent.width - width)/2
                     height: 13; z: 3
@@ -199,8 +199,8 @@ Item {
                         mMenu.close()
                     }
                 }
-                property real footerHeight: FileIO.canUpload() ? 13 : 0
-                footer: FileIO.canUpload() ? uploadFooter : emptyFooter
+                property real footerHeight: 0
+                footer: emptyFooter
                 footerPositioning: ListView.OverlayFooter
                 clip: true
                 onModelChanged: {
@@ -220,9 +220,9 @@ Item {
                 x: Fn.centerInX(this,delModuleMenu)
                 y: Fn.centerInY(this,delModuleMenu.body)
                 width: 45; height: 45
-		padding: 0
+                padding: 0
                 icon.source: "qrc:/app/ui/icons/delete.svg"
-		display: AbstractButton.IconOnly
+                display: AbstractButton.IconOnly
                 border: 0
                 onClicked: {
                     patch.deleteModule(delModuleMenu.candidate);

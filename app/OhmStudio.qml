@@ -12,8 +12,6 @@ ApplicationWindow {
 
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
-    //onActiveFocusItemChanged: print(activeFocusItem)
-
 
     Drawer {
         id: setup
@@ -72,7 +70,7 @@ ApplicationWindow {
             onClicked: {
                 saveFileChoose.open = false
                 loadFileChoose.open = true;
-                saveBtn.label.color = Style.buttonTextColor
+                //saveBtn.label.color = Style.buttonTextColor
             }
         }
 
@@ -86,10 +84,10 @@ ApplicationWindow {
                 if (!saveFileChoose.open) {
                     loadFileChoose.open = false;
                     saveFileChoose.open = true;
-                    label.color = Style.fileChooseLitColor
+                    //label.color = Style.fileChooseLitColor
                 } else {
                     saveFileChoose.fileChosen(saveFileChoose.saveFile)
-                    label.color = Style.buttonTextColor
+                    //label.color = Style.buttonTextColor
                 }
             }
         }
@@ -105,9 +103,6 @@ ApplicationWindow {
                 if (overlay.loadPatchQML(fileURL)) {
                     setup.close()
                 }
-            }
-            onFileUploaded: {
-                setup.close()
             }
         }
 
