@@ -5,12 +5,12 @@ Item {
 
     function set(key, val) {
         var msg = JSON.stringify({ cmd: 'set', key: key, val: val })
-        SoundEngine.sendMsg(msg)
+        ohm.handle(msg)
     }
 
     function setsubkey(key,subkey,val) {
         var msg = JSON.stringify({ cmd: 'set', key: key, subkey: subkey, val: val })
-        SoundEngine.sendMsg(msg)
+        ohm.handle(msg)
     }
 
     function updateControl(uuid,val) {

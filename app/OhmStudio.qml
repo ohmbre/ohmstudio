@@ -1,6 +1,8 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 
+import "qrc:/app/engine/ohm.mjs" as OhmEngine
+
 ApplicationWindow {
     id: window
     visible: true

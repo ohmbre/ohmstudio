@@ -25,7 +25,9 @@ const dependencies = [
   'FunctionNode',
   'OperatorNode',
   'ParenthesisNode',
-  'SymbolNode'
+  'SymbolNode',
+  'ConditionalNode',
+  'ArrayNode'
 ]
 
 export const createSimplify = /* #__PURE__ */ factory(name, dependencies, (
@@ -47,7 +49,9 @@ export const createSimplify = /* #__PURE__ */ factory(name, dependencies, (
     FunctionNode,
     OperatorNode,
     ParenthesisNode,
-    SymbolNode
+    SymbolNode,
+    ConditionalNode,
+    ArrayNode
   }
 ) => {
   const simplifyConstant = createSimplifyConstant({
@@ -59,7 +63,9 @@ export const createSimplify = /* #__PURE__ */ factory(name, dependencies, (
     ConstantNode,
     OperatorNode,
     FunctionNode,
-    SymbolNode
+    SymbolNode,
+    ConditionalNode,
+    ArrayNode
   })
   const simplifyCore = createSimplifyCore({
     equal,

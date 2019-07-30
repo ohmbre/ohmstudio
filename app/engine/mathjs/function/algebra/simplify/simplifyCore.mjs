@@ -13,7 +13,7 @@ const dependencies = [
   'ConstantNode',
   'OperatorNode',
   'FunctionNode',
-  'ParenthesisNode'
+  'ParenthesisNode',
 ]
 
 export const createSimplifyCore = /* #__PURE__ */ factory(name, dependencies, ({
@@ -27,7 +27,7 @@ export const createSimplifyCore = /* #__PURE__ */ factory(name, dependencies, ({
   ConstantNode,
   OperatorNode,
   FunctionNode,
-  ParenthesisNode
+  ParenthesisNode,
 }) => {
   const node0 = new ConstantNode(0)
   const node1 = new ConstantNode(1)

@@ -711,7 +711,7 @@ export const createParse = /* #__PURE__ */ factory(name, dependencies, ({
    * @private
    */
   function parseLogicalXor (state) {
-  
+
     let node = parseLogicalAnd(state)
 
     while (state.token === 'xor') { // eslint-disable-line no-unmodified-loop-condition

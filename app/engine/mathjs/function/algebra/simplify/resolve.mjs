@@ -6,14 +6,14 @@ const dependencies = [
   'parse',
   'FunctionNode',
   'OperatorNode',
-  'ParenthesisNode'
+  'ParenthesisNode',
 ]
 
 export const createResolve = /* #__PURE__ */ factory(name, dependencies, ({
   parse,
   FunctionNode,
   OperatorNode,
-  ParenthesisNode
+  ParenthesisNode,
 }) => {
   /**
    * resolve(expr, scope) replaces variable nodes with their scoped values

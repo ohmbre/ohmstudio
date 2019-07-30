@@ -6,7 +6,7 @@ const name = 'simplifyUtil'
 const dependencies = [
   'FunctionNode',
   'OperatorNode',
-  'SymbolNode'
+  'SymbolNode',
 ]
 
 export const createUtil = /* #__PURE__ */ factory(name, dependencies, ({ FunctionNode, OperatorNode, SymbolNode }) => {

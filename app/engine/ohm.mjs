@@ -2,7 +2,7 @@
 
 import { math } from "mathjs/math.mjs"
 
-export function OhmEngine() {
+const O = () => {
 
     const assign = Object.assign
     const o = {}
@@ -452,7 +452,8 @@ export function OhmEngine() {
 
     o.uniqify = (topnode) => {
         const seen = new Map()
-        const symbolmap = new Map()
+        const symbolmap = {}
+
         topnode.traverse((node,path,parent) => { node.redirect = false })
         const queue = [topnode]
         while (queue.length) {
@@ -466,10 +467,10 @@ export function OhmEngine() {
                 if (other.redirect)
                 node.redirect = other.redirect
                 else {
-                    const symname = `f${symbolmap.size}`
+                    const symname = `f${Object.entries(symbolmap).length}`
                     other.redirect = symname
                     node.redirect = symname
-                    symbolmap.set(symname, other)
+                    symbolmap[symname] = other
                 }
                 continue
             }
@@ -480,9 +481,11 @@ export function OhmEngine() {
         const symbolTransform = (node, path, parent) =>
         node.redirect ? new math.SymbolNode(node.redirect) : node
 
-        let symbols = [...symbolmap.entries()]
-        symbols.sort((a, b) => parseInt(a[0].slice(1)) - parseInt(b[0].slice(1)))
-        symbols = symbols.map(sym => {
+        const sentries = Object.entries(symbolmap);
+
+        sentries.sort((a, b) => parseInt(a[0].slice(1)) - parseInt(b[0].slice(1)))
+
+        const symbols = sentries.map(sym => {
                                   let clone = sym[1].clone()
                                   clone.redirect = false
                                   clone = new math.FunctionNode("cached",[clone.transform(symbolTransform)])
@@ -509,11 +512,9 @@ export function OhmEngine() {
                                 }))
             const combo = new math.FunctionNode('separator',simplified)
             let [uniqified, symbols] = o.uniqify(combo)
-            //o.debug(uniqified, symbols)
             const mapped = mapOhms(uniqified, symbols)
             o.streams.out[0] = mapped.nodes[0]
             o.streams.out[1] = mapped.nodes[1]
-
         } else if (msg.cmd == 'set' && msg.key == 'control') {
             let val = parseFloat(msg.val)
             if (!o.controls[msg.subkey] || typeof(o.controls[msg.subkey]) == 'number')
@@ -589,4 +590,7 @@ export function OhmEngine() {
     }
 
     return o
+
 }
+
+global.set("ohm",O());

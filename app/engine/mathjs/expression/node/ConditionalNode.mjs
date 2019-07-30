@@ -12,7 +12,7 @@ export const createConditionalNode = /* #__PURE__ */ factory(name, dependencies,
    * A lazy evaluating conditional operator: 'condition ? trueExpr : falseExpr'
    *
    * @param {Node} condition   Condition, must result in a boolean
-   * @param {Node} trueExpr    Expression evaluated when condition is true
+   * @param {Node} trueExpr    Expression evaluated when condit16ion is true
    * @param {Node} falseExpr   Expression evaluated when condition is true
    *
    * @constructor ConditionalNode

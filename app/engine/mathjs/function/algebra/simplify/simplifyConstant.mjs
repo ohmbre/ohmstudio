@@ -14,7 +14,9 @@ const dependencies = [
   'ConstantNode',
   'OperatorNode',
   'FunctionNode',
-  'SymbolNode'
+  'SymbolNode',
+  'ConditionalNode',
+  'ArrayNode'
 ]
 
 export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies, ({
@@ -26,7 +28,9 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
   ConstantNode,
   OperatorNode,
   FunctionNode,
-  SymbolNode
+  SymbolNode,
+  ConditionalNode,
+  ArrayNode
 }) => {
   const { isCommutative, isAssociative, allChildren, createMakeNodeFunction } =
     createUtil({ FunctionNode, OperatorNode, SymbolNode })
@@ -175,6 +179,23 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
           return _toNumber(node.value, options)
         }
         return node
+      case 'ConditionalNode':
+          const cond = foldFraction(node.condition, options)
+          const texpr = foldFraction(node.trueExpr, options)
+          const fexpr = foldFraction(node.falseExpr, options)
+          if (!isNode(cond))
+              return cond ? texpr : fexpr
+          const texprFolded = isNode(texpr) ? texpr : _toNode(texpr)
+          const fexprFolded = isNode(fexpr) ? fexpr : _toNode(fexpr)
+          return new ConditionalNode(cond,texprFolded,fexprFolded)
+      case 'ArrayNode':
+          var newitems = []
+          for (var i = 0; i < node.items.length; i++) {
+              var inode = foldFraction(node.items[i])
+              if (inode.isNode) newitems.push(inode)
+              else newitems.push(new ConstantNode(inode))
+          }
+          return new ArrayNode(newitems)
       case 'FunctionNode':
         if (mathWithTransform[node.name] && mathWithTransform[node.name].rawArgs) {
           return node
@@ -253,8 +274,6 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
         return foldFraction(node.content, options)
       case 'AccessorNode':
         /* falls through */
-      case 'ArrayNode':
-        /* falls through */
       case 'AssignmentNode':
         /* falls through */
       case 'BlockNode':
@@ -267,8 +286,7 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
         /* falls through */
       case 'RangeNode':
         /* falls through */
-      case 'ConditionalNode':
-        /* falls through */
+
       default:
         throw new Error(`Unimplemented node type in simplifyConstant: ${node.type}`)
     }

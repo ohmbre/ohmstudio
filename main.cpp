@@ -13,8 +13,10 @@
 #include <QIODevice>
 #include <QAudioOutput>
 #include <QJSEngine>
+#include <QJSValueIterator>
 #include <QDataStream>
 #include <QWaitCondition>
+
 
 #include <algorithm>
 #include <cmath>
@@ -26,6 +28,21 @@
 #define BYTES_PER_SAMPLE 2
 #define NCHANNELS 2
 #define BYTES_PER_FRAME 4
+#define BUFSIZE 16384
+
+class JSGlobal : public QObject {
+Q_OBJECT
+public:
+    JSGlobal(QQmlContext *root) : QObject(root) {
+     engine = root->engine();
+    }
+    Q_INVOKABLE void set(const QString &key, QJSValue val) {
+        engine->globalObject().setProperty(key, val);
+    }
+
+private:
+    QJSEngine *engine;
+};
 
 void logexception(QJSValue err) {
     qWarning() << err.property("name").toString() << "thrown in" <<  err.property("fileName").toString()
@@ -35,26 +52,13 @@ void logexception(QJSValue err) {
 
 class SoundBackend : public QIODevice {
     Q_OBJECT
+public:
+    SoundBackend(QQmlContext *rootContext) : QIODevice(rootContext) {
+        QJSEngine *engine = rootContext->engine();
+        QJSValue global = engine->globalObject();
 
-public slots:
-
-    void setup() {
-        buffer = nullptr;
-
-        jsEngine = new QJSEngine();
-        jsEngine->installExtensions(QJSEngine::AllExtensions);
-        QJSValue module = jsEngine->importModule(":/app/engine/ohm.mjs");
-        if (module.isError()) {
-            logexception(module);
-            return;
-        }
-        QJSValue ohm = module.property("OhmEngine").call();
-        if (ohm.isError()) {
-            logexception(ohm);
-            return;
-        }
+        ohm = global.property("ohm");
         streamOuts = ohm.property("streams").property("out");
-        msgHandler = ohm.property("handle");
         time = ohm.property("time");
 
         QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
@@ -72,127 +76,57 @@ public slots:
 
         setOpenMode(QIODevice::ReadWrite);
         outdev = new QAudioOutput(format, this);
-        outdev->setBufferSize(8192*2);
-        buffer = new QByteArray(outdev->bufferSize(), 0);
-        full = false;
-        connect(this, &SoundBackend::bufferEmptied, this, &SoundBackend::fillBuffer);
-        fillBuffer();
+        outdev->setBufferSize(BUFSIZE);
         outdev->start(this);
-        qWarning() << "actual buffer size" << outdev->bufferSize();
+        if (outdev->bufferSize() != BUFSIZE)
+        qWarning() << "using different buffer size!:" << outdev->bufferSize();
     }
 
-    void handleMsg(const QString &msg) {
-        QJSValueList args;
-        args << msg;
-        QJSValue ret = msgHandler.call(args);
-        if (ret.isError())
-            logexception(ret);
-    }
-
-    void teardown() {
+    ~SoundBackend() {
         outdev->stop();
-        delete jsEngine;
         delete outdev;
-        deleteLater();
     }
 
-    void fillBuffer() {
-        mutex.lock();
-        if (full)
-            condEmpty.wait(&mutex);
-        mutex.unlock();
+    qint64 readData(char *data, qint64 maxSize) {
+        if (maxSize < BUFSIZE) return 0;
 
-        void *v = buffer->data();
-        qint16 *data = (qint16*)v;
+        void *datamem = data;
+        qint16 *buf = (qint16*)datamem;
 
         QJSValue streamOut1 = streamOuts.property(0);
         QJSValue streamOut2 = streamOuts.property(1);
         int t = time.property("val").toInt();
 
-        int nframes = buffer->size() / BYTES_PER_FRAME;
+        int nframes = BUFSIZE / BYTES_PER_FRAME;
         for (int i = 0; i < nframes; i++,t++) {
-            *data++ = (qint16)round(streamOut1.toNumber()*3276.7);
-            *data++ = (qint16)round(streamOut2.toNumber()*3276.7);
+            *buf++ = (qint16)round(streamOut1.toNumber()*3276.7);
+            *buf++ = (qint16)round(streamOut2.toNumber()*3276.7);
             time.setProperty("val", QJSValue(t));
         }
 
-        mutex.lock();
-        full = true;
-        condFull.wakeAll();
-        mutex.unlock();
-
-        emit readyRead();
-    }
-
-    qint64 readData(char *data, qint64 maxSize) {
-        if (maxSize < buffer->size()) return 0;
-
-        mutex.lock();
-        if (!full)
-            condFull.wait(&mutex);
-        mutex.unlock();
-
-        void *src = buffer->data();
-        memcpy(data, src, (size_t)buffer->size());
-
-        mutex.lock();
-        full = false;
-        condEmpty.wakeAll();
-        mutex.unlock();
-
-        emit bufferEmptied();
-        return buffer->size();
+        return BUFSIZE;
     }
 
     qint64 writeData(const char *, qint64 ) {
+
         return 0;
     }
 
-signals:
-    void bufferEmptied();
-
 private:
-    QJSEngine *jsEngine;
-    QByteArray *buffer;
     QAudioOutput *outdev;
-    QMutex mutex;
-    QWaitCondition condFull;
-    QWaitCondition condEmpty;
-    bool full;
+    QJSValue ohm;
     QJSValue streamOuts;
     QJSValue msgHandler;
     QJSValue time;
 
 };
 
-class SoundEngine : public QObject {
-    Q_OBJECT
-    QThread thread;
-
-public:
-    SoundEngine() {
-        backend = new SoundBackend();
-        backend->moveToThread(&thread);
-        connect(&thread, &QThread::started, backend, &SoundBackend::setup);
-        connect(&thread, &QThread::finished, backend, &SoundBackend::teardown);
-        connect(this, &SoundEngine::sendMsg, backend, &SoundBackend::handleMsg);
-        thread.start();
-    }
-    ~SoundEngine(){
-        thread.quit();
-        thread.wait();
-    }
-signals:
-    void sendMsg(const QString &msg);
-
-private:
-    SoundBackend *backend;
-};
-
 class FileIO : public QObject {
     Q_OBJECT
 
 public:
+
+    FileIO(QObject *parent) : QObject(parent) {}
 
     Q_INVOKABLE static bool write(const QString fname, const QString content) {
         QFile f(fname);
@@ -271,14 +205,17 @@ int main(int argc, char *argv[]) {
                         fname.split('/').last().chopped(4).toLatin1().data());
     }
 
-    SoundEngine *soundEngine = new SoundEngine();
-    FileIO *fileIO = new FileIO();
+    QQmlContext *root = engine.rootContext();
 
-    engine.rootContext()->setContextProperty("FileIO", fileIO);
-    engine.rootContext()->setContextProperty("SoundEngine", soundEngine);
+    JSGlobal global(root);
+    QJSValue jsGlobal = engine.newQObject(&global);
+    engine.globalObject().setProperty("global", jsGlobal);
+
+    FileIO fileIO(root);
+    root->setContextProperty("FileIO", &fileIO);
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
-
+    SoundBackend soundBackend(root);
 
     return app.exec();
 }
