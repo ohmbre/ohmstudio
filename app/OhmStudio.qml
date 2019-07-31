@@ -7,8 +7,8 @@ ApplicationWindow {
     id: window
     visible: true
     flags: Qt.Window
-    width: 640
-    height: 480
+    width: 1500
+    height: 1500
     minimumWidth: 320
     minimumHeight: 240
 

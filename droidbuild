@@ -5,11 +5,11 @@ export ANDROID_NDK_ROOT=~/Android/Sdk/ndk-bundle
 export MAKE=$ANDROID_NDK_ROOT/prebuilt/linux-x86_64/bin/make
 export JDK_ROOT=~/android-studio/jre
 export JAVA_HOME=~/android-studio/jre
-export QTDIR=/opt/qt/5.13.0/android_arm64_v8a
+export QTDIR=/opt/qt/5.13.0/android_x86_64
 export QMAKE=$QTDIR/bin/qmake
 mkdir -p build/droid
 cd build/droid
-$QMAKE -spec android-clang ../..
+$QMAKE CONFIG+=debug -spec android-clang ../..
 $MAKE
 $MAKE install INSTALL_ROOT=android-build
 $QTDIR/bin/androiddeployqt \

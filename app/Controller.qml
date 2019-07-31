@@ -12,7 +12,6 @@ Item {
     property alias indicatorItem: indicatorLoader.item
     property var clickHandler: function(mouse) {
         if (editor) editCtrl.open()
-        print('clicked')
     }
     MouseArea {
         id: inidicatorClick

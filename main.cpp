@@ -95,13 +95,13 @@ public:
 
         QJSValue streamOut1 = streamOuts.property(0);
         QJSValue streamOut2 = streamOuts.property(1);
-        int t = time.property("val").toInt();
-
+        QJSValue timeIncFunc = time.property("inc");
+	
         int nframes = BUFSIZE / BYTES_PER_FRAME;
-        for (int i = 0; i < nframes; i++,t++) {
+        for (int i = 0; i < nframes; i++) {
             *buf++ = (qint16)round(streamOut1.toNumber()*3276.7);
             *buf++ = (qint16)round(streamOut2.toNumber()*3276.7);
-            time.setProperty("val", QJSValue(t));
+            timeIncFunc.callWithInstance(time);
         }
 
         return BUFSIZE;

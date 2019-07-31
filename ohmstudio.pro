@@ -3,7 +3,8 @@ CONFIG += c++11
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    ohm.cpp
 
 RESOURCES += $$files(app/*.qml, true) \
              $$files(app/*.js, true) \
@@ -45,5 +46,8 @@ android {
     droid/res/mipmap-xxxhdpi/ic_launcher_round.png
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/droid
 }
+
+HEADERS += \
+    ohm.h
 
 

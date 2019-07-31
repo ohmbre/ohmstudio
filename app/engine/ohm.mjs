@@ -95,6 +95,9 @@ const O = () => {
             super()
             this.val = vinitial
         }
+	inc() {
+	    this.val++
+	}
         [Symbol.toPrimitive]() {
             return this.val;
         }
