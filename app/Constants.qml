@@ -8,4 +8,5 @@ QtObject {
     }
     property string savedPatchDir: 'file:./patches'
     property string autoSavePath: 'patches/autosave.qml'
+    property string optionsPath: 'options.json'
 }

@@ -130,7 +130,7 @@ Item {
             onOpened: {
                 body.contentLoader.item.forceActiveFocus()
                 body.contentLoader.item.folder = mMenu.directory
-                body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match)
+                body.contentLoader.item.model = HWIO.listDir(mMenu.directory,match)
             }
             contents: ListView {
                 id: moduleList
@@ -141,7 +141,7 @@ Item {
                 focus: true
                 property string folder: mMenu.directory
                 property string match: mMenu.match
-                model: FileIO.listDir(folder,match)
+                model: HWIO.listDir(folder,match)
                 delegate: OhmText {
                     width: mMenu.width
                     height: 14
@@ -172,7 +172,7 @@ Item {
                                 if (leaf=="..")
                                     moduleList.folder = parts.slice(0,-2).join('/')
                                 else moduleList.folder = path
-                                moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match)
+                                moduleList.model = HWIO.listDir(moduleList.folder, moduleList.match)
                             } else {
                                 pView.patch.addModule(path, mMenu.x - content.width/2,
                                                       mMenu.y - content.height/2);
@@ -195,7 +195,7 @@ Item {
                     clip: true
                     text: 'Upload New'
                     onClicked: {
-                        FileIO.upload(mMenu.folder)
+                        HWIO.upload(mMenu.folder)
                         mMenu.close()
                     }
                 }

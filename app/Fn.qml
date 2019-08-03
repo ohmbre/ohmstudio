@@ -33,11 +33,11 @@ QtObject {
             fileUrl = fileUrl.substr(5)
         if (fileUrl.startsWith('./'))
             fileUrl = fileUrl.substr(2)
-        return FileIO.read(fileUrl)
+        return HWIO.read(fileUrl)
     }
 
     property var writeFile: function (fileUrl, contents) {
-        return FileIO.write(fileUrl, contents)
+        return HWIO.write(fileUrl, contents)
     }
 
     property var dDump: function (obj) {

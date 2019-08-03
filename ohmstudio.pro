@@ -2,9 +2,7 @@ QT += quickcontrols2 svg multimedia qml
 CONFIG += c++11
 
 DEFINES += QT_DEPRECATED_WARNINGS
-
-SOURCES += main.cpp \
-    ohm.cpp
+SOURCES += main.cpp backend.cpp hwio.cpp
 
 RESOURCES += $$files(app/*.qml, true) \
              $$files(app/*.js, true) \
@@ -13,7 +11,6 @@ RESOURCES += $$files(app/*.qml, true) \
              $$files(app/*.png, true) \
              $$files(app/*.svg, true) \
              $$files(app/*.ttf, true)
-
 QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =
 QMAKE_MAC_SDK = macosx10.14
@@ -46,8 +43,5 @@ android {
     droid/res/mipmap-xxxhdpi/ic_launcher_round.png
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/droid
 }
-
-HEADERS += \
-    ohm.h
 
 

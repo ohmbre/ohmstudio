@@ -50,7 +50,8 @@ Model {
 
     function addModule(fileUrl, x, y) {
         var fileData = Fn.readFile(fileUrl)
-        var mObj = Qt.createQmlObject(fileData, this, fileUrl);
+        console.log(fileUrl);
+        var mObj = Qt.createQmlObject(fileData, this, fileUrl)
         mObj.x = x; mObj.y = y
         Fn.forEach(mObj.inJacks, function(jack) { jack.parent = mObj });
         Fn.forEach(mObj.outJacks, function(jack) { jack.parent = mObj });
@@ -60,8 +61,8 @@ Model {
 
     function saveTo(fileName) {
         var qml =
-	    'import ohm 1.0\n' +
-	    'import modules 1.0\n\n'
+        'import ohm 1.0\n' +
+        'import modules 1.0\n\n'
         qml += this.toQML();
         Fn.writeFile(fileName, qml)
     }

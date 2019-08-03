@@ -7,8 +7,8 @@ ApplicationWindow {
     id: window
     visible: true
     flags: Qt.Window
-    width: 1500
-    height: 1500
+    width: 1000
+    height: 1000
     minimumWidth: 320
     minimumHeight: 240
 
@@ -17,7 +17,7 @@ ApplicationWindow {
 
     Drawer {
         id: setup
-        property real extension: (saveFileChoose.open || loadFileChoose.open)
+        property real extension: (saveFileChoose.open || loadFileChoose.open || optionChoose.open)
         width: 0.3*(1 + extension) * overlay.width * overlay.scale
         height: overlay.height * overlay.scale
         dragMargin: 15*overlay.scale
@@ -66,13 +66,14 @@ ApplicationWindow {
         }
 
         OhmButton {
+            id: loadBtn
             scale: overlay.scale
             y: 100*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
             text: "Load Patch"
             onClicked: {
                 saveFileChoose.open = false
-                loadFileChoose.open = true;
-                //saveBtn.label.color = Style.buttonTextColor
+                loadFileChoose.open = true
+                optionChoose.open = false
             }
         }
 
@@ -86,14 +87,27 @@ ApplicationWindow {
                 if (!saveFileChoose.open) {
                     loadFileChoose.open = false;
                     saveFileChoose.open = true;
-                    //label.color = Style.fileChooseLitColor
+                    optionChoose.open = false
                 } else {
                     saveFileChoose.fileChosen(saveFileChoose.saveFile)
-                    //label.color = Style.buttonTextColor
                 }
             }
         }
 
+        OhmButton {
+            id: optionBtn
+            width: saveBtn.width
+            scale: overlay.scale
+            y: 200*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
+            text: "Options"
+            onClicked: {
+                if (!optionChoose.open) {
+                    loadFileChoose.open = false;
+                    saveFileChoose.open = false;
+                    optionChoose.open = true;
+                }
+            }
+        }
 
         OhmFileChoose {
             id: loadFileChoose
@@ -102,9 +116,8 @@ ApplicationWindow {
             directory: 'patches'
             extension: 'qml'
             onFileChosen: function(fileURL) {
-                if (overlay.loadPatchQML(fileURL)) {
+                if (overlay.loadPatchQML(fileURL))
                     setup.close()
-                }
             }
         }
 
@@ -118,6 +131,11 @@ ApplicationWindow {
                 activePatch.item.patch.saveTo(fileURL);
                 setup.close()
             }
+        }
+
+        OhmOptionChoose {
+            id: optionChoose
+            scale: overlay.scale
         }
     }
 
@@ -165,6 +183,12 @@ ApplicationWindow {
 
         Component.onCompleted: {
             loadPatchQML(Constants.autoSavePath)
+            let options = Fn.readFile(Constants.optionsPath)
+            options = options ? JSON.parse(options) : {}
+            if ("audioOut" in options)
+                HWIO.outName = options["audioOut"]
+            else
+                HWIO.resetOut()
             setup.open()
         }
     }

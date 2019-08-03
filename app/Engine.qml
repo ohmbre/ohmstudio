@@ -4,13 +4,20 @@ Item {
     id: engine
 
     function set(key, val) {
-        var msg = JSON.stringify({ cmd: 'set', key: key, val: val })
-        ohm.handle(msg)
+        engine.sendMsg({ cmd: 'set', key: key, val: val })
     }
 
     function setsubkey(key,subkey,val) {
-        var msg = JSON.stringify({ cmd: 'set', key: key, subkey: subkey, val: val })
-        ohm.handle(msg)
+        engine.sendMsg({ cmd: 'set', key: key, subkey: subkey, val: val })
+    }
+
+    function sendMsg(msg) {
+        try {
+            ohm.handleMsg(msg)
+        } catch (err) {
+            console.error(err);
+            console.error(err.stack)
+        }
     }
 
     function updateControl(uuid,val) {

@@ -32,13 +32,13 @@ Rectangle {
         property bool open: fileChooseDialog.open
         onOpenChanged: {
             folder = fileChooseDialog.directory
-            model = FileIO.listDir(folder,match)
+            model = HWIO.listDir(folder,match)
         }
         focus: fileChooseDialog.open
         property string folder: fileChooseDialog.directory
         property string ext: '*.'+fileChooseDialog.extension
         property string match: '*'+ext
-        model: FileIO.listDir(folder,match)
+        model: HWIO.listDir(folder,match)
         delegate: OhmText {
             leftPadding: 5
             rightPadding: 5
@@ -71,7 +71,7 @@ Rectangle {
                         if (leaf == '..')
                             fileChoose.folder = parts.slice(0,-2).join('/')
                         else fileChoose.folder = path
-                        fileChoose.model = FileIO.listDir(fileChoose.folder,fileChoose.match)
+                        fileChoose.model = HWIO.listDir(fileChoose.folder,fileChoose.match)
                     } else {
                         if (fileChooseDialog.forLoading)
                             fileChooseDialog.fileChosen(path)
