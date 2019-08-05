@@ -1,5 +1,5 @@
 QT += quickcontrols2 svg multimedia qml
-CONFIG += c++11
+CONFIG += c++17
 
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp backend.cpp hwio.cpp

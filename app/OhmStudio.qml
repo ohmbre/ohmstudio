@@ -162,7 +162,6 @@ ApplicationWindow {
         function loadPatch(raw,url) {
             if (!url) url="dynamic"
             if (activePatch.item) {
-                console.log('destroying active patch');
                 activePatch.item.patch.destroy()
             }
             try {

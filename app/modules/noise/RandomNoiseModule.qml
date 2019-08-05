@@ -7,13 +7,13 @@ Module {
     outJacks: [
         OutJack {
             label: 'signal'
-            stream: '@gain*noise(@seed)'
+            stream: '@gain*noise(@coef)'
         }
     ]
 
     inJacks: [
         InJack { label: 'gain' },
-        InJack { label: 'seed' }
+        InJack { label: 'coef' }
     ]
 
     cvs: [
@@ -23,10 +23,11 @@ Module {
             from: 2
             logBase: 1.38
         },
-        LinearCV {
-            label: 'seed'
-            inVolts: inStream('seed')
-            from: 666
+        LogScaleCV {
+            label: 'coef'
+            inVolts: inStream('coef')
+            from: 279470273
+            logBase: 3
             onControlVoltsChanged: controlVolts = Math.round(controlVolts)
         }
     ]

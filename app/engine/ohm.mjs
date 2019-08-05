@@ -48,14 +48,6 @@ o.mapConstants = (node, path, parent) => {
         return node;
     }
 
-o.omap = {
-    'val': Val,
-    'sinusoid': Sinusoid
-}
-o.backend.unaryFns().forEach((fname) => { o.omap[fname] = UnaryOp })
-o.backend.binaryFns().forEach((fname) => { o.omap[fname] = BinaryOp })
-o.backend.ternaryFns().forEach((fname) => { o.omap[fname] = TernaryOp })
-
 o.mapOhms = (node, symbols) => {
 
     if (node.objectName == "Ohm") return node;
@@ -77,13 +69,10 @@ o.mapOhms = (node, symbols) => {
         const name = node.fn.name || node.fn
         if (!name) throw new Error("could not get node.fn name: " + node.toString())
         if (name == "control")
-        return o.backend.control(node.args[0].evaluate())
-
-        let otype = o.omap[name];
+            return o.backend.control(node.args[0].evaluate())
+        let otype = o.backend.classForRef(name);
         if (!otype) throw new Error("could not find implementation for: "+name+" in node "+node.toString())
         const mappedArgs = node.args.map(arg => o.mapOhms(arg, symbols))
-        if (otype == UnaryOp || otype == BinaryOp || otype == TernaryOp)
-            return new otype(name, ...mappedArgs, o.backend);
         return new otype(...mappedArgs, o.backend)
     }
 
@@ -158,7 +147,6 @@ o.handleMsg = (msg) => {
         const combo = new math.FunctionNode('separator',simplified)
         let [uniqified, symbols] = o.uniqify(combo)
         const mapped = o.mapOhms(uniqified, symbols)
-        console.log(mapped);
         o.backend.out(0,mapped[0])
         o.backend.out(1,mapped[1])
     } else if (msg.cmd == 'set' && msg.key == 'control') {

@@ -50,7 +50,6 @@ Model {
 
     function addModule(fileUrl, x, y) {
         var fileData = Fn.readFile(fileUrl)
-        console.log(fileUrl);
         var mObj = Qt.createQmlObject(fileData, this, fileUrl)
         mObj.x = x; mObj.y = y
         Fn.forEach(mObj.inJacks, function(jack) { jack.parent = mObj });
