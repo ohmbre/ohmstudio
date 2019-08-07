@@ -8,7 +8,7 @@ Model {
     property list<Module> modules
 
     function lookupCableFor(jack) {
-        var ret = Fn.forEach(cables, function(cable, c) {
+        var ret = forEach(cables, function(cable, c) {
             if (cable.out === jack)
                 return {index: c, cable: cable, dir: 'out', otherend: cable.inp};
             if (cable.inp === jack)
@@ -25,7 +25,7 @@ Model {
 
     function deleteCable(dCable) {
         var newCables = [];
-        Fn.forEach(cables, function(cable) {
+        forEach(cables, function(cable) {
             if (cable !== dCable)
                 newCables.push(cable);
         });
@@ -40,7 +40,7 @@ Model {
                 deleteCable(cableResult.cable, true)
         }
         var newModules = [];
-        Fn.forEach(modules, function(module) {
+        forEach(modules, function(module) {
             if (module !== dModule)
                 newModules.push(module);
         });
@@ -49,11 +49,11 @@ Model {
     }
 
     function addModule(fileUrl, x, y) {
-        var fileData = Fn.readFile(fileUrl)
+        var fileData = readFile(fileUrl)
         var mObj = Qt.createQmlObject(fileData, this, fileUrl)
         mObj.x = x; mObj.y = y
-        Fn.forEach(mObj.inJacks, function(jack) { jack.parent = mObj });
-        Fn.forEach(mObj.outJacks, function(jack) { jack.parent = mObj });
+        forEach(mObj.inJacks, function(jack) { jack.parent = mObj });
+        forEach(mObj.outJacks, function(jack) { jack.parent = mObj });
         mObj.parent = this;
         modules.push(mObj);
     }
@@ -63,7 +63,7 @@ Model {
         'import ohm 1.0\n' +
         'import modules 1.0\n\n'
         qml += this.toQML();
-        Fn.writeFile(fileName, qml)
+        writeFile(fileName, qml)
     }
 
     function autosave() {
@@ -84,15 +84,15 @@ Model {
         Qt.patch = this
         cablesChanged.connect(userChanges)
         modulesChanged.connect(userChanges)
-        Fn.forEach(modules, function(module) {
+        forEach(modules, function(module) {
             module.xChanged.connect(userChanges)
             module.yChanged.connect(userChanges)
             module.parent = Qt.patch
-            Fn.forEach(module.inJacks, function(jack) { jack.parent = module })
-            Fn.forEach(module.outJacks, function(jack) { jack.parent = module })
+            forEach(module.inJacks, function(jack) { jack.parent = module })
+            forEach(module.outJacks, function(jack) { jack.parent = module })
         })
 
-        Fn.forEach(cables, function(cable) {
+        forEach(cables, function(cable) {
             cable.parent = Qt.patch
             // de-bind from module array indices so we can add/remove modules
             cable.inp = cable.inp

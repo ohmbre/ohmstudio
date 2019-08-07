@@ -14,7 +14,7 @@ Model {
     property var savedControlVolts
     onSavedControlVoltsChanged: {
         if (cvs.length !== savedControlVolts.length) return;
-        Fn.forEach(cvs, function(cv,i) {
+        forEach(cvs, function(cv,i) {
             cv.controlVolts = savedControlVolts[i];
         });
     }
@@ -33,7 +33,7 @@ Model {
 
 
     function inStream(label) {
-        return Fn.forEach(inJacks, function(inJack) {
+        return forEach(inJacks, function(inJack) {
             if (inJack.label === label)
                 return inJack.stream
         });
@@ -42,7 +42,7 @@ Model {
     function cvStream(index) {
         if (typeof index == "number")
             return cvs[index].cv;
-        return Fn.forEach(cvs, function(cv) {
+        return forEach(cvs, function(cv) {
             if (cv.label === index)
                 return cv.stream;
         });

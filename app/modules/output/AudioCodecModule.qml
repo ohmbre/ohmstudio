@@ -1,11 +1,11 @@
 import QtQuick 2.11
 import ohm 1.0
+import "qml" as Fn
 
 Module {
     id: codec
     objectName: 'AudioCodecModule'
     label: 'Audio Codec'
-    property bool started: false
 
     outJacks: [
         OutJack {
@@ -25,23 +25,19 @@ Module {
 
     property var outL: inStream('outL')
     property var outR: inStream('outR')
-
-    property Timer streamSender: Timer {
-        interval: 100; running: false; repeat: false
+    property Timer setStreamDelayed: Timer {
+        interval: 200; running: false; repeat: false
         onTriggered: {
-            engine.set('streams',[outL,outR])
-	    if (!started) {
-		engine.set('audioEnabled',true)
-		started = true
-	    }
+            checked(()=>{ engine.setStream('outL',outL) }, outL)
+            checked(()=>{ engine.setStream('outR',outR) }, outR)
         }
     }
-
-    onOutLChanged: streamSender.restart()
-    onOutRChanged: streamSender.restart()
-
-    Component.onDestruction: engine.set('audioEnabled', false)
-
+    onOutLChanged: setStreamDelayed.restart()
+    onOutRChanged: setStreamDelayed.restart()
+    Component.onDestruction: {
+        checked(()=>{ engine.setStream('outL',0) }, outL)
+        checked(()=>{ engine.setStream('outR',0) }, outR)
+    }
 }
 
 

@@ -8,7 +8,7 @@
 #include <QVariant>
 #include <cmath>
 #include <QJSEngine>
-#include <QQmlEngine>
+#include <QQmlApplicationEngine>
 #include <QJSValue>
 #include <QDebug>
 #include <QReadWriteLock>
@@ -19,7 +19,7 @@
 #define TAU 6.283185307179586
 
 #define V double
-
+#define ___ ,
 
 static QList<const QMetaObject *> metaFns;
 const QMetaObject *addMetaFn(const QMetaObject *fn) {
@@ -28,8 +28,6 @@ const QMetaObject *addMetaFn(const QMetaObject *fn) {
 }
 #define META_REGISTER(type) \
     const static QMetaObject* type##Meta = addMetaFn(&type::staticMetaObject);
-
-
 
 /*-------------------------------------------*/
 
@@ -52,10 +50,9 @@ Q_DECLARE_INTERFACE(Ohm, "org.ohm.studio.Ohm")
 class Val : public QObject, public Ohm {
     Q_OBJECT
     Q_INTERFACES(Ohm)
+    Q_CLASSINFO("ref", "val")
 public:
-    Q_INVOKABLE Val(V _val, QObject *parent) : QObject(parent), val(_val){
-        this->setObjectName("Ohm");
-    }
+    Q_INVOKABLE Val(V _val);
     V get() { return val; }
     void set(V _val) { val = _val; }
     Q_INVOKABLE void inc() {
@@ -70,13 +67,63 @@ static Val *t;
 
 /*-------------------------------------------*/
 
+class Backend : public QObject {
+    Q_OBJECT
+    QHash<long, Val*> controls;
+    QHash<QString, Ohm *> streams;
+
+public:
+    QMap<QString, QJSValue> refMap;
+
+    Backend(QObject *parent) : QObject(parent) {}
+
+    Q_INVOKABLE Val* time() {
+        return t;
+    }
+
+    Q_INVOKABLE Ohm* getStream(QString key) {
+        return streams[key];
+    }
+
+    Q_INVOKABLE void setStream(QString key, QObject *_s) {
+        Ohm *s = qobject_cast<Ohm*>(_s);
+        streams[key] = s;
+    }
+
+    Q_INVOKABLE void setControl(long id, V val) {
+        Val *control = controls[id];
+        if (control) control->set(val);
+        else controls[id] = new Val(val);
+    }
+
+    Q_INVOKABLE Val* getControl(long id) {
+        Val *control = controls[id];
+        if (control) return control;
+        controls[id] = new Val(0);
+        return controls[id];
+    }
+
+    Q_INVOKABLE QJSValue link(QString ref) {
+        QJSValue symbol = refMap[ref];
+        return symbol;
+    }
+
+};
+
+static Backend *backend;
+
+Q_INVOKABLE Val::Val(V _val) : QObject(backend), val(_val){}
+
+/*-------------------------------------------*/
+
+
 class Func : public QObject, public Ohm {
     Q_INTERFACES(Ohm)
     virtual V next() = 0;
     V lastT;
     V lastEval;
 public:
-    Func(QObject *parent) : QObject(parent), lastT(-1) {
+    Func() : QObject(backend), lastT(-1) {
         this->setObjectName("Ohm");
     }
     V get() {
@@ -105,18 +152,25 @@ public:
 #define ODEC(arg) Ohm *arg;
 #define OGET(arg) arg->get()
 
-#define GENFUNC(nargs,type,ref,setupdef,nextdef,args...) \
+#define FUNCHEAD(type,ref) \
   class type: public Func { \
     private: \
       Q_OBJECT \
       Q_INTERFACES(Ohm) \
-      Q_CLASSINFO("ref", #ref) \
-      Ohm DO_N(nargs,STAR,args); \
-      V next() nextdef \
-    public: \
-      Q_INVOKABLE type(DO_N(nargs,QDEC,args), QObject *parent) : Func(parent), DO_N(nargs,QARG,args) setupdef \
-  }; \
-  META_REGISTER(type)
+      Q_CLASSINFO("ref", #ref)
+
+#define FUNCFOOT(type) }; META_REGISTER(type)
+
+#define FUNC(type,ref,pub,priv) \
+  FUNCHEAD(type,ref) \
+    priv \
+  public: \
+    pub \
+  FUNCFOOT(type)
+
+#define GENFUNC(nargs,type,ref,setupdef,nextdef,args...) FUNC(type,ref, \
+      Q_INVOKABLE type(DO_N(nargs,QDEC,args)) : Func() ___ DO_N(nargs,QARG,args) setupdef, \
+      Ohm DO_N(nargs,STAR,args); V next() nextdef)
 
 #define OPFUNC(nargs,type,ref,op) \
     GENFUNC(nargs,type,ref,{},{ \
@@ -151,10 +205,10 @@ OPFUNC(2, SmallerEq, smallerEq, LAMBDA(2, a <= b ? 1 : 0))
 OPFUNC(2, Larger, larger, LAMBDA(2, a > b ? 1 : 0))
 OPFUNC(2, LargerEq, largerEq, LAMBDA(2, a >= b ? 1 : 0))
 OPFUNC(2, Add, add, LAMBDA(2, a+b))
-OPFUNC(2, Subtract, subtract, LAMBDA(2, a-b))
-OPFUNC(2, Multiply, multiply, LAMBDA(2, a*b))
-OPFUNC(2, Divide, divide, LAMBDA(2, a/b))
-OPFUNC(3, Conditional, conditional, LAMBDA(3, abs(a) > 1e-9 ? b : c))
+OPFUNC(2, Subtract, subtract, LAMBDA(2, a - b))
+OPFUNC(2, Multiply, multiply, LAMBDA(2, a * b))
+OPFUNC(2, Divide, divide, LAMBDA(2, a / b))
+OPFUNC(3, Conditional, conditional, LAMBDA(3, fabs(a) > 1e-9 ? b : c))
 
 GENFUNC(1, Sinusoid, sinusoid,
      { phase = 0; },
@@ -193,7 +247,7 @@ GENFUNC(2, PWM, pwm,
      , freq, duty)
 
 GENFUNC(1, StopWatch, stopwatch,
-     { timer = 0; },
+     { timer = 1e100; },
      {
         if (trig->get() >= 3) timer = 0;
         else timer += 1;
@@ -201,6 +255,8 @@ GENFUNC(1, StopWatch, stopwatch,
      }
      V timer;
      , trig)
+
+
 
 GENFUNC(3, ClkDiv, clkdiv,
      {
@@ -236,6 +292,59 @@ GENFUNC(1, Noise, noise,
         quint64 state;
         , coef)
 
+GENFUNC(2, Slew, slew,
+        {
+            val = 0;
+        },
+        {
+            V sigval = signal->get();
+            V lagval = lag->get()/1000;
+            val = sigval - (1 - lagval) * (sigval - val);
+            return val;
+        }
+        V val;
+        , signal, lag)
+
+
+GENFUNC(2, SampleHold, samplehold,
+        {
+            sample = 0;
+        },
+        {
+            if (trig->get() > 3)
+                sample = signal->get();
+            return sample;
+        }
+        V sample;
+        , signal, trig)
+
+
+/*
+
+class sequence extends ohm {
+    constructor(clock, values) {
+        super()
+            this.clock = clock
+              this.values = values
+              this.lastvalues = this.values[Symbol.toPrimitive]()
+                  if (this.lastvalues === undefined)
+                      throw new Error('could not get primitive from: '+values)
+                          this.position = 0
+              this.gate = false
+    }
+    [Symbol.toPrimitive]() {
+        const clklvl = +this.clock
+                        if (!this.gate && clklvl >= 3) {
+            this.lastvalues = this.values[Symbol.toPrimitive]()
+                                  this.gate = true
+                  this.position = (this.position + 1) % this.lastvalues.length
+        } else if (this.gate && clklvl <= 1)
+            this.gate = false
+              return this.lastvalues[this.position]
+    }
+}
+*/
+
 /*
 
 class randsample extends ohm {
@@ -265,28 +374,6 @@ class randsample extends ohm {
 }
 
 
-class sequence extends ohm {
-    constructor(clock, values) {
-        super()
-            this.clock = clock
-              this.values = values
-              this.lastvalues = this.values[Symbol.toPrimitive]()
-                  if (this.lastvalues === undefined)
-                      throw new Error('could not get primitive from: '+values)
-                          this.position = 0
-              this.gate = false
-    }
-    [Symbol.toPrimitive]() {
-        const clklvl = +this.clock
-                        if (!this.gate && clklvl >= 3) {
-            this.lastvalues = this.values[Symbol.toPrimitive]()
-                                  this.gate = true
-                  this.position = (this.position + 1) % this.lastvalues.length
-        } else if (this.gate && clklvl <= 1)
-            this.gate = false
-              return this.lastvalues[this.position]
-    }
-}
 
 
 class ramps extends ohm {
@@ -332,93 +419,17 @@ class ramps extends ohm {
     }
 }
 
-class slew extends ohm {
-    constructor(signal, lag, shape) {
-        super()
-            this.tstart = o.time.val
-          this.signal = signal
-          this.lag = lag
-          this.shape = shape
-          this.val = 0
-          this.target = 0
-    }
-        [Symbol.toPrimitive]() {
-        const tdiff = o.time.val - this.tstart, lag = +this.lag, shape = +this.shape
-                                                                          if (tdiff < lag)
-                                                                              return this.val
-                                                                          this.target = +this.signal
-                                                                    this.tstart = o.time.val
-
-                                                                       let delta = (this.val-this.target)*(shape+1)*(-1/lag)**3 + (this.val-this.target)*shape*(-1/this.lag)**2
-                                                                                                                                                                                   if (isNaN(delta)) delta = 0
-                                                                 else delta = Math.min(Math.max(delta,-0.1),0.1)
-                                                                       return this.val = this.val + delta
-    }
-}
-
-
-
-
 
 */
 
-/*-------------------------------------------*/
-
-
-class Backend : public QObject {
-    Q_OBJECT
-    QMap<long, Val*> controls;
-    Ohm *outL, *outR;
-
-public:
-    QMap<QString, QJSValue> refMap;
-
-    Backend(QObject *parent) : QObject(parent), outL(nullptr), outR(nullptr) {}
-
-    Q_INVOKABLE Val* time() {
-        return t;
-    }
-
-    Q_INVOKABLE Ohm* out(long i) {
-        return i ? outR : outL;
-    }
-
-    Q_INVOKABLE void out(long i, QObject *_out) {
-        Ohm *out = qobject_cast<Ohm*>(_out);
-        if (i) outR = out;
-        else outL = out;
-    }
-
-    Q_INVOKABLE void control(long id, V val) {
-        if (controls.contains(id)) controls[id]->set(val);
-        else controls[id] = new Val(val,this);
-    }
-
-    Q_INVOKABLE Val* control(long id) {
-        if (!controls.contains(id))
-            controls[id] = new Val(0, this);
-        return controls[id];
-    }
-
-    Q_INVOKABLE QJSValue classForRef(QString ref) {
-        if (refMap.contains(ref))
-            return refMap[ref];
-        return QJSValue::NullValue;
-    }
-
-};
 
 /*-------------------------------------------*/
 
-static Backend *backend;
-
-void initBackend(QGuiApplication *app, QQmlContext *root) {
-    t = new Val(0,app);
+void initBackend(QGuiApplication *app, QQmlApplicationEngine *engine) {
+    t = new Val(0);
     backend = new Backend(app);
 
-    QQmlEngine *engine = root->engine();
     QJSValue g = engine->globalObject();
-
     QListIterator<const QMetaObject *> metaIter(metaFns);
     while (metaIter.hasNext()) {
         const QMetaObject *meta = metaIter.next();
@@ -430,14 +441,13 @@ void initBackend(QGuiApplication *app, QQmlContext *root) {
             }
         }
     }
-
-    qRegisterMetaType<Val*>("Val*");
     g.setProperty("Backend",engine->newQObject(backend));
+    qRegisterMetaType<Val*>("Val*");
 }
 
 void fillBuffer(short *buf, qint64 nframes) {
-    Ohm *outL = backend->out(0);
-    Ohm *outR = backend->out(1);
+    Ohm *outL = backend->getStream("outL");
+    Ohm *outR = backend->getStream("outR");
     short *end = buf + 2*nframes;
     if (outL && outR)
         while (buf < end) {

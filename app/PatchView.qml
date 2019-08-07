@@ -58,7 +58,7 @@ Item {
                 content.x += center.x*(oldZoom-zoom);
                 content.y += center.y*(oldZoom-zoom);
                 if (zoom > 3.5 && zoomDelta > 0)
-                    Fn.forEach(patch.modules, function(m) {
+                    forEach(patch.modules, function(m) {
                         if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
                             scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
                             xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
@@ -69,7 +69,7 @@ Item {
                         }
                     });
                 else if (zoomDelta <= -0.015)
-                    Fn.forEach(patch.modules, function(m) {
+                    forEach(patch.modules, function(m) {
                         if (m.view.innerModule.state == "controlMode" && !m.view.innerModule.controlAnim.running) {
                             m.view.innerModule.state = "patchMode";
                             return -1;
@@ -96,6 +96,7 @@ Item {
                 propagateComposedEvents: false
                 onWheel: wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
                 onPressAndHold: function(mouse) {
+                    console.log("POPUP")
                     mMenu.popup(mouse.x,mouse.y)
                 }
 
@@ -217,8 +218,8 @@ Item {
             width: 46
             scale: window.width / overlay.width * 0.7
             contents: OhmButton {
-                x: Fn.centerInX(this,delModuleMenu)
-                y: Fn.centerInY(this,delModuleMenu.body)
+                x: centerInX(this,delModuleMenu)
+                y: centerInY(this,delModuleMenu.body)
                 width: 45; height: 45
                 padding: 0
                 icon.source: "qrc:/app/ui/icons/delete.svg"

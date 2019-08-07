@@ -6,10 +6,10 @@ Model {
     property string label
 
     property double controlVolts: 0
-    onControlVoltsChanged: engine.updateControl(Fn.uuid(cv),controlVolts)
+    onControlVoltsChanged: engine.setControl(uuid(cv),controlVolts)
 
     property var inVolts: 0
-    property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(Fn.uuid(cv))
+    property var stream: '(add((%1), control(%2)))'.arg(inVolts).arg(uuid(cv))
     property string reading: ''
     property Component controller: KnobController {}
 

@@ -35,8 +35,8 @@ Shape {
 
         PathCubic {
             id: dragCurve
-            x: Fn.centerX(destination) - destination.dot.width/2
-            y: Fn.centerY(destination) - destination.dot.height/2
+            x: centerX(destination) - destination.dot.width/2
+            y: centerY(destination) - destination.dot.height/2
             control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity
             control2X: x; control2Y: y + gravityOn * Style.cableGravity;
             Behavior on control2X {
@@ -103,7 +103,7 @@ Shape {
 
     signal cableMoved
     onCableMoved: {
-        Fn.forEach(pView.patch.modules, function(module) {
+        forEach(pView.patch.modules, function(module) {
             var mv = module.view;
             if (mv === startJackView.parent) return;
             var mRelPos = dragPad.mapToItem(mv.perimeter, dragPad.mouseX, dragPad.mouseY);
@@ -114,7 +114,7 @@ Shape {
                 } else if (startJackView.jack.dir === "out") {
                     jacklist = mv.module.inJacks;
                 }
-                Fn.forEach(jacklist, function(jack) {
+                forEach(jacklist, function(jack) {
                     if (pView.patch.lookupCableFor(jack).cable) {
                         jack.view.collapse()
                         return;

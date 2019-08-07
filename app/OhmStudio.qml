@@ -1,19 +1,19 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 
-import "qrc:/app/engine/ohm.mjs" as OhmEngine
+import "qrc:/app/engine/ohm.mjs" as Engine
+import "qrc:/app/util.mjs" as Util
 
 ApplicationWindow {
     id: window
     visible: true
     flags: Qt.Window
-    width: 1000
-    height: 1000
-    minimumWidth: 320
-    minimumHeight: 240
+    width: 640
+    height: 480
 
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
+
 
     Drawer {
         id: setup
@@ -42,8 +42,8 @@ ApplicationWindow {
             color: Style.buttonBorderColor
             Image {
                 source: "qrc:/app/ui/icons/logo.svg"
-                x: Fn.centerInX(this,parent)
-                y: Fn.centerInY(this,parent)
+                x: centerInX(this,parent)
+                y: centerInY(this,parent)
                 mipmap: true
                 height: parent.height*.8
                 width: parent.height*.8
@@ -149,12 +149,8 @@ ApplicationWindow {
         transformOrigin: Item.TopLeft
         FontLoader { id: asapFont; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
 
-        Engine {
-            id: engine
-        }
-
         function loadPatchQML(url) {
-            var rawdata = Fn.readFile(url);
+            var rawdata = readFile(url);
             if (!rawdata) return false
             return loadPatch(rawdata)
         }
@@ -182,7 +178,7 @@ ApplicationWindow {
 
         Component.onCompleted: {
             loadPatchQML(Constants.autoSavePath)
-            let options = Fn.readFile(Constants.optionsPath)
+            let options = readFile(Constants.optionsPath)
             options = options ? JSON.parse(options) : {}
             if ("audioOut" in options)
                 HWIO.outName = options["audioOut"]

@@ -184,9 +184,9 @@ signals:
 
 static HWIO *hwio;
 
-void initHWIO(QGuiApplication *app, QQmlContext *root) {
+void initHWIO(QGuiApplication *app, QQmlApplicationEngine *engine) {
     hwio = new HWIO(app);
-    root->setContextProperty("HWIO", hwio);
+    engine->globalObject().setProperty("HWIO", engine->newQObject(hwio));
 
     QDirIterator qrcIt(":/app", QStringList() << "*.qml", QDir::Files, QDirIterator::Subdirectories);
     while (qrcIt.hasNext()) {
@@ -195,7 +195,7 @@ void initHWIO(QGuiApplication *app, QQmlContext *root) {
 
         if (fname.startsWith(":/app/modules/") || fname.startsWith(":/app/patches/")) {
             QString dstpath = fname.section('/',2,-1);
-            if (fname != ":/app/patches/autosave.qml")
+            if (!(fname == ":/app/patches/autosave.qml" && HWIO::read(dstpath) != ""))
                 HWIO::write(dstpath, HWIO::read(fname));
             if (fname.startsWith(":/modules")) {
                 qmlRegisterType(QUrl::fromLocalFile(dstpath), "modules", 1, 0, typeName.toLatin1().data());

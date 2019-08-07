@@ -6,7 +6,7 @@ CV {
     property var choices
     onControlVoltsChanged: {
         controlVolts = Math.round(((controlVolts+10)/20)*choices.length)/choices.length*20-10
-    engine.updateControl(Fn.uuid(quantcv), controlVolts)
+        engine.setControl(uuid(quantcv), controlVolts)
     }
     reading: stream
 

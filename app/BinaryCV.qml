@@ -11,6 +11,6 @@ CV {
         return "Off"
     }
 
-    stream: 'max(%1, control(%2))'.arg(inVolts).arg(Fn.uuid(bincv))
+    stream: 'max(%1, control(%2))'.arg(inVolts).arg(uuid(bincv))
 
 }

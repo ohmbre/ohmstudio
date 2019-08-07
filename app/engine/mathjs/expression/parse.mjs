@@ -1219,7 +1219,7 @@ export const createParse = /* #__PURE__ */ factory(name, dependencies, ({
       return new CustomNode(params)
     }
 
-    return parseSymbol(state);
+    return parseSymbol(state)
   }
 
   /**
@@ -1585,7 +1585,7 @@ export const createParse = /* #__PURE__ */ factory(name, dependencies, ({
       return node
     }
 
-    return parseNumber(state);
+    return parseNumber(state)
 
   }
 
@@ -1601,7 +1601,7 @@ export const createParse = /* #__PURE__ */ factory(name, dependencies, ({
       // this is a number
       numberStr = state.token
       getToken(state)
-      return new ConstantNode(numeric(numberStr, config.number));
+      return new ConstantNode(numeric(numberStr, config.number))
     }
 
     return parseParentheses(state)

@@ -13,5 +13,5 @@ CV {
         var ret = fromVal * Math.pow(parseFloat(logBase),(controlVolts))
         return ret.toFixed(1).toString()+units
     }
-    stream: '(%1 * (%2)^((%3)+control(%4)))'.arg(from).arg(logBase).arg(inVolts).arg(Fn.uuid(logcv));
+    stream: '(%1 * (%2)^((%3)+control(%4)))'.arg(from).arg(logBase).arg(inVolts).arg(uuid(logcv));
 }

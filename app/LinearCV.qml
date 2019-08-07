@@ -13,5 +13,5 @@ CV {
         return ret.toFixed(1).toString()+units
     }
 
-    stream: '((%1)+(%2)+control(%3))'.arg(from).arg(inVolts).arg(Fn.uuid(lincv))
+    stream: '((%1)+(%2)+control(%3))'.arg(from).arg(inVolts).arg(uuid(lincv))
 }

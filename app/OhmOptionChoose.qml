@@ -45,7 +45,7 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: {
                     HWIO.outName = modelData;
-                    Fn.writeFile(Constants.optionsPath, JSON.stringify({audioOut: modelData}))
+                    writeFile(Constants.optionsPath, JSON.stringify({audioOut: modelData}))
                 }
             }
         }

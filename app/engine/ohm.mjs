@@ -3,9 +3,8 @@
 import { math } from "mathjs/math.mjs"
 
 const o = {};
-global.ohm = o;
+global.engine = o;
 
-o.backend = Backend
 o.update = (obj,f=x=>x) => { for (var p in obj) o[p] = f(obj[p]) }
 o.pi = Math.PI
 o.tau = 2*o.pi
@@ -13,6 +12,7 @@ o.s = 48000
 o.ms = o.s / 1000
 o.mins = 60 * o.s
 o.hz = o.tau / o.s
+o.v = 1
 o.update({ C: -9, Cs: -8, Db: -8, D: -7, Ds: -6, Eb: -6, E: -5, F: -4, Fs: -3,
              Gb: -3, G: -2, Gs: -1, Ab: -1, A: 0, As: 1, Bb: 1, B: 2 })
 o.update({minor: [1, 9/8, 6/5, 27/20, 3/2, 8/5, 9/5],
@@ -42,48 +42,51 @@ o.mathrules.push('n^n1(n2/n3) -> (n2/n3)*n^n1')
 o.mathrules.push('c/(c1*n) -> (c/c1)/n')
 o.mathrules.push('c*(c1*n+c2*n1) -> (c*c1)*n+(c*c2)*n1')
 
-o.mapConstants = (node, path, parent) => {
-   if (node.isSymbolNode && node.name in o)
-        return new math.ConstantNode(o[node.name]);
-        return node;
-    }
 
-o.mapOhms = (node, symbols) => {
+o.linker = (node, symbols) => {
+
+    const link = (arg) => o.linker(arg, symbols)
 
     if (node.objectName == "Ohm") return node;
 
     if (node.name && node.name.slice(0,1) == 'f') {
         const n = parseInt(node.name.slice(1))
         if (symbols[n].objectName != "Ohm")
-            symbols[n] = o.mapOhms(symbols[n], symbols)
+            symbols[n] = link(symbols[n])
         return symbols[n]
     }
 
     if (node.fn && node.fn.name == 'separator') {
-        return [o.mapOhms(node.args[0], symbols), o.mapOhms(node.args[1], symbols)]
+        return node.args.map(link)
     }
 
-    if (node.name == 't') return o.backend.time()
+    if (node.name == 't') return Backend.time()
 
-    if (node.fn) {
-        const name = node.fn.name || node.fn
-        if (!name) throw new Error("could not get node.fn name: " + node.toString())
-        if (name == "control")
-            return o.backend.control(node.args[0].evaluate())
-        let otype = o.backend.classForRef(name);
-        if (!otype) throw new Error("could not find implementation for: "+name+" in node "+node.toString())
-        const mappedArgs = node.args.map(arg => o.mapOhms(arg, symbols))
-        return new otype(...mappedArgs, o.backend)
+    let fn = node.fn
+    if (fn) {
+        fn = fn.name || fn
+        if (!fn) throw new NodeLinkError(`fn missing name: ${node.toString()}`)
+        if (fn == "control")
+            return Backend.getControl(node.args[0].evaluate())
+        let otype = Backend.link(fn);
+        if (!otype)
+            throw new NodeLinkError(`missing link fn ${fn} - ${node.toString()}`)
+        const linkedArgs = node.args.map(link)
+        return new otype(...linkedArgs)
     }
 
     if (node.isArrayNode)
-        return new Error("arrays !implemented")
+        return new NodeLinkError('arrays !implemented')
 
-    if (node.isConstantNode) {
-        return new Val(node.evaluate(), o.backend)
+    if (node.isConstantNode)
+        return new Val(node.evaluate())
+
+    if (node.isConditionalNode) {
+        const args = [node.condition, node.trueExpr, node.falseExpr].map(link)
+        return new Conditional(...args)
     }
 
-    throw new Error("could not map node to implementation: " + node.toString())
+    throw new NodeLinkError(`name:${node.name}, fn:${node.fn}:${node.fn?node.fn.name:''} - ${node.toString()}`)
 }
 
 
@@ -133,29 +136,34 @@ o.uniqify = (topnode) => {
     return [uniqified, symbols]
 }
 
-o.handleMsg = (msg) => {
-    if (msg.cmd == 'set' && msg.key == 'streams') {
-        const simplified = msg.val.map(
-            (sval) => {
-                const parsed = math.parse(sval);
-                const mapped = parsed.transform(o.mapConstants);
-                const simpled = mapped.transform((node, path, parent) => math.simplify(node, o.mathrules))
-                const resimpled = math.simplify(simpled, o.mathrules);
-                const functified = resimpled.transform((node, parent, path) => node.isOperatorNode ? new math.FunctionNode(node.fn, node.args) : node)
-                return functified
-            })
-        const combo = new math.FunctionNode('separator',simplified)
-        let [uniqified, symbols] = o.uniqify(combo)
-        const mapped = o.mapOhms(uniqified, symbols)
-        o.backend.out(0,mapped[0])
-        o.backend.out(1,mapped[1])
-    } else if (msg.cmd == 'set' && msg.key == 'control') {
-        let val = parseFloat(msg.val)
-        o.backend.control(msg.subkey, val)
-    } else if (msg.cmd == 'set' && msg.key == 'audioEnabled') {
-        if (msg.val == false) {
-            // TODO
-        }
+o.expressions = []
+
+o.setStream = (key,stream) => {
+    const parsed = math.parse(stream);
+    const withSymSubs = parsed.transform(
+        (node, path, parent) => (node.isSymbolNode && node.name in o) ?
+            new math.ConstantNode(o[node.name]) : node);
+    const optimized = math.simplify(
+        withSymSubs.transform(
+            (node, path, parent) => math.simplify(node, o.mathrules)), o.mathrules);
+    const expression = optimized.transform(
+        (node, parent, path) => node.isOperatorNode ?
+            new math.FunctionNode(node.fn, node.args) : node)
+    o.expressions = o.expressions.filter(([k,v]) => k != key).concat([[key,expression]])
+
+    const combo = new math.FunctionNode('separator',o.expressions.map(([k,v])=>v))
+    let [nonRedundant, symbols] = o.uniqify(combo)
+    const linked = o.linker(nonRedundant, symbols)
+    o.expressions.forEach(([k,v],i) => Backend.setStream(k,linked[i]))
+}
+
+o.setControl = Backend.setControl
+
+
+class NodeLinkError extends Error {
+    constructor(msg) {
+        super(msg)
     }
 }
 
+console.log(Backend.getControl(2))

@@ -5,8 +5,8 @@ import QtQuick.Controls 2.4
 Item {
     id: mView
     property Module module
-    x: Fn.centerInX(this, this.parent) + module.x
-    y: Fn.centerInY(this, this.parent) + module.y
+    x: centerInX(this, this.parent) + module.x
+    y: centerInY(this, this.parent) + module.y
     z: 1
     width: 48; height: 32
 
@@ -196,24 +196,24 @@ Item {
     property double perim: tstart + mView.width/2 - mView.height/2
 
 
-	function computeJackPos(jacks) {
-	var sweep = perim / jacks.length
-		var shapeData = {}
-		for (var j = 0, start = 0; j < jacks.length; j++, start += sweep) {
-			var center = start + sweep/2
-		var sdelta = (j == 0) ? (sweep/2) : (sweep/2-0.35)
-		var edelta = (j == jacks.length-1) ? (sweep/2) : (sweep/2-0.35)
-			shapeData[jacks[j]] = {
-		start: center - Math.min(sdelta, Style.maxJackSweep),
-		center: center,
-		end: center + Math.min(edelta, Style.maxJackSweep),
-		theta: Fn.clip(-Math.PI/2,
-				   2*(center-cstart)/mView.height - Math.PI/2,
-				   Math.PI/2)
-		}
-		}
-		return shapeData
-	}
+    function computeJackPos(jacks) {
+    var sweep = perim / jacks.length
+        var shapeData = {}
+        for (var j = 0, start = 0; j < jacks.length; j++, start += sweep) {
+            var center = start + sweep/2
+        var sdelta = (j == 0) ? (sweep/2) : (sweep/2-0.35)
+        var edelta = (j == jacks.length-1) ? (sweep/2) : (sweep/2-0.35)
+            shapeData[jacks[j]] = {
+                start: center - Math.min(sdelta, Style.maxJackSweep),
+                center: center,
+                end: center + Math.min(edelta, Style.maxJackSweep),
+                theta: global.clip(-Math.PI/2,
+                                   2*(center-cstart)/mView.height - Math.PI/2,
+                                   Math.PI/2)
+            }
+        }
+        return shapeData
+    }
 
 
     property var inJackPos: computeJackPos(module.inJacks)
@@ -241,8 +241,8 @@ Item {
 
     Component.onCompleted: {
         module.view = mView;
-        module.x = Qt.binding(function() { return mView.x - Fn.centerInX(mView, mView.parent);});
-        module.y = Qt.binding(function() { return mView.y - Fn.centerInY(mView, mView.parent);});
+        module.x = Qt.binding(function() { return mView.x - centerInX(mView, mView.parent);});
+        module.y = Qt.binding(function() { return mView.y - centerInY(mView, mView.parent);});
     }
 
 }

@@ -8,7 +8,7 @@ Model {
     function toQML(indent) {
         if (!(inp && out)) return "";
         var qml = "Cable {\n";
-        Fn.forEach(parent.modules, function(module,m) {
+        forEach(parent.modules, function(module,m) {
             if (module === inp.parent) {
                 qml += '    '.repeat(indent+1)
 		qml += 'inp: modules[' + m + '].jack("' + inp.label + '")\n'
