@@ -8,5 +8,4 @@ qrc_qml.cpp
 build
 *.qmlc
 *.jsc
-debug.html
 Makefile
