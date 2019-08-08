@@ -8,32 +8,42 @@ Module {
     label: 'Scope'
 
     inJacks: [
-        InJack { label: 'vtrig' },
-        InJack { label: 'ch2' },
-        InJack { label: 'ch1' },
-        InJack { label: 'window' }
+        InJack { label: 'signal' },
+        InJack { label: 'trig' }
     ]
 
     cvs: [
         LinearCV {
             label: 'vtrig'
-            inVolts: inStream('vtrig')
+            inVolts: 0
             from: 0
         },
         LogScaleCV {
             label: 'window'
-            logBase: 1.585
-            inVolts: inStream('window')
-            from: '10ms'
+            logBase: 1.2
+            inVolts: 0
+            from: '150ms'
         }
     ]
 
-    property var ch1: inStream('ch1')
-    property var ch2: inStream('ch2')
+    property var signal: inStream('signal')
+    property var trig: inStream('trig')
     property var vtrig: cvStream('vtrig')
-    property var window: cvStream('window')
-    property var streams: [ch1,ch2,vtrig,window]
-    onStreamsChanged: engine.scope.msg({ cmd:'set', key:'streams', val:streams})
+    property var win: cvStream('window')
+    property Timer setStreamDelayed: Timer {
+        interval: 200; running: false; repeat: false;
+        onTriggered: {
+            engine.setStream('scope',signal)
+            engine.setStream('scopeTrig',trig)
+            engine.setStream('scopeVtrig',vtrig)
+            engine.setStream('scopeWin',win)
+        }
+    }
+
+    onSignalChanged: setStreamDelayed.restart()
+    onTrigChanged: setStreamDelayed.restart()
+    onVtrigChanged: setStreamDelayed.restart()
+    onWinChanged: setStreamDelayed.restart()
 
     Component.onCompleted: {
         if (!oscope.parent)
@@ -54,39 +64,26 @@ Module {
     }
 
     property Component scopeDisplay: OhmScope {
-        channelColors: ['#7df9ff', '#84ff8a']
-        buffers: [new Int8Array(512), new Int8Array(512)]
+        channelColor: '#7df9ff'
         bgColor: 'transparent'
         trig: cvs[0].controlVolts * 12.7
+        win: cvs[1].reading
 
         function enter() {
-            engine.scope.msg({ cmd:'set', key:'scopeEnabled', val:true })
+            engine.enableScope(this)
         }
 
         function exit() {
-            engine.scope.msg({ cmd:'set', key:'scopeEnabled', val:false})
+            engine.disableScope()
         }
 
-        Connections {
-            target: engine.scope
-            onBinaryMessageReceived: function(msg) {
-                var dataArray = new Int8Array(msg)
-                var window = dataArray.length / 2
-                for (var ch = 0; ch < 2; ch++) {
-                    if (buffers[ch].length < window)
-                        buffers[ch] = new Int8Array(window)
-                    buffers[ch].truncate = window
-                }
-                var d=0,b=0
-                while (d < window) {
-                    buffers[0][d] = dataArray[b++]
-                    buffers[1][d++] = dataArray[b++]
-                }
-                requestPaint()
-            }
+        function dataCallback(data) {
+            this.buffer = new Int8Array(data);
+            requestPaint()
         }
     }
 }
+
 
 
 

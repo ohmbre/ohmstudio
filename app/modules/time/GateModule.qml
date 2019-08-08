@@ -8,7 +8,7 @@ Module {
     outJacks: [
         OutJack {
             label: 'gate'
-            stream: 'stopwatch($trig) < $hold ? 1 : 0'
+            stream: 'stopwatch($trig) < @hold ? (10v) : 0'
         }
     ]
 

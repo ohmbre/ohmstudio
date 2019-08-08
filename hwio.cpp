@@ -63,7 +63,7 @@ class HWIO : public QObject {
     QThread outThread;
 public:
 
-    HWIO(QObject *parent) : QObject(parent), outName(defaultDev().deviceName()) {
+    HWIO() : QObject(QGuiApplication::instance()), outName(defaultDev().deviceName()) {
         qDebug() << "default out device is:" << outName;
         Output *output = new Output;
 
@@ -161,6 +161,10 @@ public:
         return QTextStream(&f).readAll();
     }
 
+    Q_INVOKABLE static QString pwd() {
+        return QDir::currentPath();
+    }
+
     Q_INVOKABLE static QVariant listDir(const QString dname, const QString match) {
         QDirIterator modIt(dname,QStringList()<<match,QDir::Files|QDir::NoDot|QDir::NoDotDot|QDir::AllDirs,QDirIterator::FollowSymlinks);
         QStringList fnames,subnames;
@@ -184,8 +188,8 @@ signals:
 
 static HWIO *hwio;
 
-void initHWIO(QGuiApplication *app, QQmlApplicationEngine *engine) {
-    hwio = new HWIO(app);
+void initHWIO(QQmlApplicationEngine *engine) {
+    hwio = new HWIO();
     engine->globalObject().setProperty("HWIO", engine->newQObject(hwio));
 
     QDirIterator qrcIt(":/app", QStringList() << "*.qml", QDir::Files, QDirIterator::Subdirectories);

@@ -8,19 +8,26 @@ Module {
     outJacks: [
         OutJack {
             label: 'output'
-            stream: 'slew($input,@lag)'
+            stream: 'slew($input,@risedamp,@falldamp)'
         }
     ]
 
     inJacks: [
         InJack {label: 'input'},
-        InJack {label: 'lag'}
+        InJack {label: 'risedamp'},
+        InJack {label: 'falldamp'}
     ]
 
     cvs: [
         LogScaleCV {
-            label: 'lag'
-            inVolts: inStream('lag')
+            label: 'risedamp'
+            inVolts: inStream('risedamp')
+            from: '0.2'
+            logBase: 1.2
+        },
+        LogScaleCV {
+            label: 'falldamp'
+            inVolts: inStream('falldamp')
             from: '0.2'
             logBase: 1.2
         }

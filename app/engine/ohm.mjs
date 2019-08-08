@@ -60,7 +60,10 @@ o.linker = (node, symbols) => {
         return node.args.map(link)
     }
 
-    if (node.name == 't') return Backend.time()
+    if (node.name == 't') {
+        let otype = Backend.link("time")
+        return new otype();
+    }
 
     let fn = node.fn
     if (fn) {
@@ -139,18 +142,27 @@ o.uniqify = (topnode) => {
 o.expressions = []
 
 o.setStream = (key,stream) => {
+    console.log(key, stream);
     const parsed = math.parse(stream);
-    const withSymSubs = parsed.transform(
+
+    const desymboled = parsed.transform(
         (node, path, parent) => (node.isSymbolNode && node.name in o) ?
             new math.ConstantNode(o[node.name]) : node);
+
     const optimized = math.simplify(
-        withSymSubs.transform(
+        desymboled.transform(
             (node, path, parent) => math.simplify(node, o.mathrules)), o.mathrules);
+
     const expression = optimized.transform(
         (node, parent, path) => node.isOperatorNode ?
             new math.FunctionNode(node.fn, node.args) : node)
-    o.expressions = o.expressions.filter(([k,v]) => k != key).concat([[key,expression]])
 
+    if (key == 'debug') {
+        o.debug([["parsed",parsed],["desymboled",desymboled],["optimized",optimized],["expression",expression]]);
+        return;
+    }
+
+    o.expressions = o.expressions.filter(([k,v]) => k != key).concat([[key,expression]])
     const combo = new math.FunctionNode('separator',o.expressions.map(([k,v])=>v))
     let [nonRedundant, symbols] = o.uniqify(combo)
     const linked = o.linker(nonRedundant, symbols)
@@ -158,6 +170,8 @@ o.setStream = (key,stream) => {
 }
 
 o.setControl = Backend.setControl
+o.enableScope = Backend.enableScope
+o.disableScope = Backend.disableScope
 
 
 class NodeLinkError extends Error {
@@ -166,4 +180,21 @@ class NodeLinkError extends Error {
     }
 }
 
-console.log(Backend.getControl(2))
+
+o.debug = (parts) => {
+    let options = { parenthesis: 'auto', implicit: 'hide' }
+    let body = parts.map(([part,tree])=>'<tr><td>'+part+'</td><td>$$$'+tree.toTex(options)+'$$$</td><tr/>').join('\n')
+    writeFile('debug/debug.html', HWIO.read(':/app/debug/debug.html').replace('_DEBUG_', body));
+    o.debugView.url = 'file://' + HWIO.pwd() + '/debug/debug.html'
+    console.log(o.debugView.url);
+}
+
+/*body += symbols.map(n => '<tr><td>$$' + n.symbol + ':=' + n.args[0].toTex(options) + '$$</td></tr>').join('\n')
+  body += "<tr></tr>"
+  body += node.args.map(n=> '<tr><td>$$ch'+ node.args.indexOf(n) + ':=' + n.toTex(options) + '$$</td></tr>').join('\n')*/
+
+
+
+
+
+

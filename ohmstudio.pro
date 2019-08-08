@@ -1,4 +1,4 @@
-QT += quickcontrols2 svg multimedia qml
+QT += quickcontrols2 svg multimedia qml webengine
 CONFIG += c++latest
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -14,7 +14,8 @@ RESOURCES += \
     $$files(app/*.mjs, true) \
     $$files(app/*.png, true) \
     $$files(app/*.svg, true) \
-    $$files(app/*.ttf, true)
+    $$files(app/*.ttf, true) \
+    $$files(app/*.html, true)
 
 QMAKE_CLEAN *= -r ohmstudio \
     *.o *qml.cpp *js.cpp *qrc* *cache* \
@@ -56,6 +57,9 @@ android {
     droid/res/mipmap-xxxhdpi/ic_launcher_round.png
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/droid
 }
+
+DISTFILES += \
+    app/modules/output/DebugModule.qml
 
 
 

@@ -19,7 +19,8 @@
 #define TAU 6.283185307179586
 
 #define V double
-#define ___ ,
+#define _comma_ ,
+#define PADRE QGuiApplication::instance()
 
 static QList<const QMetaObject *> metaFns;
 const QMetaObject *addMetaFn(const QMetaObject *fn) {
@@ -45,6 +46,23 @@ public:
 };
 Q_DECLARE_INTERFACE(Ohm, "org.ohm.studio.Ohm")
 
+
+/*-------------------------------------------*/
+
+static quint64 t = 0;
+
+class Time : public QObject, public Ohm {
+    Q_OBJECT
+    Q_INTERFACES(Ohm)
+    Q_CLASSINFO("ref","time")
+public:
+    Q_INVOKABLE Time() : QObject(PADRE) {}
+    V get() {
+        return static_cast<double>(t);
+    }
+};
+META_REGISTER(Time)
+
 /*-------------------------------------------*/
 
 class Val : public QObject, public Ohm {
@@ -52,42 +70,48 @@ class Val : public QObject, public Ohm {
     Q_INTERFACES(Ohm)
     Q_CLASSINFO("ref", "val")
 public:
-    Q_INVOKABLE Val(V _val);
+    Q_INVOKABLE Val(V _val) : QObject(PADRE), val(_val) {}
     V get() { return val; }
     void set(V _val) { val = _val; }
-    Q_INVOKABLE void inc() {
-        val = val + 1;
-    }
 protected:
     V val;
 };
 META_REGISTER(Val)
 
-static Val *t;
 
 /*-------------------------------------------*/
 
 class Backend : public QObject {
     Q_OBJECT
+    QQmlApplicationEngine *engine;
     QHash<long, Val*> controls;
     QHash<QString, Ohm *> streams;
-
 public:
+    QScopedPointer<QByteArray> scopebuf;
+    QByteArray *scopeOut;
+    QByteArray scopeBytes;
+    QJSValue qscope;
+    int scopePos;
+    int scopeLen;
+
     QMap<QString, QJSValue> refMap;
 
-    Backend(QObject *parent) : QObject(parent) {}
-
-    Q_INVOKABLE Val* time() {
-        return t;
-    }
-
-    Q_INVOKABLE Ohm* getStream(QString key) {
-        return streams[key];
+    Backend(QQmlApplicationEngine *_engine) : QObject(PADRE), engine(_engine), scopeOut(nullptr),
+        scopeBytes(512,0), qscope(QJSValue::NullValue), scopePos(0), scopeLen(0) {
+        connect(this, &Backend::scopeDataReady, this, &Backend::scopeFireCallback, Qt::QueuedConnection);
     }
 
     Q_INVOKABLE void setStream(QString key, QObject *_s) {
         Ohm *s = qobject_cast<Ohm*>(_s);
         streams[key] = s;
+    }
+
+    Q_INVOKABLE void enableScope(QJSValue _qscope) {
+        qscope = _qscope;
+    }
+
+    Q_INVOKABLE void disableScope() {
+        qscope = QJSValue::NullValue;
     }
 
     Q_INVOKABLE void setControl(long id, V val) {
@@ -108,11 +132,68 @@ public:
         return symbol;
     }
 
+    void fillBuffer(short *buf, qint64 nframes) {
+        Ohm *outL = streams["outL"];
+        Ohm *outR = streams["outR"];
+
+        Ohm *scope = streams["scope"];
+        Ohm *scopeTrig = streams["scopeTrig"];
+        Ohm *scopeVtrig = streams["scopeVtrig"];
+        Ohm *scopeWin = streams["scopeWin"];
+        V strig = 0;
+        bool scopeEnabled = !qscope.isNull();
+        if (scopeEnabled && scopeVtrig)
+            strig = scopeVtrig->get();
+        short *end = buf + 2*nframes;
+        short *scopeData;
+
+        while (buf < end) {
+            *buf++ = outL ? outL->v16b() : 0;
+            *buf++ = outR ? outR->v16b() : 0;
+            if (scopeEnabled) {
+                if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
+                    scopeOut = scopebuf.take();
+                    emit scopeDataReady();
+                } else if (scopePos < scopeLen) {
+                    scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
+                    scopeData[scopePos++] = scope ? scope->v16b() : 0;
+                } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
+                    scopePos = 0;
+                    scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
+                    scopebuf.reset(new QByteArray(scopeLen*2, 0));
+                }
+            }
+            t++;
+        }
+    }
+signals:
+    void scopeDataReady();
+
+public slots:
+    void scopeFireCallback() {
+        QJSValue callback = qscope.property("dataCallback");
+        short *data = reinterpret_cast<short*>(scopeOut->data());
+        double avg = 0;
+        int bufpos = 0, buflen = scopeBytes.length(), datapos = 0, n = scopeOut->length()/2, scale = n / buflen;
+        if (scale == 0) scale = 1;
+        while (datapos < n) {
+            avg += data[datapos++];
+            if (datapos % scale == 0 && (datapos == n || ((datapos + scale) <= n)) && bufpos < buflen) {
+                scopeBytes[bufpos++] = static_cast<char>(qBound(-128.0, round(avg/scale/256), 127.0));
+                avg = 0;
+            }
+        }
+        if (datapos % scale != 0)
+            scopeBytes[bufpos] = static_cast<char>(qBound(-128.0, round(avg/(scale+(datapos % scale))/256.0), 127.0));
+        if (callback.isCallable())
+            callback.callWithInstance(qscope,QJSValueList() << engine->toScriptValue<QByteArray>(scopeBytes));
+        delete scopeOut;
+        scopeOut = nullptr;
+    }
+
 };
 
-static Backend *backend;
 
-Q_INVOKABLE Val::Val(V _val) : QObject(backend), val(_val){}
 
 /*-------------------------------------------*/
 
@@ -123,11 +204,11 @@ class Func : public QObject, public Ohm {
     V lastT;
     V lastEval;
 public:
-    Func() : QObject(backend), lastT(-1) {
+    Func() : QObject(PADRE), lastT(-1) {
         this->setObjectName("Ohm");
     }
     V get() {
-        V curT = t->get();
+        V curT = t;
         if (curT - lastT < 0.0001) return lastEval;
         lastEval = this->next();
         lastT = curT;
@@ -169,7 +250,7 @@ public:
   FUNCFOOT(type)
 
 #define GENFUNC(nargs,type,ref,setupdef,nextdef,args...) FUNC(type,ref, \
-      Q_INVOKABLE type(DO_N(nargs,QDEC,args)) : Func() ___ DO_N(nargs,QARG,args) setupdef, \
+      Q_INVOKABLE type(DO_N(nargs,QDEC,args)) : Func() _comma_ DO_N(nargs,QARG,args) setupdef, \
       Ohm DO_N(nargs,STAR,args); V next() nextdef)
 
 #define OPFUNC(nargs,type,ref,op) \
@@ -247,13 +328,21 @@ GENFUNC(2, PWM, pwm,
      , freq, duty)
 
 GENFUNC(1, StopWatch, stopwatch,
-     { timer = 1e100; },
      {
-        if (trig->get() >= 3) timer = 0;
-        else timer += 1;
+        timer = 1e100;
+        hi = false;
+     },
+     {
+        timer++;
+        V trigv = trig->get();
+        if (!hi && trigv >= 3) {
+            hi = true;
+            timer = 0;
+        } else if (hi && trigv < 3)
+            hi = false;
         return timer;
      }
-     V timer;
+     V timer; bool hi;
      , trig)
 
 
@@ -292,30 +381,37 @@ GENFUNC(1, Noise, noise,
         quint64 state;
         , coef)
 
-GENFUNC(2, Slew, slew,
+GENFUNC(3, Slew, slew,
         {
             val = 0;
         },
         {
             V sigval = signal->get();
-            V lagval = lag->get()/1000;
-            val = sigval - (1 - lagval) * (sigval - val);
+            if (sigval > val)
+                val += risedamp->get()/1000 * (sigval - val);
+            else
+                val -= falldamp->get()/1000 * (val - sigval);
             return val;
         }
         V val;
-        , signal, lag)
+        , signal, risedamp, falldamp)
 
 
 GENFUNC(2, SampleHold, samplehold,
         {
             sample = 0;
+            hi = false;
         },
         {
-            if (trig->get() > 3)
+            V trigv = trig->get();
+            if (hi && trigv < 3) hi = false;
+            else if (!hi && trigv >= 3) {
+                hi = true;
                 sample = signal->get();
+            }
             return sample;
         }
-        V sample;
+        V sample; bool hi;
         , signal, trig)
 
 
@@ -425,9 +521,11 @@ class ramps extends ohm {
 
 /*-------------------------------------------*/
 
-void initBackend(QGuiApplication *app, QQmlApplicationEngine *engine) {
-    t = new Val(0);
-    backend = new Backend(app);
+static Backend *backend;
+
+void initBackend(QQmlApplicationEngine *engine) {
+
+    backend = new Backend(engine);
 
     QJSValue g = engine->globalObject();
     QListIterator<const QMetaObject *> metaIter(metaFns);
@@ -445,34 +543,11 @@ void initBackend(QGuiApplication *app, QQmlApplicationEngine *engine) {
     qRegisterMetaType<Val*>("Val*");
 }
 
+
+
+
 void fillBuffer(short *buf, qint64 nframes) {
-    Ohm *outL = backend->getStream("outL");
-    Ohm *outR = backend->getStream("outR");
-    short *end = buf + 2*nframes;
-    if (outL && outR)
-        while (buf < end) {
-            *buf++ = outL->v16b();
-            *buf++ = outR->v16b();
-            t->inc();
-        }
-    else if (outL && !outR)
-        while (buf < end) {
-            *buf++ = outL->v16b();
-            *buf++ = 0;
-            t->inc();
-        }
-    else if (!outL && outR)
-        while (buf < end) {
-            *buf++ = 0;
-            *buf++ = outR->v16b();
-            t->inc();
-        }
-    else
-        while (buf < end) {
-            *buf++ = 0;
-            *buf++ = 0;
-            t->inc();
-        }
+    backend->fillBuffer(buf, nframes);
 }
 
 #include "backend.moc"

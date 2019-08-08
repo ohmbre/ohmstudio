@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import ohm 1.0
-import "qml" as Fn
 
 Module {
     id: codec

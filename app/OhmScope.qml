@@ -8,12 +8,15 @@ Canvas {
     antialiasing: true
     renderTarget: Canvas.FramebufferObject
     renderStrategy: Canvas.Cooperative
-    transform: Scale { origin.x: 0; origin.y: 0;
-        xScale: parent.width/512; yScale: parent.height/256}
-    property var channelColors: ['red','blue','green','yellow']
+    transform: Scale {
+        origin.x: 0; origin.y: 0;
+        xScale: parent.width/512; yScale: parent.height/256
+    }
+    property var channelColor: 'red'
     property color bgColor: 'black'
-    property var buffers
+    property var buffer: new Int16Array(512)
     property real trig: 0
+    property string win
     property real trigOpacity: 0
     NumberAnimation { id: trigAnim; target: scope; property:'trigOpacity'; from: 1; to: 0; duration: 1000 }
     onTrigChanged: {
@@ -29,22 +32,13 @@ Canvas {
         ctx.clearRect(0, 0, 512, 256);
         ctx.globalAlpha = 0.75
         ctx.lineWidth = 3
-        var window
-        for (var ch = 0; ch < buffers.length; ch++) {
-            var buf = buffers[ch]
-            window = buf.truncate ? buf.truncate : buf.length
-            if (window === 0) continue
-            ctx.strokeStyle = channelColors[ch]
-            ctx.beginPath();
-            ctx.moveTo(0,128-buf[0]);
-            const xinc = 512/window
-            var x = xinc
-            for (var i=1; i < window; i++) {
-                ctx.lineTo(x, 128-buf[i])
-                x += xinc
-            }
-            ctx.stroke();
+        ctx.strokeStyle = channelColor
+        ctx.beginPath();
+        ctx.moveTo(0,128-buffer[0]);
+        for (let i=1; i < 512; i++) {
+            ctx.lineTo(i, 128-buffer[i])
         }
+        ctx.stroke();
         ctx.strokeStyle = Qt.rgba(128,128,0,trigOpacity)
         ctx.beginPath();
 
@@ -56,7 +50,7 @@ Canvas {
         ctx.fillText('10v', 0, 15)
         ctx.fillText('0v', 0, 130)
         ctx.fillText('-10v', 0, 255)
-        ctx.fillText((Math.round(window/4.8)/10)+'ms',440,145)
+        ctx.fillText(win,440,145)
         ctx.restore();
     }
 }
