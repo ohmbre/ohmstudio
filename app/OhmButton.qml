@@ -4,8 +4,10 @@ import QtQuick 2.11
 RoundButton {
     id: control
     radius: implicitHeight/2
-    padding: 10
+    padding: 5
     property double border: 4
+    font.pixelSize: 11
+    property int verticalAlignment: Text.AlignVCenter
     background: Rectangle {
         radius: control.radius
         anchors.fill: control
@@ -15,10 +17,11 @@ RoundButton {
     }
     contentItem: OhmText {
         text: control.text
-        font.family: "Asap Semibold"
-        font.pixelSize: 11
-        color: Style.buttonTextColor;
-        verticalAlignment: Text.AlignVCenter;
-
+        font.family: asapSemiBold.name
+        font.pixelSize: control.font.pixelSize
+        font.weight: Font.DemiBold
+        color: Style.buttonTextColor
+        padding: control.padding
+        verticalAlignment: control.verticalAlignment
     }
 }

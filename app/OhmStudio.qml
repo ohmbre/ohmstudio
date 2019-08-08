@@ -13,7 +13,9 @@ ApplicationWindow {
 
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
-
+    FontLoader { id: asapMedium; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
+    FontLoader { id: asapSemiBold; source: "qrc:/app/ui/fonts/Asap-SemiBold.ttf" }
+    font.family: asapMedium.name
 
     Drawer {
         id: setup
@@ -147,7 +149,6 @@ ApplicationWindow {
         height: width * window.height / window.width
         scale: window.width / width
         transformOrigin: Item.TopLeft
-        FontLoader { id: asapFont; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
 
         function loadPatchQML(url) {
             var rawdata = readFile(url);

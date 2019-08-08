@@ -102,7 +102,7 @@ Rectangle {
             clip: true
             z:2
             placeholderText: qsTr("Enter filename")
-            font.family: asapFont.name
+            font.family: asapMedium.name
             font.pixelSize: 11
             height: 20
             width: fileChooseDialog.width

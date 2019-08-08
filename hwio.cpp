@@ -12,30 +12,35 @@
 #include <QThread>
 #include <QString>
 
-void fillBuffer(short *buf, qint64 nframes);
+void writeToDevice(QAudioOutput *audioOut, QIODevice *device);
 
-constexpr auto SAMPLE_RATE = 48000;
+
+constexpr auto SAMPLES_PER_SECOND = 48000;
 constexpr auto BYTES_PER_SAMPLE = 2;
 constexpr auto NCHANNELS = 2;
-constexpr auto BYTES_PER_FRAME = 4;
-constexpr auto BUFSIZE = 4096LL;
+constexpr auto SAMPLES_PER_FRAME = NCHANNELS;
+constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
+constexpr auto FRAMES_PER_PERIOD = 1024LL;
+constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
+constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
 constexpr auto RD = QIODevice::ReadOnly|QIODevice::Text;
 constexpr auto WR = QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text;
 constexpr auto PERM = QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther;
 
 
-class Output : public QIODevice {
+class Output : public QObject { //QIODevice {
     Q_OBJECT
     QScopedPointer<QAudioOutput> audioOut;
 
 public slots:
-    void start(const QAudioDeviceInfo &dev, const QAudioFormat &format) {
-        setOpenMode(QIODevice::ReadWrite);
+     void start(const QAudioDeviceInfo &dev, const QAudioFormat &format)  {
         if (!audioOut.isNull()) audioOut->stop();
         audioOut.reset(new QAudioOutput(dev,format,this));
-        audioOut->setBufferSize(BUFSIZE);
-        audioOut->start(this);
-        qDebug() << "audio output started: bufsize =" << audioOut->bufferSize();
+        audioOut->setBufferSize(BYTES_PER_PERIOD);
+        QIODevice *outBuf = audioOut->start();
+        writeToDevice(audioOut.get(), outBuf);
+
+        qDebug() << "error with audio stream. state:" << audioOut->state() << ", error:" << audioOut->error();
     }
 
 public:
@@ -44,16 +49,6 @@ public:
         if (!audioOut.isNull()) audioOut->stop();
     }
 
-    qint64 readData(char *data, qint64 maxSize) {
-        if (maxSize == 0) return 0;
-        qint64 len = qMin(BUFSIZE, maxSize);
-        fillBuffer(reinterpret_cast<short*>(data), len / BYTES_PER_FRAME);
-        return len;
-    }
-
-    qint64 writeData(const char *, qint64 ) {
-        return 0;
-    }
 };
 
 class HWIO : public QObject {
@@ -82,7 +77,7 @@ public:
 
     static QAudioFormat& audioFormat() {
         static QAudioFormat fmt;
-        fmt.setSampleRate(SAMPLE_RATE);
+        fmt.setSampleRate(SAMPLES_PER_SECOND);
         fmt.setChannelCount(NCHANNELS);
         fmt.setSampleSize(8*BYTES_PER_SAMPLE);
         fmt.setSampleType(QAudioFormat::SignedInt);

@@ -95,10 +95,6 @@ Item {
                 drag.target: content
                 propagateComposedEvents: false
                 onWheel: wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
-                onPressAndHold: function(mouse) {
-                    console.log("POPUP")
-                    mMenu.popup(mouse.x,mouse.y)
-                }
 
                 Repeater {
                     model: patch.modules
@@ -119,97 +115,7 @@ Item {
             }
         }
 
-        OhmPopup {
-            id: mMenu
-            title: "Add Module"
-            width: 95
-            scale: window.width / overlay.width * .7
-            transformOrigin: Item.TopLeft
-            property point popOrigin: Qt.point(content.width/2, content.height/2)
-            property string directory: 'modules'
-            property string match: '*Module.qml'
-            onOpened: {
-                body.contentLoader.item.forceActiveFocus()
-                body.contentLoader.item.folder = mMenu.directory
-                body.contentLoader.item.model = HWIO.listDir(mMenu.directory,match)
-            }
-            contents: ListView {
-                id: moduleList
-                width: mMenu.width
-                contentHeight: model.length * 13
-                height: contentHeight
-                keyNavigationEnabled: mMenu.opened
-                focus: true
-                property string folder: mMenu.directory
-                property string match: mMenu.match
-                model: HWIO.listDir(folder,match)
-                delegate: OhmText {
-                    width: mMenu.width
-                    height: 14
-                    property string path: modelData
-                    property var parts: modelData.split('/')
-                    property string leaf: parts[parts.length-1]
-                    property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
-                    property string stem: parts.slice(0,-1).join('/')
-                    text: isDir ? leaf : leaf.replace(/Module\.qml$/,'')
-                    color: "black"
-                    horizontalAlignment: Text.AlignRight
-                    padding: 2
-                    rightPadding: 14
-                    Image {
-                        source: 'qrc:/app/ui/icons/arrow.svg'
-                        width: 11
-                        height: 5
-                        visible: isDir
-                        horizontalAlignment: Text.AlignRight
-                        y: 5.5
-                        x: parent.width - 12
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (isDir) {
-                                if (leaf=="..")
-                                    moduleList.folder = parts.slice(0,-2).join('/')
-                                else moduleList.folder = path
-                                moduleList.model = HWIO.listDir(moduleList.folder, moduleList.match)
-                            } else {
-                                pView.patch.addModule(path, mMenu.x - content.width/2,
-                                                      mMenu.y - content.height/2);
-                                mMenu.close();
-                            }
-                        }
-                    }
-                }
-                highlight: Rectangle {
-                    color: Style.menuLitColor
-                    radius: 2
-                }
-                property Component emptyFooter: Item {}
-                property Component uploadFooter: OhmButton {
-                    id: mFooter
-                    font.pixelSize: 6
-                    border: 2; padding: 6
-                    x: (parent.width - width)/2
-                    height: 13; z: 3
-                    clip: true
-                    text: 'Upload New'
-                    onClicked: {
-                        HWIO.upload(mMenu.folder)
-                        mMenu.close()
-                    }
-                }
-                property real footerHeight: 0
-                footer: emptyFooter
-                footerPositioning: ListView.OverlayFooter
-                clip: true
-                onModelChanged: {
-                    mMenu.height = model.length * 14 + 13 + footerHeight
-                    mMenu.body.height =  model.length * 14
-                }
-            }
-        }
+
 
         OhmPopup {
             id: delModuleMenu
@@ -220,11 +126,11 @@ Item {
             contents: OhmButton {
                 x: centerInX(this,delModuleMenu)
                 y: centerInY(this,delModuleMenu.body)
-                width: 45; height: 45
+                verticalAlignment: Text.AlignBottom
+                width: 26; height: 26
                 padding: 0
-                icon.source: "qrc:/app/ui/icons/delete.svg"
-                display: AbstractButton.IconOnly
-                border: 0
+                text: "×"
+                font.pixelSize:27
                 onClicked: {
                     patch.deleteModule(delModuleMenu.candidate);
                     delModuleMenu.close();
@@ -247,6 +153,111 @@ Item {
         }
 
     }
+
+    OhmButton {
+        id: addModuleBtn
+        x: parent.width - 30; y: parent.height - 30
+        width: 40; height: 40; radius: 20
+        text: "+"
+        font.pixelSize: 20
+        font.weight: Font.DemiBold
+        verticalAlignment: Text.AlignBottom
+        onClicked: mMenu.popup(addModuleBtn)
+    }
+
+    OhmPopup {
+        id: mMenu
+        title: "Add Module"
+        width: 95
+        height: 200
+        scale: 2
+        transformOrigin: Item.BottomRight
+
+        property point popOrigin: Qt.point(content.width/2, content.height/2)
+        property string directory: 'modules'
+        property string match: '*Module.qml'
+        onOpened: {
+            body.contentLoader.item.forceActiveFocus()
+            body.contentLoader.item.folder = mMenu.directory
+            body.contentLoader.item.model = HWIO.listDir(mMenu.directory,match)
+        }
+        contents: ListView {
+            id: moduleList
+            width: mMenu.width
+            contentHeight: model.length * 13
+            height: contentHeight
+            keyNavigationEnabled: mMenu.opened
+            focus: true
+            property string folder: mMenu.directory
+            property string match: mMenu.match
+            model: HWIO.listDir(folder,match)
+            delegate: OhmText {
+                width: mMenu.width
+                height: 14
+                property string path: modelData
+                property var parts: modelData.split('/')
+                property string leaf: parts[parts.length-1]
+                property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
+                property string stem: parts.slice(0,-1).join('/')
+                text: isDir ? leaf : leaf.replace(/Module\.qml$/,'')
+                color: "black"
+                horizontalAlignment: Text.AlignRight
+                padding: 2
+                rightPadding: 14
+                Image {
+                    source: 'qrc:/app/ui/icons/arrow.svg'
+                    width: 8
+                    height: 3.5
+                    visible: isDir
+                    horizontalAlignment: Text.AlignRight
+                    y: 5.5
+                    x: parent.width - 10
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        if (isDir) {
+                            if (leaf=="..")
+                                moduleList.folder = parts.slice(0,-2).join('/')
+                            else moduleList.folder = path
+                            moduleList.model = HWIO.listDir(moduleList.folder, moduleList.match)
+                        } else {
+                            pView.patch.addModule(path, 80, 60);
+                            mMenu.close();
+                        }
+                    }
+                }
+            }
+            highlight: Rectangle {
+                color: Style.menuLitColor
+                radius: 2
+            }
+            property Component emptyFooter: Item {}
+            property Component uploadFooter: OhmButton {
+                id: mFooter
+                font.pixelSize: 6
+                border: 2; padding: 6
+                x: (parent.width - width)/2
+                height: 13; z: 3
+                clip: true
+                text: 'Upload New'
+                onClicked: {
+                    HWIO.upload(mMenu.folder)
+                    mMenu.close()
+                }
+            }
+            property real footerHeight: 0
+            footer: emptyFooter
+            footerPositioning: ListView.OverlayFooter
+            clip: true
+            onModelChanged: {
+                mMenu.height = model.length * 14 + 13 + footerHeight
+                mMenu.body.height =  model.length * 14
+            }
+        }
+    }
+
 
     property Component moduleDisplay: Item {
         function enter(){}

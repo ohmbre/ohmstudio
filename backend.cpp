@@ -14,6 +14,18 @@
 #include <QReadWriteLock>
 #include <QMutex>
 #include <QGuiApplication>
+#include <QAudioOutput>
+#include <QThread>
+
+constexpr auto SAMPLES_PER_SECOND = 48000;
+constexpr auto BYTES_PER_SAMPLE = 2;
+constexpr auto NCHANNELS = 2;
+constexpr auto SAMPLES_PER_FRAME = NCHANNELS;
+constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
+constexpr auto FRAMES_PER_PERIOD = 1024LL;
+constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
+constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
+constexpr auto SECONDS_PER_PERIOD = SAMPLES_PER_PERIOD/SAMPLES_PER_SECOND;
 
 #define PI 3.14159265358979323846
 #define TAU 6.283185307179586
@@ -132,40 +144,54 @@ public:
         return symbol;
     }
 
-    void fillBuffer(short *buf, qint64 nframes) {
-        Ohm *outL = streams["outL"];
-        Ohm *outR = streams["outR"];
+    void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
+        short samples[SAMPLES_PER_PERIOD];
+        char *bytesamples = (char*)samples;
+        int samplepos = 0;
+        while(audioOut->state() != QAudio::StoppedState && audioOut->error() == QAudio::NoError) {
+            Ohm *outL = streams["outL"];
+            Ohm *outR = streams["outR"];
 
-        Ohm *scope = streams["scope"];
-        Ohm *scopeTrig = streams["scopeTrig"];
-        Ohm *scopeVtrig = streams["scopeVtrig"];
-        Ohm *scopeWin = streams["scopeWin"];
-        V strig = 0;
-        bool scopeEnabled = !qscope.isNull();
-        if (scopeEnabled && scopeVtrig)
-            strig = scopeVtrig->get();
-        short *end = buf + 2*nframes;
-        short *scopeData;
+            Ohm *scope = streams["scope"];
+            Ohm *scopeTrig = streams["scopeTrig"];
+            Ohm *scopeVtrig = streams["scopeVtrig"];
+            Ohm *scopeWin = streams["scopeWin"];
+            V strig = 0;
+            bool scopeEnabled = !qscope.isNull();
+            if (scopeEnabled && scopeVtrig)
+                strig = scopeVtrig->get();
+            short *scopeData;
 
-        while (buf < end) {
-            *buf++ = outL ? outL->v16b() : 0;
-            *buf++ = outR ? outR->v16b() : 0;
-            if (scopeEnabled) {
-                if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
-                    scopeOut = scopebuf.take();
-                    emit scopeDataReady();
-                } else if (scopePos < scopeLen) {
-                    scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
-                    scopeData[scopePos++] = scope ? scope->v16b() : 0;
-                } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
-                    scopePos = 0;
-                    scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
-                    scopebuf.reset(new QByteArray(scopeLen*2, 0));
+            samplepos = 0;
+            while (samplepos < SAMPLES_PER_PERIOD) {
+                samples[samplepos++] = outL ? outL->v16b() : 0;
+                samples[samplepos++] = outR ? outR->v16b() : 0;
+                if (scopeEnabled) {
+                    if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
+                        scopeOut = scopebuf.take();
+                        emit scopeDataReady();
+                    } else if (scopePos < scopeLen) {
+                        scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
+                        scopeData[scopePos++] = scope ? scope->v16b() : 0;
+                    } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
+                        scopePos = 0;
+                        scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
+                        scopebuf.reset(new QByteArray(scopeLen*2, 0));
+                    }
                 }
+                t++;
             }
-            t++;
+            unsigned long written = 0;
+            while (written <  BYTES_PER_PERIOD) {
+                written += device->write(bytesamples + written, BYTES_PER_PERIOD-written);
+                if (written != BYTES_PER_PERIOD)
+                    QThread::msleep(7);
+            }
+
+
         }
     }
+
 signals:
     void scopeDataReady();
 
@@ -545,9 +571,8 @@ void initBackend(QQmlApplicationEngine *engine) {
 
 
 
-
-void fillBuffer(short *buf, qint64 nframes) {
-    backend->fillBuffer(buf, nframes);
+void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
+    backend->writeToDevice(audioOut, device);
 }
 
 #include "backend.moc"

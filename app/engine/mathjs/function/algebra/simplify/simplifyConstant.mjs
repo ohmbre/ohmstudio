@@ -76,6 +76,7 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
 
   // convert a number to a fraction only if it can be expressed exactly
   function _exactFraction (n, options) {
+    return n;
     const exactFractions = (options && options.exactFractions !== false)
     if (exactFractions && isFinite(n) && fraction) {
       const f = fraction(n)

@@ -60,8 +60,8 @@ Item {
             padding: 0
             fontSizeMode: Text.Fit
             color: Style.moduleLabelColor
-            font.family: asapFont.name
-            font.weight: Font.Medium
+            font.family: asapSemiBold.name
+            font.weight: Font.DemiBold
             font.pixelSize: 10
             minimumPixelSize: 8
             maximumLineCount: 2
