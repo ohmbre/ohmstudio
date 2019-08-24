@@ -7,30 +7,25 @@ Module {
     outJacks: [
         OutJack {
             label: 'v/oct'
-            stream: '@octaves * sequence($clock,randsample(@scale,@numnotes,@randseed))'
+            stream: 'samplehold(random(@seed,0,@octaves,@numnotes), $trig)'
         }
     ]
 
     inJacks: [
-        InJack {label: 'clock'},
-        InJack {label: 'randseed'}
+        InJack {label: 'trig'},
+        InJack {label: 'seed'}
     ]
 
     cvs: [
-        QuantCV {
-            label: 'scale'
-            choices: ['minor','locrian','major','dorian','phrygian','lydian','mixolydian',
-                'minorPentatonic','majorPentatonic','egyptian','minorBlues','majorBlues']
-        },
         LogScaleCV {
-            label: 'randseed'
-            inVolts: inStream('randseed')
+            label: 'seed'
+            inVolts: inStream('seed')
             from: '666'
+            logBase: 2
         },
         QuantCV {
             label: 'numnotes'
-            choices: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
-                17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
+            choices: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
         },
         LogScaleCV {
             label: 'octaves'

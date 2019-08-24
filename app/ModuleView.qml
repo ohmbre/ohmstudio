@@ -85,7 +85,7 @@ Item {
             Loader {
                 id: displayLoader
                 anchors.fill: parent
-                sourceComponent: pView.moduleDisplay
+                sourceComponent: module.display
             }
         }
 

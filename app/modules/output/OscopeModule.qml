@@ -33,10 +33,12 @@ Module {
     property Timer setStreamDelayed: Timer {
         interval: 200; running: false; repeat: false;
         onTriggered: {
-            engine.setStream('scope',signal)
-            engine.setStream('scopeTrig',trig)
-            engine.setStream('scopeVtrig',vtrig)
-            engine.setStream('scopeWin',win)
+            checked(()=>{
+                        engine.setStream('scope',signal)
+                        engine.setStream('scopeTrig',trig)
+                        engine.setStream('scopeVtrig',vtrig)
+                        engine.setStream('scopeWin',win)
+                    }, signal);
         }
     }
 
@@ -45,25 +47,7 @@ Module {
     onVtrigChanged: setStreamDelayed.restart()
     onWinChanged: setStreamDelayed.restart()
 
-    Component.onCompleted: {
-        if (!oscope.parent)
-            parentChanged.connect(function() {
-                if (!oscope.parent.view)
-                    oscope.parent.viewChanged.connect(function() {
-                        oscope.parent.view.moduleDisplay = scopeDisplay
-                    });
-                else oscope.parent.view.moduleDisplay = scopeDisplay
-            })
-        else {
-            if (!oscope.parent.view)
-                oscope.parent.viewChanged.connect(function() {
-                    oscope.parent.view.moduleDisplay = scopeDisplay
-                });
-            else oscope.parent.view.moduleDisplay = scopeDisplay
-        }
-    }
-
-    property Component scopeDisplay: OhmScope {
+    display: OhmScope {
         channelColor: '#7df9ff'
         bgColor: 'transparent'
         trig: cvs[0].controlVolts * 12.7

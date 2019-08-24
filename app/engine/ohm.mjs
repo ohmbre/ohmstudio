@@ -52,9 +52,11 @@ o.linker = (node, symbols) => {
 
     const link = (arg) => o.linker(arg, symbols)
 
+    if (typeof(node) == 'number') return new Val(node);
+
     if (node.objectName == "Ohm") return node;
 
-    if (node.name && node.name.slice(0,1) == 'f') {
+    if (node.name && node.name.slice(0,1) == '%') {
         const n = parseInt(node.name.slice(1))
         if (symbols[n].objectName != "Ohm")
             symbols[n] = link(symbols[n])
@@ -79,8 +81,17 @@ o.linker = (node, symbols) => {
         let otype = Backend.link(fn);
         if (!otype)
             throw new NodeLinkError(`missing link fn ${fn} - ${node.toString()}`)
-        const linkedArgs = node.args.map(link)
-        return new otype(...linkedArgs)
+        if (fn == "list") {
+            let elements = node.args[0];
+            const index = link(node.args[1]);
+            if (elements.isConstantNode)
+              elements = elements.value.map(link)
+            else if (elements.isArrayNode)
+              elements = elements.items.map(link)
+            return new otype(elements, index)
+        }
+        const compiledArgs = node.args.map(link)
+        return new otype(...compiledArgs)
     }
 
     if (node.isArrayNode)
@@ -116,7 +127,7 @@ o.uniqify = (topnode) => {
             if (other.redirect)
             node.redirect = other.redirect
             else {
-                const symname = `f${Object.entries(symbolmap).length}`
+                const symname = `%${Object.entries(symbolmap).length}`
                 other.redirect = symname
                 node.redirect = symname
                 symbolmap[symname] = other
@@ -145,38 +156,40 @@ o.uniqify = (topnode) => {
 }
 
 o.expressions = []
+o.compiled = []
 
-o.setStream = (key,stream) => {
-    console.log(key, stream);
-    const parsed = math.parse(stream);
-
-    const desymboled = parsed.transform(
+o.optimizer = (expression) => {
+    const ret = {};
+    ret.parsed = math.parse(expression);
+    ret.desymboled = ret.parsed.transform(
         (node, path, parent) => {
             if (node.isSymbolNode && node.name in o)
                 return new math.ConstantNode(o[node.name])
             return node
         });
-
-    const optimized = math.simplify(
-        desymboled.transform(
+    ret.optimized = math.simplify(
+        ret.desymboled.transform(
             (node, path, parent) => math.simplify(node, o.mathrules))
         , o.mathrules);
-
-    const expression = optimized.transform(
+    ret.processed = ret.optimized.transform(
         (node, parent, path) => node.isOperatorNode ?
             new math.FunctionNode(node.fn, node.args) : node)
+    return ret;
+}
 
-    if (key == 'debug') {
-        o.debug([["parsed",parsed],["desymboled",desymboled],["optimized",optimized],["expression",expression]]);
-        return;
-    }
-
-    o.expressions = o.expressions.filter(([k,v]) => k != key).concat([[key,expression]])
+o.setStream = (key,stream) => {
+    console.log(key, stream);
+    const result = o.optimizer(stream)
+    o.expressions = o.expressions.filter(([k,v]) => k != key).concat([[key,result.processed]])
     const combo = new math.FunctionNode('separator',o.expressions.map(([k,v])=>v))
     let [nonRedundant, symbols] = o.uniqify(combo)
-    const linked = o.linker(nonRedundant, symbols)
-    o.expressions.forEach(([k,v],i) => Backend.setStream(k,linked[i]))
+    o.compiled = o.linker(nonRedundant, symbols)
+    o.expressions.forEach(
+        ([k,v],i) => {
+            Backend.setStream(k,o.compiled[i])
+        })
 }
+
 
 o.setControl = Backend.setControl
 o.enableScope = Backend.enableScope
@@ -189,18 +202,50 @@ class NodeLinkError extends Error {
     }
 }
 
-
-o.debug = (parts) => {
-    let options = { parenthesis: 'auto', implicit: 'hide' }
-    let body = parts.map(([part,tree])=>'<tr><td>'+part+'</td><td>$$$'+tree.toTex(options)+'$$$</td><tr/>').join('\n')
+o.debugStream = (stream, view) => {
+    const objToHtml = (obj, fromRecur) => {
+        const tag = (fromRecur) ? 'span' : 'div';
+        const nextLevel = (fromRecur || 0) + 1;
+        if (typeof obj == 'string')
+            return `<${tag} style="color: #0e4889; cursor: default;">${obj}</${tag}>`
+        else if (typeof obj == 'boolean' || obj === null || obj === undefined)
+            return `<${tag}><em style="color: #06624b; cursor: default;">${obj}</em></${tag}>`
+        else if (typeof obj == 'number')
+            return `<${tag} style="color: #ca000a; cursor: default;">${obj}</${tag}>`
+        else if (Object.prototype.toString.call(obj) == '[object Date]')
+            return `<${tag} style="color: #009f7b; cursor: default;">${obj}</${tag}>`
+        else if (Array.isArray(obj)) {
+            let rtn = `<${tag} style="color: #666; cursor: default;">Array: [`
+            if (!obj.length) return rtn + `]</${tag}>`
+                rtn += `</${tag}><div style="padding-left: 20px;">`
+            for (var i = 0; i < obj.length; i++)
+                rtn += `<span></span>${objToHtml(obj[i], nextLevel)} ${(i < obj.length - 1) ? ', <br>' : ''}`
+            return rtn + `</div><${tag} style="color: #666">]</${tag}>`
+        } else if (obj && typeof obj == 'object') {
+            let rtn = '', len = Object.keys(obj).length
+            if (fromRecur && !len) return `<${tag} style="color: #999; cursor: default;">Object: {}</${tag}>`
+            if (fromRecur) rtn += `<${tag} style="color: #0b89b6">Object: {</${tag}><div class="_stringify_recur _stringify_recur_level_${fromRecur}" style="padding-left: 20px;">`
+            for (var key in obj)
+                if (typeof obj[key] != 'function')
+                    rtn += `<div><span style="padding-right: 5px; cursor: default;">${key}:</span>${objToHtml(obj[key], nextLevel)}</div>`
+            if (fromRecur)
+                rtn += `</div><${tag} style="color: #0b89b6; cursor: default;">}</${tag}>`
+            return rtn;
+        }
+        return '';
+    }
+    console.log("debug",stream);
+    const expr = o.optimizer(stream)
+    let options = {parenthesis:'auto', implicit:'hide'}
+    let body = Object.entries(expr).map(([part,tree])=>[part,'$$$'+tree.toTex(options)+'$$$<br/>'+objToHtml(tree)])
+    let [node, symbols] = o.uniqify(expr.processed)
+    symbols.forEach(sym => body.push([sym.symbol,sym.args[0].toTex(options)]))
+    body.push(['stream','$$$'+node.toTex(options)+'$$$'])
+    body.push(["compiled",o.linker(node, symbols).repr()])
+    body = body.map(row=>'<tr><td>'+row.join('</td><td>')+'</td></tr>').join('\n')
     writeFile('debug/debug.html', HWIO.read(':/app/debug/debug.html').replace('_DEBUG_', body));
-    if (o.debugView) o.debugView.url = 'file://' + HWIO.pwd() + '/debug/debug.html'
+    view.url = `file://${HWIO.pwd()}/debug/debug.html`
 }
-
-/*body += symbols.map(n => '<tr><td>$$' + n.symbol + ':=' + n.args[0].toTex(options) + '$$</td></tr>').join('\n')
-  body += "<tr></tr>"
-  body += node.args.map(n=> '<tr><td>$$ch'+ node.args.indexOf(n) + ':=' + n.toTex(options) + '$$</td></tr>').join('\n')*/
-
 
 
 

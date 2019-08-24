@@ -13,11 +13,10 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        LinearCV {
             label: 'cv'
             inVolts: 0
-            from: '5v'
-            logBase: 1.1
+            from: '0v'
         }
     ]
 }

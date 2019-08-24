@@ -8,19 +8,22 @@ Module {
     outJacks: [
         OutJack {
             label: 'envelope'
-            stream: '@offset + @gain*ramps($gate,0v,1v,@attack,@atkshape,0v,@decay,@decshape)'
+            stream: `@offset + @gain * (
+                        (stopwatch($trig)<@attack) ?
+                              (stopwatch($trig)/@attack)^@atkshape :
+                              max(0,1-(stopwatch($trig)-@attack)/@decay)^@decshape)`
         }
 
     ]
 
     inJacks: [
+        InJack {label: 'trig'},
         InJack {label: 'gain'},
-        InJack {label: 'atkshape'},
+        InJack {label: 'offset'},
         InJack {label: 'attack'},
-        InJack {label: 'gate'},
+        InJack {label: 'atkshape'},
         InJack {label: 'decay'},
-        InJack {label: 'decshape'},
-        InJack {label: 'offset'}
+        InJack {label: 'decshape'}
     ]
 
     cvs: [
@@ -28,28 +31,28 @@ Module {
             label: 'attack'
             inVolts: inStream('attack')
             from: '100ms'
+            logBase: 1.5
+        },
+        LogScaleCV {
+            label: 'atkshape'
+            inVolts: inStream('atkshape')
+            from: '1'
         },
         LogScaleCV {
             label: 'decay'
             inVolts: inStream('decay')
             from: '100ms'
-        },
-        LogScaleCV {
-            label: 'atkshape'
-            logBase: 4
-            inVolts: inStream('atkshape')
-            from: 1
+            logBase: 1.5
         },
         LogScaleCV {
             label: 'decshape'
-            logBase: '4'
             inVolts: inStream('decshape')
-            from: 1
+            from: '1'
         },
         LogScaleCV {
             label: 'gain'
             logBase: 1.35
-            from: 2
+            from: 5
             inVolts: inStream('gain')
         },
         LinearCV {

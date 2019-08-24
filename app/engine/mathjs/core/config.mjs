@@ -4,7 +4,7 @@ export const DEFAULT_CONFIG = {
   epsilon: 1e-12,
 
   // type of default matrix output. Choose 'matrix' (default) or 'array'
-  matrix: 'Matrix',
+  matrix: 'array',
 
   // type of default number output. Choose 'number' (default) 'BigNumber', or 'Fraction
   number: 'number',

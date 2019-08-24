@@ -192,7 +192,7 @@ export const createSimplifyConstant = /* #__PURE__ */ factory(name, dependencies
       case 'ArrayNode':
           var newitems = []
           for (var i = 0; i < node.items.length; i++) {
-              var inode = foldFraction(node.items[i])
+              var inode = foldFraction(node.items[i], options)
               if (inode.isNode) newitems.push(inode)
               else newitems.push(new ConstantNode(inode))
           }

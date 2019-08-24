@@ -25,7 +25,6 @@ constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
 constexpr auto FRAMES_PER_PERIOD = 1024LL;
 constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
 constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
-constexpr auto SECONDS_PER_PERIOD = SAMPLES_PER_PERIOD/SAMPLES_PER_SECOND;
 
 #define PI 3.14159265358979323846
 #define TAU 6.283185307179586
@@ -55,6 +54,7 @@ public:
         v = qBound(-32768.0, v, 32767.0);
         return static_cast<qint16>(v);
     }
+    virtual QString repr() = 0;
 };
 Q_DECLARE_INTERFACE(Ohm, "org.ohm.studio.Ohm")
 
@@ -68,9 +68,14 @@ class Time : public QObject, public Ohm {
     Q_INTERFACES(Ohm)
     Q_CLASSINFO("ref","time")
 public:
-    Q_INVOKABLE Time() : QObject(PADRE) {}
+    Q_INVOKABLE Time() : QObject(PADRE) {
+        this->setObjectName("Ohm");
+    }
     V get() {
         return static_cast<double>(t);
+    }
+    Q_INVOKABLE QString repr() {
+        return QString("<time: %1>").arg(t);
     }
 };
 META_REGISTER(Time)
@@ -82,143 +87,18 @@ class Val : public QObject, public Ohm {
     Q_INTERFACES(Ohm)
     Q_CLASSINFO("ref", "val")
 public:
-    Q_INVOKABLE Val(V _val) : QObject(PADRE), val(_val) {}
-    V get() { return val; }
+    Q_INVOKABLE Val(V _val) : QObject(PADRE), val(_val) {
+        this->setObjectName("Ohm");
+    }
+    Q_INVOKABLE V get() { return val; }
     void set(V _val) { val = _val; }
+    Q_INVOKABLE QString repr() {
+        return QString("<val: %1>").arg(val);
+    }
 protected:
     V val;
 };
 META_REGISTER(Val)
-
-
-/*-------------------------------------------*/
-
-class Backend : public QObject {
-    Q_OBJECT
-    QQmlApplicationEngine *engine;
-    QHash<long, Val*> controls;
-    QHash<QString, Ohm *> streams;
-public:
-    QScopedPointer<QByteArray> scopebuf;
-    QByteArray *scopeOut;
-    QByteArray scopeBytes;
-    QJSValue qscope;
-    int scopePos;
-    int scopeLen;
-
-    QMap<QString, QJSValue> refMap;
-
-    Backend(QQmlApplicationEngine *_engine) : QObject(PADRE), engine(_engine), scopeOut(nullptr),
-        scopeBytes(512,0), qscope(QJSValue::NullValue), scopePos(0), scopeLen(0) {
-        connect(this, &Backend::scopeDataReady, this, &Backend::scopeFireCallback, Qt::QueuedConnection);
-    }
-
-    Q_INVOKABLE void setStream(QString key, QObject *_s) {
-        Ohm *s = qobject_cast<Ohm*>(_s);
-        streams[key] = s;
-    }
-
-    Q_INVOKABLE void enableScope(QJSValue _qscope) {
-        qscope = _qscope;
-    }
-
-    Q_INVOKABLE void disableScope() {
-        qscope = QJSValue::NullValue;
-    }
-
-    Q_INVOKABLE void setControl(long id, V val) {
-        Val *control = controls[id];
-        if (control) control->set(val);
-        else controls[id] = new Val(val);
-    }
-
-    Q_INVOKABLE Val* getControl(long id) {
-        Val *control = controls[id];
-        if (control) return control;
-        controls[id] = new Val(0);
-        return controls[id];
-    }
-
-    Q_INVOKABLE QJSValue link(QString ref) {
-        QJSValue symbol = refMap[ref];
-        return symbol;
-    }
-
-    void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
-        short samples[SAMPLES_PER_PERIOD];
-        char *bytesamples = (char*)samples;
-        int samplepos = 0;
-        while(audioOut->state() != QAudio::StoppedState && audioOut->error() == QAudio::NoError) {
-            Ohm *outL = streams["outL"];
-            Ohm *outR = streams["outR"];
-
-            Ohm *scope = streams["scope"];
-            Ohm *scopeTrig = streams["scopeTrig"];
-            Ohm *scopeVtrig = streams["scopeVtrig"];
-            Ohm *scopeWin = streams["scopeWin"];
-            V strig = 0;
-            bool scopeEnabled = !qscope.isNull();
-            if (scopeEnabled && scopeVtrig)
-                strig = scopeVtrig->get();
-            short *scopeData;
-
-            samplepos = 0;
-            while (samplepos < SAMPLES_PER_PERIOD) {
-                samples[samplepos++] = outL ? outL->v16b() : 0;
-                samples[samplepos++] = outR ? outR->v16b() : 0;
-                if (scopeEnabled) {
-                    if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
-                        scopeOut = scopebuf.take();
-                        emit scopeDataReady();
-                    } else if (scopePos < scopeLen) {
-                        scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
-                        scopeData[scopePos++] = scope ? scope->v16b() : 0;
-                    } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
-                        scopePos = 0;
-                        scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
-                        scopebuf.reset(new QByteArray(scopeLen*2, 0));
-                    }
-                }
-                t++;
-            }
-            unsigned long written = 0;
-            while (written <  BYTES_PER_PERIOD) {
-                written += device->write(bytesamples + written, BYTES_PER_PERIOD-written);
-                if (written != BYTES_PER_PERIOD)
-                    QThread::msleep(7);
-            }
-
-
-        }
-    }
-
-signals:
-    void scopeDataReady();
-
-public slots:
-    void scopeFireCallback() {
-        QJSValue callback = qscope.property("dataCallback");
-        short *data = reinterpret_cast<short*>(scopeOut->data());
-        double avg = 0;
-        int bufpos = 0, buflen = scopeBytes.length(), datapos = 0, n = scopeOut->length()/2, scale = n / buflen;
-        if (scale == 0) scale = 1;
-        while (datapos < n) {
-            avg += data[datapos++];
-            if (datapos % scale == 0 && (datapos == n || ((datapos + scale) <= n)) && bufpos < buflen) {
-                scopeBytes[bufpos++] = static_cast<char>(qBound(-128.0, round(avg/scale/256), 127.0));
-                avg = 0;
-            }
-        }
-        if (datapos % scale != 0)
-            scopeBytes[bufpos] = static_cast<char>(qBound(-128.0, round(avg/(scale+(datapos % scale))/256.0), 127.0));
-        if (callback.isCallable())
-            callback.callWithInstance(qscope,QJSValueList() << engine->toScriptValue<QByteArray>(scopeBytes));
-        delete scopeOut;
-        scopeOut = nullptr;
-    }
-
-};
-
 
 
 /*-------------------------------------------*/
@@ -233,7 +113,7 @@ public:
     Func() : QObject(PADRE), lastT(-1) {
         this->setObjectName("Ohm");
     }
-    V get() {
+    Q_INVOKABLE V get() {
         V curT = t;
         if (curT - lastT < 0.0001) return lastEval;
         lastEval = this->next();
@@ -248,6 +128,8 @@ public:
 #define DO_3(fn,arg,rest...) fn(arg), DO_2(fn,rest)
 #define DO_4(fn,arg,rest...) fn(arg), DO_3(fn,rest)
 #define DO_5(fn,arg,rest...) fn(arg), DO_4(fn,rest)
+#define DO_6(fn,arg,rest...) fn(arg), DO_5(fn,rest)
+#define DO_7(fn,arg,rest...) fn(arg), DO_6(fn,rest)
 #define DO_N(n,fn,rest...) DO_##n(fn,rest)
 
 #define NOP(arg) arg
@@ -258,6 +140,47 @@ public:
 #define QARG(a) a(qobject_cast<Ohm*>(_##a))
 #define ODEC(arg) Ohm *arg;
 #define OGET(arg) arg->get()
+
+/*-------------------------------------------*/
+
+class List : public Func {
+private:
+    Q_OBJECT
+    Q_INTERFACES(Ohm)
+    Q_CLASSINFO("ref", "list")
+public:
+    QList<Ohm*> data;
+    Ohm *index;
+    int length;
+
+    Q_INVOKABLE List(QJSValue _data, QObject *_index) : Func() {
+        index = qobject_cast<Ohm*>(_index);
+        if (_data.isArray()) {
+            length = static_cast<int>(_data.property("length").toInt());
+            for (int i = 0; i < length; i++)
+                data << qobject_cast<Ohm*>(_data.property(static_cast<quint32>(i)).toQObject());
+        } else
+            length = 0;
+    }
+
+    Q_INVOKABLE V next() {
+        if (length == 0) return 0;
+        int idx = static_cast<int>(floor((10.0+index->get())/10.0 * length));
+        return data[idx % length]->get();
+    }
+
+    Q_INVOKABLE QString repr() {
+        QStringList datareps;
+        for (int i = 0; i < length; i++)
+            datareps << data[i]->repr();
+        QString datarep = "[" + datareps.join(", ") + "]";
+        return QString("<list data:%1 index:%2>").arg(datarep).arg(index->repr());
+
+    }
+};
+META_REGISTER(List)
+
+/*-------------------------------------------*/
 
 #define FUNCHEAD(type,ref) \
   class type: public Func { \
@@ -275,8 +198,14 @@ public:
     pub \
   FUNCFOOT(type)
 
+#define REPMAC(rep) QString("%1: %2").arg(#rep, rep->repr())
+
 #define GENFUNC(nargs,type,ref,setupdef,nextdef,args...) FUNC(type,ref, \
-      Q_INVOKABLE type(DO_N(nargs,QDEC,args)) : Func() _comma_ DO_N(nargs,QARG,args) setupdef, \
+      Q_INVOKABLE type(DO_N(nargs,QDEC,args)) : Func() _comma_ DO_N(nargs,QARG,args) \
+      setupdef \
+      Q_INVOKABLE QString repr() { \
+        return QString("<%1 %2>").arg(#ref, QStringList({ DO_N(nargs,REPMAC,args) }).join(", ")); \
+      }, \
       Ohm DO_N(nargs,STAR,args); V next() nextdef)
 
 #define OPFUNC(nargs,type,ref,op) \
@@ -298,10 +227,17 @@ OPFUNC(1, Tan, tan, tan)
 OPFUNC(1, Asin, asin, asin)
 OPFUNC(1, Acos, acos, acos)
 OPFUNC(1, Atan, atan, atan)
+OPFUNC(1, Sinh, sinh, sinh)
+OPFUNC(1, Cosh, cosh, cosh)
+OPFUNC(1, Tanh, tanh, tanh)
+OPFUNC(1, Floor, floor, floor)
+OPFUNC(1, Trunc, trunc, trunc)
+OPFUNC(1, Ceil, ceil, ceil)
 OPFUNC(2, Mod, mod, fmod)
+OPFUNC(2, Remainder, remainder, remainder)
 OPFUNC(2, Pow, pow, pow)
 OPFUNC(2, Max, max, fmax)
-OPFUNC(2, Min, max, fmin)
+OPFUNC(2, Min, min, fmin)
 OPFUNC(2, Fdim, dim, fdim)
 OPFUNC(2, Hypot, hypot, hypot)
 OPFUNC(2, Atan2, atan2, atan2)
@@ -376,36 +312,49 @@ GENFUNC(1, StopWatch, stopwatch,
 GENFUNC(3, ClkDiv, clkdiv,
      {
          count = 0;
-         ingate = 0;
+         ingate = false;
      },
      {
         V clklvl = clk->get();
+        quint64 divnow = static_cast<quint64>(div->get());
+        quint64 shiftnow = static_cast<quint64>(shift->get());
         if (!ingate && clklvl >= 3) {
             ingate = true;
             count++;
+            if ((count - shiftnow) % divnow == 0)
+                outgate = true;
         } else if (ingate && clklvl <= 1) {
             ingate = false;
-            if (fmod(count - shift->get(), div->get()) == 0)
-                return clklvl;
-            return 0;
+            if (outgate) outgate = false;
         }
-        return 0;
+        return outgate ? 10 : 0;
      }
-     V count;
+     quint64 count;
      bool ingate;
+     bool outgate;
      , clk, div, shift)
 
 
-GENFUNC(1, Noise, noise,
+GENFUNC(4, Random, random,
         {
-            state = 666;
+            count = 0;
+            state = 0;
         },
         {
-            state = static_cast<quint64>(coef->get()) * state % 4294967291UL;
-            return state / 2147483645.0 - 1.0;
+            if (count == 0) state = static_cast<qint64>(qRound(seed->get()));
+            if (state < 1) state = 1;
+            qint64 imodulus = static_cast<qint64>(qRound(modulus->get()));
+            if (imodulus <= 0) imodulus = 2147483647L;
+            count = (count + 1) % imodulus;
+            V l = lo->get();
+            V h = hi->get();
+            V ret = state / 2147483646.0 * (h-l)+l;
+            state = (48271 * state) % 2147483647L;
+            return ret;
         }
-        quint64 state;
-        , coef)
+        qint64 state;
+        qint64 count;
+        , seed, lo, hi, modulus)
 
 GENFUNC(3, Slew, slew,
         {
@@ -414,9 +363,9 @@ GENFUNC(3, Slew, slew,
         {
             V sigval = signal->get();
             if (sigval > val)
-                val += risedamp->get()/1000 * (sigval - val);
+                val += 1/risedamp->get() * (sigval - val);
             else
-                val -= falldamp->get()/1000 * (val - sigval);
+                val -= 1/falldamp->get() * (val - sigval);
             return val;
         }
         V val;
@@ -441,59 +390,29 @@ GENFUNC(2, SampleHold, samplehold,
         , signal, trig)
 
 
-/*
-
-class sequence extends ohm {
-    constructor(clock, values) {
-        super()
-            this.clock = clock
-              this.values = values
-              this.lastvalues = this.values[Symbol.toPrimitive]()
-                  if (this.lastvalues === undefined)
-                      throw new Error('could not get primitive from: '+values)
-                          this.position = 0
-              this.gate = false
-    }
-    [Symbol.toPrimitive]() {
-        const clklvl = +this.clock
-                        if (!this.gate && clklvl >= 3) {
-            this.lastvalues = this.values[Symbol.toPrimitive]()
-                                  this.gate = true
-                  this.position = (this.position + 1) % this.lastvalues.length
-        } else if (this.gate && clklvl <= 1)
-            this.gate = false
-              return this.lastvalues[this.position]
-    }
-}
-*/
-
-/*
-
-class randsample extends ohm {
-    constructor(pool, nsamples, seed) {
-        super()
-            this.pool = pool
-          this.lastnsamples = 0
-          this.nsamples = nsamples
-          this.lastseed = 279470274
-          this.seed = (typeof seed == 'undefined') ? Math.floor(Math.random() * 279470273) : seed
-                                                                                 this.val = undefined
-    }
-        [Symbol.toPrimitive]() {
-        let intseed = Math.round(this.seed)
-                          let intnsamples = Math.round(this.nsamples)
-                  if (intseed == this.lastseed && intnsamples == this.lastnsamples
-                                                                    && this.val !== undefined) return this.val
-              this.lastseed = intseed
-              this.lastnsamples = intnsamples
-            const val = []
-            while (val.length < intnsamples) {
-            val.push(this.pool[intseed % this.pool.length])
-                intseed = (intseed * 279470273) % 4294967291
+GENFUNC(7, BiQuad, biquad,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V x = signal->get();
+            V a0t = a0->get();
+            V y = x/a0t*b0->get() + x1/a0t*b1->get() + x2/a0t*b2->get() - y1/a0t*a1->get() - y2/a0t*a2->get();
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
         }
-        return this.val = val
-    }
-}
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, a0, a1, a2, b0, b1, b2)
+
+
+
+
+/*
+
 
 
 
@@ -547,6 +466,134 @@ class ramps extends ohm {
 
 /*-------------------------------------------*/
 
+class Backend : public QObject {
+    Q_OBJECT
+    QQmlApplicationEngine *engine;
+    QHash<long, Val*> controls;
+    QHash<QString, Ohm *> streams;
+public:
+    QScopedPointer<QByteArray> scopebuf;
+    QByteArray *scopeOut;
+    QByteArray scopeBytes;
+    QJSValue qscope;
+    int scopePos;
+    int scopeLen;
+
+    QMap<QString, QJSValue> refMap;
+
+    Backend(QQmlApplicationEngine *_engine) : QObject(PADRE), engine(_engine), scopeOut(nullptr),
+        scopeBytes(512,0), qscope(QJSValue::NullValue), scopePos(0), scopeLen(0) {
+        connect(this, &Backend::scopeDataReady, this, &Backend::scopeFireCallback, Qt::QueuedConnection);
+    }
+
+    Q_INVOKABLE void setStream(QString key, QObject *_s) {
+        Ohm *s = qobject_cast<Ohm*>(_s);
+        streams[key] = s;
+    }
+
+    Q_INVOKABLE void enableScope(QJSValue _qscope) {
+        qscope = _qscope;
+    }
+
+    Q_INVOKABLE void disableScope() {
+        qscope = QJSValue::NullValue;
+    }
+
+    Q_INVOKABLE void setControl(long id, V val) {
+        Val *control = controls[id];
+        if (control) control->set(val);
+        else controls[id] = new Val(val);
+    }
+
+    Q_INVOKABLE Val* getControl(long id) {
+        Val *control = controls[id];
+        if (control) return control;
+        controls[id] = new Val(0);
+        return controls[id];
+    }
+
+    Q_INVOKABLE QJSValue link(QString ref) {
+        QJSValue symbol = refMap[ref];
+        return symbol;
+    }
+
+    void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
+        short samples[SAMPLES_PER_PERIOD];
+        char *bytesamples = reinterpret_cast<char*>(samples);
+        int samplepos = 0;
+        while(audioOut->state() != QAudio::StoppedState && audioOut->error() == QAudio::NoError) {
+            Ohm *outL = streams["outL"];
+            Ohm *outR = streams["outR"];
+
+            Ohm *scope = streams["scope"];
+            Ohm *scopeTrig = streams["scopeTrig"];
+            Ohm *scopeVtrig = streams["scopeVtrig"];
+            Ohm *scopeWin = streams["scopeWin"];
+            V strig = 0;
+            bool scopeEnabled = !qscope.isNull();
+            if (scopeEnabled && scopeVtrig)
+                strig = scopeVtrig->get();
+            short *scopeData;
+
+            samplepos = 0;
+            while (samplepos < SAMPLES_PER_PERIOD) {
+                samples[samplepos++] = outL ? outL->v16b() : 0;
+                samples[samplepos++] = outR ? outR->v16b() : 0;
+                if (scopeEnabled) {
+                    if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
+                        scopeOut = scopebuf.take();
+                        emit scopeDataReady();
+                    } else if (scopePos < scopeLen) {
+                        scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
+                        scopeData[scopePos++] = scope ? scope->v16b() : 0;
+                    } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
+                        scopePos = 0;
+                        scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
+                        scopebuf.reset(new QByteArray(scopeLen*2, 0));
+                    }
+                }
+                t++;
+            }
+            long long written = 0;
+            while (written <  BYTES_PER_PERIOD) {
+                written += device->write(bytesamples + written, BYTES_PER_PERIOD-written);
+                if (written != BYTES_PER_PERIOD)
+                    QThread::msleep(7);
+            }
+
+
+        }
+    }
+
+signals:
+    void scopeDataReady();
+
+public slots:
+    void scopeFireCallback() {
+        QJSValue callback = qscope.property("dataCallback");
+        short *data = reinterpret_cast<short*>(scopeOut->data());
+        double avg = 0;
+        int bufpos = 0, buflen = scopeBytes.length(), datapos = 0, n = scopeOut->length()/2, scale = n / buflen;
+        if (scale == 0) scale = 1;
+        while (datapos < n) {
+            avg += data[datapos++];
+            if (datapos % scale == 0 && (datapos == n || ((datapos + scale) <= n)) && bufpos < buflen) {
+                scopeBytes[bufpos++] = static_cast<char>(qBound(-128.0, round(avg/scale/256), 127.0));
+                avg = 0;
+            }
+        }
+        if (datapos % scale != 0)
+            scopeBytes[bufpos] = static_cast<char>(qBound(-128.0, round(avg/(scale+(datapos % scale))/256.0), 127.0));
+        if (callback.isCallable())
+            callback.callWithInstance(qscope,QJSValueList() << engine->toScriptValue<QByteArray>(scopeBytes));
+        delete scopeOut;
+        scopeOut = nullptr;
+    }
+
+};
+
+/*-------------------------------------------*/
+
 static Backend *backend;
 
 void initBackend(QQmlApplicationEngine *engine) {
@@ -567,6 +614,8 @@ void initBackend(QQmlApplicationEngine *engine) {
     }
     g.setProperty("Backend",engine->newQObject(backend));
     qRegisterMetaType<Val*>("Val*");
+    qRegisterMetaType<Val*>("List*");
+
 }
 
 

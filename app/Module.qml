@@ -19,7 +19,10 @@ Model {
         });
     }
 
-    property Component display: (parent && parent.view) ? parent.view.moduleDisplay : null
+    property Component display: Item {
+        function enter() {}
+        function exit() {}
+    }
 
     function jack(index) {
         if (typeof index == "number")
@@ -33,9 +36,16 @@ Model {
 
 
     function inStream(label) {
-        return forEach(inJacks, function(inJack) {
+        return forEach(inJacks, (inJack) => {
             if (inJack.label === label)
                 return inJack.stream
+        });
+    }
+
+    function outStream(label) {
+        return forEach(outJacks, (outJack) => {
+            if (outJack.label === label)
+                return outJack.stream
         });
     }
 

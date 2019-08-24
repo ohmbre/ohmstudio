@@ -22,14 +22,14 @@ Module {
         LogScaleCV {
             label: 'risedamp'
             inVolts: inStream('risedamp')
-            from: '0.2'
-            logBase: 1.2
+            from: '200ms'
+            logBase: 1.5
         },
         LogScaleCV {
             label: 'falldamp'
             inVolts: inStream('falldamp')
-            from: '0.2'
-            logBase: 1.2
+            from: '200ms'
+            logBase: 1.5
         }
     ]
 
