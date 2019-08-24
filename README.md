@@ -1,6 +1,6 @@
 # Ωhmstudio
 
-Work-in-progress virtual modular synthesizer for audio and video.  Custom designed for ohmbre hardware synthesizer, an upcoming eurorack module with a touchscreen and analog-to-digital / vice-versa converters to play nicely with patching in and out of analog synthsizers.  Yet it is a fully standalone synthesis app easily portable to any Unix / Android / Mac / iOS / Windows / Browser.  Written in QML / Javascript / C++, it's only dependency is Qt.
+Work-in-progress virtual modular synthesizer for audio and video.  Custom designed for ohmbre hardware synthesizer, an upcoming eurorack module with a touchscreen and analog-to-digital / vice-versa converters to play nicely with patching in and out of analog synthsizers.  Yet it is a fully standalone portable synthesis and music production app which currently builds and works under linux, android, Mac OS X, iOS, Windows, and in the browser via webassembly.  Written in QML / Javascript / C++, it's only dependency is Qt.
 
 ### Build and Runtime Dependencies
 
