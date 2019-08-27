@@ -1,8 +1,8 @@
 import ohm 1.0
 
 Module {
-    objectName: 'StepSeqModule'
-    label: 'Step Sequencer'
+    objectName: 'CVSeqModule'
+    label: 'CV Sequencer'
 
     outJacks: [
         OutJack {

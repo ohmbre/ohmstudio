@@ -3,9 +3,12 @@ CONFIG += c++latest
 
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
-    main.cpp \
-    backend.cpp \
-    hwio.cpp
+    $$files(*.cpp, false) \
+    $$files(external/*.cpp, false)
+
+HEADERS += \
+    $$files(*.h, false) \
+    $$files(external/*.h, false)
 
 RESOURCES += \
     $$files(app/*.qml, true) \
@@ -59,7 +62,12 @@ android {
 }
 
 DISTFILES += \
-    app/modules/output/DebugModule.qml
+    app/modules/effects/BPFilterModule.qml \
+    app/modules/effects/HPFilterModule.qml \
+    app/modules/effects/NotchFilterModule.qml \
+    app/modules/effects/PeakFilterModule.qml \
+    app/modules/output/DebugModule.qml \
+    app/modules/sequencer/CVSeqModule.qml
 
 
 

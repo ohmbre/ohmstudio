@@ -1,13 +1,7 @@
-#include <QObject>
-#include <QGuiApplication>
 #include <QProcessEnvironment>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QDebug>
 #include <QtWebEngine/QtWebEngine>
 
-void initBackend(QQmlApplicationEngine *engine);
-void initHWIO(QQmlApplicationEngine *engine);
+#include "common.h"
 
 int main(int argc, char *argv[]) {
 

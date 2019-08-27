@@ -1,7 +1,7 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 
-import "qrc:/app/engine/ohm.mjs" as Engine
+import "qrc:/app/engine/engine.mjs" as Engine
 import "qrc:/app/util.mjs" as Util
 
 ApplicationWindow {
@@ -16,6 +16,29 @@ ApplicationWindow {
     FontLoader { id: asapMedium; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
     FontLoader { id: asapSemiBold; source: "qrc:/app/ui/fonts/Asap-SemiBold.ttf" }
     font.family: asapMedium.name
+
+    WorkerScript {
+        id: compileWorker
+        source: "engine/compiler.mjs"
+        property var callbacks: ({})
+        property var callId: 0
+        function run(fn,args,callback) {
+            callbacks[++callId] = callback;
+            compileWorker.sendMessage({id: callId, fn:fn, args:args})
+        }
+        onMessage: (message) => {
+            const callback = callbacks[message.id]
+            delete callbacks[message.id]
+            try {
+                callback(message.result)
+            } catch(err) {
+                console.error(err.constructor.name, err.message, err.stack)
+            }
+        }
+        Component.onCompleted: {
+            global.compiler = this
+        }
+    }
 
     Drawer {
         id: setup
@@ -184,7 +207,7 @@ ApplicationWindow {
             if ("audioOut" in options)
                 HWIO.outName = options["audioOut"]
             else
-                HWIO.resetOut()
+                HWIO.resetAudio()
             setup.open()
         }
     }

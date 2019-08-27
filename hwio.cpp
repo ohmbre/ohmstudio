@@ -1,52 +1,51 @@
-#include <QObject>
-#include <QIODevice>
 #include <QAudioOutput>
+#include <QAudioInput>
 #include <QAudioDeviceInfo>
-#include <QDebug>
 #include <QFile>
 #include <QDir>
 #include <QDirIterator>
-#include <QQmlContext>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QThread>
-#include <QString>
 
-void writeToDevice(QAudioOutput *audioOut, QIODevice *device);
+#include "common.h"
+#include "external/RtMidi.h"
 
-
-constexpr auto SAMPLES_PER_SECOND = 48000;
-constexpr auto BYTES_PER_SAMPLE = 2;
-constexpr auto NCHANNELS = 2;
-constexpr auto SAMPLES_PER_FRAME = NCHANNELS;
-constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
-constexpr auto FRAMES_PER_PERIOD = 1024LL;
-constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
-constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
 constexpr auto RD = QIODevice::ReadOnly|QIODevice::Text;
 constexpr auto WR = QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text;
 constexpr auto PERM = QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther;
 
 
-class Output : public QObject { //QIODevice {
+class AudioIO : public QObject {
     Q_OBJECT
     QScopedPointer<QAudioOutput> audioOut;
+    QScopedPointer<QAudioInput> audioIn;
 
 public slots:
-     void start(const QAudioDeviceInfo &dev, const QAudioFormat &format)  {
+     void start(const QAudioDeviceInfo &outDev, const QAudioDeviceInfo &inDev, const QAudioFormat &format)  {
         if (!audioOut.isNull()) audioOut->stop();
-        audioOut.reset(new QAudioOutput(dev,format,this));
-        audioOut->setBufferSize(BYTES_PER_PERIOD);
-        QIODevice *outBuf = audioOut->start();
-        writeToDevice(audioOut.get(), outBuf);
-
-        qDebug() << "error with audio stream. state:" << audioOut->state() << ", error:" << audioOut->error();
+        if (!audioIn.isNull()) audioIn->stop();
+        QIODevice *outBuf = nullptr, *inBuf = nullptr;
+        if (!outDev.isNull()) {
+            audioOut.reset(new QAudioOutput(outDev,format,this));
+            audioOut->setBufferSize(BYTES_PER_PERIOD);
+            outBuf = audioOut->start();
+        }
+        if (!inDev.isNull()) {
+            audioIn.reset(new QAudioInput(inDev,format,this));
+            audioIn->setBufferSize(BYTES_PER_PERIOD);
+            inBuf = audioIn->start();
+        }
+        while (outBuf != nullptr || inBuf != nullptr) {
+            ioloop(outBuf,inBuf);
+            if (audioOut.isNull() || (audioOut->state() == QAudio::StoppedState)) outBuf = nullptr;
+            if (audioIn.isNull() || (audioIn->state() == QAudio::StoppedState)) inBuf = nullptr;
+        }
+        qDebug() << "audio stop/error: state =" << audioOut->state() << ", error =" << audioOut->error();
     }
 
 public:
 
-    ~Output() {
+    ~AudioIO() {
         if (!audioOut.isNull()) audioOut->stop();
+        if (!audioIn.isNull()) audioIn->stop();
     }
 
 };
@@ -55,58 +54,66 @@ class HWIO : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString outName READ getOutName WRITE setOutName NOTIFY outNameChanged)
     QString outName;
-    QThread outThread;
+    QString inName;
+    QThread audioThread;
 public:
+    QAudioFormat audioFormat;
 
-    HWIO() : QObject(QGuiApplication::instance()), outName(defaultDev().deviceName()) {
-        qDebug() << "default out device is:" << outName;
-        Output *output = new Output;
+    HWIO() : QObject(QGuiApplication::instance()) {
 
-        output->moveToThread(&outThread);
-        connect(&outThread, &QThread::finished, output, &QObject::deleteLater);
-        connect(this, &HWIO::startOutThread, output, &Output::start);
-        outThread.start();
-        connect(this, &HWIO::outNameChanged, this, &HWIO::resetOut, Qt::QueuedConnection);
+        AudioIO *audioIO = new AudioIO;
+        audioFormat.setSampleRate(SAMPLES_PER_SECOND);
+        audioFormat.setChannelCount(NCHANNELS);
+        audioFormat.setSampleSize(8*BYTES_PER_SAMPLE);
+        audioFormat.setSampleType(QAudioFormat::SignedInt);
+        audioFormat.setCodec("audio/pcm");
+        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+
+        outName = defaultDev(QAudio::AudioOutput);
+        inName = defaultDev(QAudio::AudioInput);
+
+        audioIO->moveToThread(&audioThread);
+        connect(&audioThread, &QThread::finished, audioIO, &QObject::deleteLater);
+        connect(this, &HWIO::startAudioThread, audioIO, &AudioIO::start);
+        audioThread.start();
+        connect(this, &HWIO::outNameChanged, this, &HWIO::resetAudio, Qt::QueuedConnection);
+        connect(this, &HWIO::inNameChanged, this, &HWIO::resetAudio, Qt::QueuedConnection);
     }
 
     ~HWIO() {
-        outThread.quit();
-        outThread.wait();
+        audioThread.quit();
+        audioThread.wait();
     }
 
-
-    static QAudioFormat& audioFormat() {
-        static QAudioFormat fmt;
-        fmt.setSampleRate(SAMPLES_PER_SECOND);
-        fmt.setChannelCount(NCHANNELS);
-        fmt.setSampleSize(8*BYTES_PER_SAMPLE);
-        fmt.setSampleType(QAudioFormat::SignedInt);
-        fmt.setCodec("audio/pcm");
-        fmt.setByteOrder(QAudioFormat::LittleEndian);
-        return fmt;
+    QString defaultDev(QAudio::Mode mode) {
+        QAudioDeviceInfo dev;
+        if (mode == QAudio::AudioOutput)
+            dev = QAudioDeviceInfo::defaultOutputDevice();
+        else
+            dev = QAudioDeviceInfo::defaultInputDevice();
+        if (!dev.isNull()) return dev.deviceName();
+        QStringList names = devNames(mode);
+        if (names.length() != 0) return names[0];
+        return "";
     }
 
-    static QAudioDeviceInfo defaultDev() {
-        QAudioDeviceInfo dev = QAudioDeviceInfo::defaultOutputDevice();
-        if (dev.deviceName() != "") return dev;
-        QList<QAudioDeviceInfo> available = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-        for (QList<QAudioDeviceInfo>::iterator dev = available.begin(); dev != available.end(); ++dev)
-            if (dev->isFormatSupported(audioFormat()))
-                return *dev;
-        qWarning() << "Could not find a compatible audio device";
-        exit(1);
+    QStringList devNames(QAudio::Mode mode) {
+        QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(mode);
+        QStringList names;
+        qDebug() << "\n\n\n-------------------------------------------------------------------------------";
+        for (QList<QAudioDeviceInfo>::iterator dev = devs.begin(); dev != devs.end(); ++dev)
+            if (dev->isFormatSupported(audioFormat))
+                names << dev->deviceName();
+        qDebug() << "-------------------------------------------------------------------------------\n\n\n";
+        return names;
     }
 
     Q_INVOKABLE QVariant outList() {
-        QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-        QStringList outs;
-        qDebug() << "\n\n\n-------------------------------------------------------------------------------";
-        for (QList<QAudioDeviceInfo>::iterator dev = devs.begin(); dev != devs.end(); ++dev)
-            if (dev->isFormatSupported(audioFormat()))
-                outs << dev->deviceName();
-        qDebug() << "-------------------------------------------------------------------------------\n\n\n";
+        return QVariant::fromValue(devNames(QAudio::AudioOutput));
+    }
 
-        return QVariant::fromValue(outs);
+    Q_INVOKABLE QVariant inList() {
+        return QVariant::fromValue(devNames(QAudio::AudioInput));
     }
 
     QString getOutName() {
@@ -118,22 +125,35 @@ public:
         emit outNameChanged(name);
     }
 
-    Q_INVOKABLE void resetOut() {
-        QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    QString getInName() {
+        return inName;
+    }
+
+    void setInName(QString name) {
+        inName = name;
+        emit inNameChanged(name);
+    }
+
+    QAudioDeviceInfo devFromName(QString name, QAudio::Mode mode) {
+        QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(mode);
         QList<QAudioDeviceInfo>::iterator dev;
         for (dev = devs.begin(); dev != devs.end(); ++dev)
-            if (dev->deviceName() == outName)
-                break;
-        if (dev == devs.end() || !dev->isFormatSupported(audioFormat())) {
-            qWarning() << "device doesnt exist or support format:" << outName;
-            QString def = defaultDev().deviceName();
-            if (outName == def) exit(1);
-            outName = def;
-            emit outNameChanged(outName);
-            return;
-        }
+            if (dev->deviceName() == name && dev->isFormatSupported(audioFormat))
+                return *dev;
+        qWarning() << "device doesnt exist or support format:" << name;
+        QString defName = defaultDev(mode);
+        if (defName != name)
+            return devFromName(defName, mode);
+        qWarning() << "proceding without" << mode << "device";
+        return QAudioDeviceInfo();
+    }
 
-        emit startOutThread(*dev, audioFormat());
+
+    Q_INVOKABLE void resetAudio() {
+        QAudioDeviceInfo outDev = devFromName(outName, QAudio::AudioOutput);
+        QAudioDeviceInfo inDev = devFromName(inName, QAudio::AudioInput);
+
+        emit startAudioThread(outDev, inDev, audioFormat);
 
     }
 
@@ -178,7 +198,8 @@ public:
 
 signals:
     void outNameChanged(QString);
-    void startOutThread(const QAudioDeviceInfo &info, const QAudioFormat &format);
+    void inNameChanged(QString);
+    void startAudioThread(const QAudioDeviceInfo &outDev, const QAudioDeviceInfo &inDev, const QAudioFormat &format);
 };
 
 static HWIO *hwio;

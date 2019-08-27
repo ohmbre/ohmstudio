@@ -1,30 +1,10 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <QObject>
-#include <QQmlContext>
-#include <QQmlEngine>
-#include <QJSValue>
-#include <QVariant>
 #include <cmath>
-#include <QJSEngine>
-#include <QQmlApplicationEngine>
-#include <QJSValue>
-#include <QDebug>
-#include <QReadWriteLock>
-#include <QMutex>
-#include <QGuiApplication>
-#include <QAudioOutput>
-#include <QThread>
+#include <QtConcurrent/QtConcurrent>
 
-constexpr auto SAMPLES_PER_SECOND = 48000;
-constexpr auto BYTES_PER_SAMPLE = 2;
-constexpr auto NCHANNELS = 2;
-constexpr auto SAMPLES_PER_FRAME = NCHANNELS;
-constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
-constexpr auto FRAMES_PER_PERIOD = 1024LL;
-constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
-constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
+#include "common.h"
 
 #define PI 3.14159265358979323846
 #define TAU 6.283185307179586
@@ -79,6 +59,29 @@ public:
     }
 };
 META_REGISTER(Time)
+
+/*-------------------------------------------*/
+
+static V inSampleL = 0;
+static V inSampleR = 0;
+
+class Capture: public QObject, public Ohm {
+    Q_OBJECT
+    Q_INTERFACES(Ohm)
+    Q_CLASSINFO("ref","capture")
+public:
+    Q_INVOKABLE Capture(qint64 stream) : QObject(PADRE) {
+        if (stream == 0) val = &inSampleL;
+        else val = &inSampleR;
+    }
+    Q_INVOKABLE V get() { return *val; }
+    Q_INVOKABLE QString repr() {
+        return QString("<Capture: %1>").arg(val == &inSampleL ? 0 : 1);
+    }
+protected:
+    V *val;
+};
+META_REGISTER(Capture)
 
 /*-------------------------------------------*/
 
@@ -307,7 +310,24 @@ GENFUNC(1, StopWatch, stopwatch,
      V timer; bool hi;
      , trig)
 
-
+GENFUNC(2, Counter, counter,
+     {
+         count = 0;
+         ingate = false;
+     },
+     {
+         if (reset->get() >= 3) count = 0;
+         V clklvl = clk->get();
+         if (!ingate && clklvl >= 3) {
+             ingate = true;
+             count++;
+         } else if (ingate && clklvl <= 1)
+             ingate = false;
+         return count;
+     }
+     V count;
+     bool ingate;
+    , clk, reset)
 
 GENFUNC(3, ClkDiv, clkdiv,
      {
@@ -411,61 +431,6 @@ GENFUNC(7, BiQuad, biquad,
 
 
 
-/*
-
-
-
-
-
-class ramps extends ohm {
-    constructor(trig, initval, ...args) {
-        super()
-            this.trig = trig
-          this.gate = false
-          this.initval = initval
-          this.timer = 0
-          this.ramps = []
-          this.args = [...args]
-          this.val = initval
-          this.running = false
-    }
-        [Symbol.toPrimitive]() {
-        const siglvl = +this.trig
-                        if (!this.gate && siglvl >= 3) {
-            this.gate = this.running = true
-                                       this.timer = 0
-                  this.vstart = this.val
-                  this.rampsleft = [...this.args]
-                const ramplist = this.rampsleft.splice(0, 3)
-                      this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
-        } else if (this.gate && siglvl <= 1)
-            this.gate = false
-              if (!this.running) return this.val
-              this.timer++
-              let len = +this.len
-               if (this.timer > len) {
-            if (!this.rampsleft.length) {
-                this.running = false
-                               return this.val
-            }
-            const ramplist = this.rampsleft.splice(0, 3)
-                                 this.target = ramplist[0]; this.len = ramplist[1]; this.shape = ramplist[2]
-                len = +this.len
-                   this.vstart = this.val
-                  this.timer = 1
-        }
-        const target = +this.target, shape = +this.shape
-                                              if (len == 0) return this.val = target
-                                       return this.val = target + (this.vstart - target) * (1 - this.timer / len) ** shape
-    }
-}
-
-
-*/
-
-
-/*-------------------------------------------*/
-
 class Backend : public QObject {
     Q_OBJECT
     QQmlApplicationEngine *engine;
@@ -478,12 +443,18 @@ public:
     QJSValue qscope;
     int scopePos;
     int scopeLen;
-
     QMap<QString, QJSValue> refMap;
+    short outsamples[SAMPLES_PER_PERIOD];
+    short insamples[SAMPLES_PER_PERIOD];
 
     Backend(QQmlApplicationEngine *_engine) : QObject(PADRE), engine(_engine), scopeOut(nullptr),
         scopeBytes(512,0), qscope(QJSValue::NullValue), scopePos(0), scopeLen(0) {
         connect(this, &Backend::scopeDataReady, this, &Backend::scopeFireCallback, Qt::QueuedConnection);
+    }
+
+    Q_INVOKABLE void concurrently(QJSValue fn) {
+        if (!fn.isCallable()) return;
+        QtConcurrent::run(fn, &QJSValue::call, QJSValueList());
     }
 
     Q_INVOKABLE void setStream(QString key, QObject *_s) {
@@ -517,52 +488,65 @@ public:
         return symbol;
     }
 
-    void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
-        short samples[SAMPLES_PER_PERIOD];
-        char *bytesamples = reinterpret_cast<char*>(samples);
-        int samplepos = 0;
-        while(audioOut->state() != QAudio::StoppedState && audioOut->error() == QAudio::NoError) {
-            Ohm *outL = streams["outL"];
-            Ohm *outR = streams["outR"];
+    void ioloop(QIODevice *out, QIODevice *in) {
+        char *bytesamples;
+        long long taken;
 
-            Ohm *scope = streams["scope"];
-            Ohm *scopeTrig = streams["scopeTrig"];
-            Ohm *scopeVtrig = streams["scopeVtrig"];
-            Ohm *scopeWin = streams["scopeWin"];
-            V strig = 0;
-            bool scopeEnabled = !qscope.isNull();
-            if (scopeEnabled && scopeVtrig)
-                strig = scopeVtrig->get();
-            short *scopeData;
-
-            samplepos = 0;
-            while (samplepos < SAMPLES_PER_PERIOD) {
-                samples[samplepos++] = outL ? outL->v16b() : 0;
-                samples[samplepos++] = outR ? outR->v16b() : 0;
-                if (scopeEnabled) {
-                    if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
-                        scopeOut = scopebuf.take();
-                        emit scopeDataReady();
-                    } else if (scopePos < scopeLen) {
-                        scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
-                        scopeData[scopePos++] = scope ? scope->v16b() : 0;
-                    } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
-                        scopePos = 0;
-                        scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
-                        scopebuf.reset(new QByteArray(scopeLen*2, 0));
-                    }
-                }
-                t++;
-            }
-            long long written = 0;
-            while (written <  BYTES_PER_PERIOD) {
-                written += device->write(bytesamples + written, BYTES_PER_PERIOD-written);
-                if (written != BYTES_PER_PERIOD)
+        if (in != nullptr) {
+            bytesamples = reinterpret_cast<char*>(insamples);
+            taken = 0;
+            while (taken < BYTES_PER_PERIOD) {
+                taken += in->read(bytesamples + taken, BYTES_PER_PERIOD - taken);
+                if (taken != BYTES_PER_PERIOD)
                     QThread::msleep(7);
             }
-
-
         }
+
+        Ohm *outL = streams["outL"];
+        Ohm *outR = streams["outR"];
+
+        Ohm *scope = streams["scope"];
+        Ohm *scopeTrig = streams["scopeTrig"];
+        Ohm *scopeVtrig = streams["scopeVtrig"];
+        Ohm *scopeWin = streams["scopeWin"];
+        V strig = 0;
+        bool scopeEnabled = !qscope.isNull();
+        if (scopeEnabled && scopeVtrig)
+            strig = scopeVtrig->get();
+        short *scopeData;
+
+        int samplepos = 0;
+        while (samplepos < SAMPLES_PER_PERIOD) {
+            inSampleL = insamples[samplepos];
+            inSampleR = insamples[samplepos+1];
+            outsamples[samplepos] = outL ? outL->v16b() : 0;
+            outsamples[samplepos+1] = outR ? outR->v16b() : 0;
+            samplepos += 2;
+            if (scopeEnabled) {
+                if (scopePos == scopeLen && scopeOut == nullptr && !scopebuf.isNull()) {
+                    scopeOut = scopebuf.take();
+                    emit scopeDataReady();
+                } else if (scopePos < scopeLen) {
+                    scopeData = reinterpret_cast<short *>(scopebuf.data()->data());
+                    scopeData[scopePos++] = scope ? scope->v16b() : 0;
+                } else if (scopebuf.isNull() && scopeTrig && scopeTrig->get() > strig) {
+                    scopePos = 0;
+                    scopeLen = scopeWin ? static_cast<int>(scopeWin->get()) : 0;
+                    scopebuf.reset(new QByteArray(scopeLen*2, 0));
+                }
+            }
+            t++;
+        }
+
+        bytesamples = reinterpret_cast<char*>(outsamples);
+        taken = 0;
+        while (taken < BYTES_PER_PERIOD) {
+            taken += out->write(bytesamples + taken, BYTES_PER_PERIOD-taken);
+            if (taken != BYTES_PER_PERIOD)
+                QThread::msleep(7);
+        }
+
+
     }
 
 signals:
@@ -620,8 +604,8 @@ void initBackend(QQmlApplicationEngine *engine) {
 
 
 
-void writeToDevice(QAudioOutput *audioOut, QIODevice *device) {
-    backend->writeToDevice(audioOut, device);
+void ioloop(QIODevice *out, QIODevice *in) {
+    backend->ioloop(out, in);
 }
 
 #include "backend.moc"

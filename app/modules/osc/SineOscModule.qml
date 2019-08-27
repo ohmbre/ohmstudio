@@ -25,8 +25,8 @@ Module {
         LogScaleCV {
             label: 'gain'
             inVolts: inStream('gain')
-            from: 2
-            logBase: 1.38
+            from: 3
+            logBase: 1.4
         }
     ]
 

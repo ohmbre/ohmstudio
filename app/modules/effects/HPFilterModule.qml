@@ -1,9 +1,9 @@
 import ohm 1.0
 
 Module {
-    objectName: 'LPFilterModule'
+    objectName: 'HPFilterModule'
 
-    label: 'LP Filter'
+    label: 'HP Filter'
 
     property var cs: `cos(@f)`
     property var sn: `sin(@f)`
@@ -11,9 +11,9 @@ Module {
     property var a0: `1 + ${alpha}`
     property var a1: `-2 * ${cs}`
     property var a2: `1 - ${alpha}`
-    property var b0: `(1 - ${cs})/2`
-    property var b1: `1 - ${cs}`
-    property var b2: `(1 - ${cs})/2`
+    property var b0: `(1 + ${cs})/2`
+    property var b1: `-(1 + ${cs})`
+    property var b2: `(1 + ${cs})/2`
 
     outJacks: [
         OutJack {
