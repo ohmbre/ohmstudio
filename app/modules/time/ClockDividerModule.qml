@@ -22,13 +22,13 @@ Module {
         LinearCV {
             label: 'div'
             inVolts: inStream('div')
-            from: 10
+            offset: 11
             onControlVoltsChanged: controlVolts = Math.round(controlVolts)
         },
         LinearCV {
             label: 'shift'
             inVolts: inStream('shift')
-            from: 0
+            offset: 0
             onControlVoltsChanged: controlVolts = Math.round(controlVolts)
         }
     ]

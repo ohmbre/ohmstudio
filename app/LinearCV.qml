@@ -2,16 +2,6 @@ CV {
     id:lincv
     objectName: 'LinearCV'
 
-    property var from
-    reading: {
-        var fromVal = parseFloat(from)
-        var fromStr = fromVal.toString()
-        if (fromStr === 'NaN') return ''
-        var units = from.toString().replace(fromStr,'')
-        units = units.replace('/mins',' bpm')
-        var ret = fromVal + controlVolts
-        return ret.toFixed(1).toString()+units
-    }
-
-    stream: '((%1)+(%2)+control(%3))'.arg(from).arg(inVolts).arg(uuid(lincv))
+    property var offset: null
+    unitStream: v => offset ? `(${offset} + ${v})` : `${v}`
 }

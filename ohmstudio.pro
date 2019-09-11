@@ -1,4 +1,4 @@
-QT += quickcontrols2 svg multimedia qml webengine
+QT += quickcontrols2 svg multimedia qml webview
 CONFIG += c++latest
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -18,7 +18,9 @@ RESOURCES += \
     $$files(app/*.png, true) \
     $$files(app/*.svg, true) \
     $$files(app/*.ttf, true) \
-    $$files(app/*.html, true)
+    $$files(app/*.html, true) \
+    qtquickcontrols2.conf
+
 
 QMAKE_CLEAN *= -r ohmstudio \
     *.o *qml.cpp *js.cpp *qrc* *cache* \
@@ -62,12 +64,8 @@ android {
 }
 
 DISTFILES += \
-    app/modules/effects/BPFilterModule.qml \
-    app/modules/effects/HPFilterModule.qml \
-    app/modules/effects/NotchFilterModule.qml \
-    app/modules/effects/PeakFilterModule.qml \
-    app/modules/output/DebugModule.qml \
-    app/modules/sequencer/CVSeqModule.qml
+    app/CVController.qml \
+    app/ModuleOverlay.qml
 
 
 

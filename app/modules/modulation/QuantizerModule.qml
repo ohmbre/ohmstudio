@@ -15,8 +15,8 @@ Module {
     cvs: [
         QuantCV {
             label: 'scale'
-            choices: ['min','locrian','maj','dorian','phrygian','lydian','mixolydian',
-                'minPentatonic','majPentatonic','egyptian','minBlues','majBlues']
+            choices: ['minor','locrian','major','dorian','phrygian','lydian','mixolydian',
+                'minPent','majPent','egyptian','blues']
         }
     ]
 }

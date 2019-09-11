@@ -429,6 +429,122 @@ GENFUNC(7, BiQuad, biquad,
         , signal, a0, a1, a2, b0, b1, b2)
 
 
+GENFUNC(3, HiPass, hipass,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V f = freq->get();
+            V q = Q->get();
+            V x = signal->get();
+            V cs = cos(f);
+            V sn = sin(f);
+            V alpha = sn*sinh(0.34657359027997264*f/(q*sn));
+            V cs1 = 1+cs;
+            V b02 = cs1/2;
+            V y = (b02*x - cs1*x1 + b02*x2 + 2*cs*y1 + (alpha-1)*y2)/(1+alpha);
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
+        }
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, freq, Q)
+
+GENFUNC(3, LoPass, lopass,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V f = freq->get();
+            V q = Q->get();
+            V x = signal->get();
+            V cs = cos(f);
+            V sn = sin(f);
+            V alpha = sn*sinh(0.34657359027997264*f/(q*sn));
+            V b1 = 1-cs;
+            V b02 = b1/2;
+            V y = (b02*x + b1*x1 + b02*x2 + 2*cs*y1 + (alpha-1)*y2)/(1+alpha);
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
+        }
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, freq, Q)
+
+GENFUNC(3, BandPass, bandpass,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V f = freq->get();
+            V q = Q->get();
+            V x = signal->get();
+            V sn = sin(f);
+            V alpha = sn*sinh(0.34657359027997264*f/(q*sn));
+            V y = (alpha*(x - x2 + y2) + 2*cos(f)*y1 - y2)/(1+alpha);
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
+        }
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, freq, Q)
+
+GENFUNC(3, NotchFilt, notchfilter,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V f = freq->get();
+            V q = Q->get();
+            V x = signal->get();
+            V sn = sin(f);
+            V alpha = sn*sinh(0.34657359027997264*f/(q*sn));
+            V m2cs = -2*cos(f);
+            V y = (x + m2cs*x1 + x2 - m2cs*y1 + (alpha-1)*y2)/(1+alpha);
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
+        }
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, freq, Q)
+
+GENFUNC(4, PeakFilter, peakfilter,
+        { x1 = 0; x2 = 0; y1 = 0; y2 = 0;},
+        {
+            V f = freq->get();
+            V q = Q->get();
+            V x = signal->get();
+            V sn = sin(f);
+            V g = gain->get();
+            V alpha = sn*sinh(0.34657359027997264*f/(q*sn));
+            V adivg = alpha/g;
+            V ag = alpha*g;
+            V b1 = -2*cos(f);
+            V y = ((1+ag)*x + b1*(x1-y1) + (1-ag)*x2 - (1-adivg)*y2)/(1+adivg);
+            x2 = x1;
+            x1 = x;
+            y2 = y1;
+            y1 = y;
+            return y;
+        }
+        V x1;
+        V x2;
+        V y1;
+        V y2;
+        , signal, freq, Q, gain)
+
 
 
 class Backend : public QObject {
@@ -505,7 +621,7 @@ public:
         Ohm *outL = streams["outL"];
         Ohm *outR = streams["outR"];
 
-        Ohm *scope = streams["scope"];
+        Ohm *scope = streams["scopeSignal"];
         Ohm *scopeTrig = streams["scopeTrig"];
         Ohm *scopeVtrig = streams["scopeVtrig"];
         Ohm *scopeWin = streams["scopeWin"];

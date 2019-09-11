@@ -5,24 +5,14 @@ Module {
 
     label: 'BP Filter'
 
-    property var cs: `cos(@f)`
-    property var sn: `sin(@f)`
-    property var alpha: `${sn} * sinh(log(2)/2 * 1/@q * @f/${sn})`
-    property var a0: `1 + ${alpha}`
-    property var a1: `-2 * ${cs}`
-    property var a2: `1 - ${alpha}`
-    property var b0: `${alpha}`
-    property var b1: `0`
-    property var b2: `-${alpha}`
-
     outJacks: [
         OutJack {
             label: '-12dB/oct'
-            stream: `biquad($in,${a0},${a1},${a2},${b0},${b1},${b2})`
+            stream: 'bandpass($in,@f,@q)'
         },
         OutJack {
             label: '-24dB/oct'
-            stream: `biquad(${outStream('-12dB/oct')},${a0},${a1},${a2},${b0},${b1},${b2})`
+            stream: 'bandpass(bandpass($in,@f,@q),@f,@q)'
         }
     ]
 
@@ -35,11 +25,11 @@ Module {
     cvs: [
         LogScaleCV {
             label: 'f'
-            from: '200hz'
+            from: '220hz'
             logBase: 1.6
             inVolts: inStream('f')
         },
-    LogScaleCV {
+        LogScaleCV {
             label: 'q'
             from: 1.0
             logBase: 2.5

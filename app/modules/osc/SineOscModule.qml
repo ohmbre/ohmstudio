@@ -20,13 +20,12 @@ Module {
         LogScaleCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            from: 'notehz(C,4)'
+            logBase: 1.598743737
+            from: '220hz'
         },
-        LogScaleCV {
+        LinearCV {
             label: 'gain'
             inVolts: inStream('gain')
-            from: 3
-            logBase: 1.4
         }
     ]
 

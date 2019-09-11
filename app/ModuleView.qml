@@ -4,12 +4,11 @@ import QtQuick.Controls 2.4
 
 Item {
     id: mView
-    property Module module
     x: centerInX(this, this.parent) + module.x
     y: centerInY(this, this.parent) + module.y
     z: 1
     width: 48; height: 32
-
+    property Module module;
     property alias outline: outline
 
     OhmRect {
@@ -33,6 +32,7 @@ Item {
             if (anyExtended) collapseAll()
             else extendAll()
         }
+        onDoubleClicked: pView.moduleOverlay.module = module
         dragTarget: parent
     }
 
@@ -46,140 +46,22 @@ Item {
             module.jack(j).view.extend()
     }
 
-    Item {
-        id: innerModule
+    OhmText {
+        id: moduleLabel
+        text: module.label
+        padding: 5
         anchors.fill: parent
-
-        OhmText {
-            id: moduleLabel
-            x: mView.height/5
-            y: mView.height/5
-            width: mView.width - mView.height/2.5
-            height: mView.height - mView.height/2.5
-            text: module.label
-            padding: 0
-            fontSizeMode: Text.Fit
-            color: Style.moduleLabelColor
-            font.family: asapSemiBold.name
-            font.weight: Font.DemiBold
-            font.pixelSize: 10
-            minimumPixelSize: 8
-            maximumLineCount: 2
-            elide: Text.ElideNone
-            wrapMode: Text.WordWrap
-        }
-
-
-
-        Rectangle {
-            id: display
-            x: parent.width*.20
-            y: parent.height*.20
-            width:parent.width*.6
-            height: parent.height*.64
-            color: 'black'
-            radius: parent.height*.015
-            opacity: 0
-            visible: false
-            clip: true
-            Loader {
-                id: displayLoader
-                anchors.fill: parent
-                sourceComponent: module.display
-            }
-        }
-
-        states: [
-            State {
-                name: "controlMode"
-                StateChangeScript { script: { collapseAll(); displayLoader.item.enter(); }}
-                PropertyChanges { target: moduleLabel; scale: 0.25*controllers.scale;
-                    topPadding:-92; leftPadding: -40; rightPadding: -40 }
-                PropertyChanges { target: mousePinch; drag.target: null; onPressAndHold: null }
-                PropertyChanges { target: outline; radius: outline.height/10; pad.enabled: false
-                    wb: pView.width/scaler.max; hb: pView.height/scaler.max
-                    dragTarget: null }
-                PropertyChanges { target: controllers; opacity: 1.0; visible: true }
-                PropertyChanges { target: displayLoader; sourceComponent: module.display }
-                PropertyChanges { target: display; opacity: 1.0; visible: true }
-            },
-            State {
-                name: "patchMode"
-                StateChangeScript { script: { collapseAll(); displayLoader.item.exit() }}
-                PropertyChanges { target: mousePinch; drag.target: content;
-                    onPressAndHold: function(mouse) {
-                        mMenu.popup(mouse.x,mouse.y)
-                    }
-                }
-                PropertyChanges {
-                    target: outline
-                    dragTarget: mView
-                }
-            }
-        ]
-
-        transitions: Transition {
-            ParallelAnimation {
-                id: controlAnim
-                NumberAnimation { target: outline; properties: "wb,hb,radius";
-                    duration: 500; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: moduleLabel; properties: "scale,topPadding";
-                    duration: 500; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: controllers; properties: "opacity";
-                    duration: 500; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: display; properties: "opacity";
-                    duration: 500; easing.type: Easing.InOutQuad }
-
-            }
-        }
-        property alias controlAnim: controlAnim
-
-        PathView {
-            id: controllers
-            width: parent.width / scale; height: parent.height / scale
-            anchors.centerIn: parent
-            opacity: 0
-            visible: false
-            interactive: false
-            scale: 6.75/scaler.max
-            model: module.cvs
-            delegate: Column {
-                id: knobView
-                width: 10
-                height: 8
-                Loader {
-                    width: parent.width
-                    height: 7.5
-                    id: cvLoader
-                    sourceComponent: controller
-                    active: controllers.visible
-                }
-                OhmText {
-                    id: labelText
-                    width: parent.width
-                    height: 1.2
-                    color: Style.moduleLabelColor
-                    font.pixelSize: 1
-                    scale: 1.5
-                    text: label
-                }
-
-            }
-
-            pathItemCount: undefined
-            offset: .5
-            path: Path {
-                startX: .13*controllers.width; startY: .2*controllers.height
-                PathLine { x: .13*controllers.width; y: .93*controllers.height }
-                PathPercent { value: .333 }
-                PathLine { x: .89*controllers.width; y: .93*controllers.height }
-                PathPercent { value: .667 }
-                PathLine { x: .89*controllers.width; y: .2*controllers.height }
-                PathPercent { value: 1 }
-            }
-        }
+        horizontalAlignment: Text.AlignHCenter
+        fontSizeMode: Text.Fit
+        color: Style.moduleLabelColor
+        font.family: asapSemiBold.name
+        font.weight: Font.DemiBold
+        font.pixelSize: 10
+        minimumPixelSize: 8
+        maximumLineCount: 2
+        elide: Text.ElideNone
+        wrapMode: Text.WordWrap
     }
-    property alias innerModule: innerModule
 
     Rectangle {
         id: perimeter

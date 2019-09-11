@@ -7,8 +7,13 @@ Item {
     property Patch patch
     width: 320
     height: 240
+    property alias moduleOverlay: moduleOverlay
+    ModuleOverlay {
+        id: moduleOverlay
+    }
 
     Item {
+        enabled: moduleOverlay.module == null
         id: content
         width: 1600
         height: 1200
@@ -57,7 +62,7 @@ Item {
                 zoom = newZoom;
                 content.x += center.x*(oldZoom-zoom);
                 content.y += center.y*(oldZoom-zoom);
-                if (zoom > 3.5 && zoomDelta > 0)
+                /*if (zoom > 3.5 && zoomDelta > 0)
                     forEach(patch.modules, function(m) {
                         if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
                             scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
@@ -74,7 +79,7 @@ Item {
                             m.view.innerModule.state = "patchMode";
                             return -1;
                         }
-                    });
+                    });*/
                 return true
             }
         }
@@ -114,7 +119,6 @@ Item {
 
             }
         }
-
 
 
         OhmPopup {

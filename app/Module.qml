@@ -10,7 +10,8 @@ Model {
     property list<CV> cvs
     property real x
     property real y
-
+    property var view: null
+    property var overlay: null
     property var savedControlVolts
     onSavedControlVoltsChanged: {
         if (cvs.length !== savedControlVolts.length) return;
@@ -19,11 +20,7 @@ Model {
         });
     }
 
-    property Component display: Item {
-        function enter() {}
-        function exit() {}
-    }
-
+    property Component display: null
     function jack(index) {
         if (typeof index == "number")
             return (index < inJacks.length) ? inJacks[index] : outJacks[index - inJacks.length];
@@ -38,7 +35,7 @@ Model {
     function inStream(label) {
         return forEach(inJacks, (inJack) => {
             if (inJack.label === label)
-                return inJack.stream
+                return '('+inJack.stream+')'
         });
     }
 

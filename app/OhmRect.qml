@@ -5,7 +5,7 @@ Shape {
     id: rect
     containsMode: Shape.FillContains
     layer.enabled: {
-	return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
+    return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
             Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
     }
     layer.samples: 16
@@ -57,6 +57,7 @@ Shape {
     property Item dragTarget
     signal clicked
     signal pressAndHold
+    signal doubleClicked
 
     property alias pad: pad
     MouseArea {
@@ -73,6 +74,7 @@ Shape {
         pressAndHoldInterval: 800
         onPressAndHold: rect.pressAndHold(mouse)
         onClicked: rect.clicked(mouse)
+        onDoubleClicked: rect.doubleClicked(mouse)
     }
 }
 

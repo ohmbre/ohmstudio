@@ -23,15 +23,12 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        LinearCV {
             label: 'gain'
             inVolts: inStream('gain')
-            from: 1
-            logBase: 1.6
         },
         LinearCV {
             label: 'inshift'
-            from: 0
         }
 
     ]

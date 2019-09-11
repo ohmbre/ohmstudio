@@ -1,51 +1,31 @@
 import QtQuick 2.11
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.5
 
-Controller {
-    id: sw
-    clickHandler: function(mouse) {
-        if (indicatorItem.toggleTip.flip)
-            indicatorItem.toggleTip.flip = false;
-        else indicatorItem.toggleTip.flip = true;
+Switch {
+    id: control
+    text: displayLabel
+    width: 30; height: 25
+    property double value: controlVolts
+    onValueChanged: {
+        if (controlVolts >= 3 && !checked) toggle()
+        else if (controlVolts < 3 && checked) toggle()
     }
+    onCheckedChanged: controlVolts = checked ? 10 : 0
     indicator: Item {
-        property alias toggleTip: toggleTip
+        x: 0; y: 0; width: 30; height: 25
         Image {
-            width: 3.5; height: 3.1
-            source: "qrc:/app/ui/icons/togglebase.png"
-            mipmap: true
-            smooth: true
-            x: (sw.width-width)/2
-            y: (sw.height-height)*.5
-            Image {
-                id: toggleTip
-                width: 2.3
-                height: 3.5
-                source: "qrc:/app/ui/icons/toggletip.png"
-                x: (parent.width-width)/2*1.8
-                y: (parent.height/2-height)*.85
-                property bool flip: controlVolts < 1
-                onFlipChanged: controlVolts = flip ? 0 : 10
+            source: control.checked ? 'qrc:/app/ui/icons/down.svg' : 'qrc:/app/ui/icons/up.svg'
+            x: 0; y: 0; width: 30; height: 15
+        }
+        OhmText {
+            x: 0; y: 15; width: 30; height: 6
+            text: control.text
+            color: Style.moduleLabelColor
+            font.pixelSize: 6
+            horizontalAlignment: Text.AlignHCenter
 
-                property double txy: flip ? -0.85 : 1
-                Behavior on txy {
-                    PropertyAnimation {
-                        easing.type: Easing.OutBounce
-                        easing.overshoot: 1.8
-                        easing.amplitude: .5
-                        duration: 400
-                    }
-                }
-                transform: [
-                    Matrix4x4 {
-                        matrix: Qt.matrix4x4(1,0,0,0,0,
-                                             toggleTip.txy,0,
-                                             (1-toggleTip.txy)*toggleTip.height*.92,
-                                             0,0,1,0,0,0,0,1);
-                    }
-                ]
-            }
         }
     }
+    contentItem: Item {}
 }
 

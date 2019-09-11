@@ -14,18 +14,17 @@ compiler.symbols = {
     v: 1,
     C: -9, Cs: -8, Db: -8, D: -7, Ds: -6, Eb: -6, E: -5, F: -4, Fs: -3,
     Gb: -3,	G: -2, Gs: -1, Ab: -1, A: 0, As: 1, Bb: 1, B: 2,
-    min:           [ 1, 9/8,   6/5, 27/20,  3/2,  8/5,  9/5 ].map(Math.log2),
+    minor:           [ 1, 9/8,   6/5, 27/20,  3/2,  8/5,  9/5 ].map(Math.log2),
     locrian:       [ 1, 16/15, 6/5,  4/3,  64/45, 8/5,  16/9 ].map(Math.log2),
-    maj:           [ 1, 9/8,   5/4,  4/3,   3/2,  5/3,  15/8 ].map(Math.log2),
+    major:           [ 1, 9/8,   5/4,  4/3,   3/2,  5/3,  15/8 ].map(Math.log2),
     dorian:        [ 1, 10/9, 32/27, 4/3,  40/27, 5/3,  16/9 ].map(Math.log2),
     phrygian:      [ 1, 16/15, 6/5,  4/3,   3/2,  8/5,  9/5 ].map(Math.log2),
-    lydian:        [ 1, 9 /8,  5/4,  45/32, 3/2, 27/16, 15/8 ].map(Math.log2),
+    lydian:        [ 1, 9/8,   5/4,  45/32, 3/2, 27/16, 15/8 ].map(Math.log2),
     mixolydian:    [ 1, 10/9,  5/4,  4/3,   3/2,  5/3,  16/9 ].map(Math.log2),
-    minPentatonic: [ 1, 6/5,  27/20, 3/2,   9/5 ].map(Math.log2),
-    majPentatonic: [ 1, 9/8,   5/4,  3/2,   5/3 ].map(Math.log2),
+    minPent:       [ 1, 6/5,   4/3,  3/2,   9/5 ].map(Math.log2),  // [ 1, 6/5,  27/20, 3/2,   9/5 ]?
+    majPent:       [ 1, 9/8,   5/4,  3/2,   5/3 ].map(Math.log2),
     egyptian:      [ 1, 10/9,  4/3, 40/27, 16/9 ].map(Math.log2),
-    minBlues:      [ 1, 6/5,   4/3,  8/5,   9/5 ].map(Math.log2),
-    majBlues:      [ 1, 10/9,  4/3,  3/2,   5/3 ].map(Math.log2)
+    blues:         [ 1, 6/5,   4/3, 45/32,  3/2,  9/5 ].map(Math.log2) // maj [ 1, 10/9,  4/3,  3/2,   5/3 ]?
 }
 
 math.import({['notehz']: math.typed('notehz',
@@ -129,7 +128,6 @@ compiler.keys = []
 compiler.expressions = []
 
 compiler.process = (key,stream) => {
-    //console.log(key, stream)
     const optimized = compiler.optimize(stream)
     let idx = compiler.keys.indexOf(key)
     if (idx === -1) {

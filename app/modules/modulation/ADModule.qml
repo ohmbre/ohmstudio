@@ -49,15 +49,12 @@ Module {
             inVolts: inStream('decshape')
             from: '1'
         },
-        LogScaleCV {
+        LinearCV {
             label: 'gain'
-            logBase: 1.35
-            from: 5
             inVolts: inStream('gain')
         },
         LinearCV {
             label: 'offset'
-            from: 0
             inVolts: inStream('offset')
         }
     ]

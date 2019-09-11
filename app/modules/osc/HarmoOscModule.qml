@@ -14,23 +14,21 @@ Module {
     inJacks: [
         InJack { label: 'v/oct' },
         InJack { label: 'gain' },
-	InJack { label: 'trig' },
-	InJack { label: 'decay' }
+        InJack { label: 'trig' },
+        InJack { label: 'decay' }
     ]
 
     cvs: [
         LogScaleCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            from: 'notehz(C,4)'
+            from: '220hz'
         },
-        LogScaleCV {
+        LinearCV {
             label: 'gain'
             inVolts: inStream('gain')
-            from: 1.273
-            logBase: 1.38
         },
-	LogScaleCV {
+        LogScaleCV {
             label: 'decay'
             inVolts: inStream('decay')
             from: .0001

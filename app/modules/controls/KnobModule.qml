@@ -16,7 +16,6 @@ Module {
         LinearCV {
             label: 'cv'
             inVolts: 0
-            from: '0v'
         }
     ]
 }
