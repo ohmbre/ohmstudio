@@ -9,7 +9,6 @@
 constexpr auto PI = 3.14159265358979323846;
 constexpr auto TAU = 6.283185307179586;
 
-#define V double
 #define _comma_ ,
 #define PADRE QGuiApplication::instance()
 
@@ -763,16 +762,6 @@ void initBackend(QQmlApplicationEngine *engine) {
 
 void ioloop(QIODevice *out, QIODevice *in) {
     backend->ioloop(out, in);
-}
-
-#include "external/exprtk.hpp"
-
-void test() {
-
-    SymbolTable symtable;
-      symtable.add_constant("pi", PI);
-      symtable.add_constant("hz", 2*PI/48000);
-
 }
 
 
