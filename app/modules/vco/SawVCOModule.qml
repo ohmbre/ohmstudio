@@ -1,34 +1,29 @@
 import ohm 1.0
 
 Module {
-    objectName: 'PwmOscModule'
-    label: 'PWM Osc'
+    objectName: 'SawVCOModule'
+    label: 'Saw VCO'
 
     outJacks: [
         OutJack {
             label: 'signal'
-            stream: '@gain * pwm(@freq,@duty/20)'
+            stream: '@gain * sawtooth(@freq)'
         }
     ]
 
     inJacks: [
         InJack { label: 'v/oct' },
-        InJack { label: 'duty' },
         InJack { label: 'gain' }
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            from: '220hz'
+            from: '440hz'
         },
         LinearCV {
-            label: 'duty'
-            inVolts: inStream('duty')
-            from: '10'
-        },
-        LinearCV {
+            controlVolts: 3
             label: 'gain'
             inVolts: inStream('gain')
         }

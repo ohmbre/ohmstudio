@@ -108,11 +108,10 @@ const SCALES = [
     ["1P 2m 2M 3m 3M 4P 4A 5P 6m 6M 7m 7M", "chromatic"]
 ];
 
-const NoScaleType = {
-    ...EmptyPcset,
-    intervals: [],
-    aliases: []
-};
+const NoScaleType = {};
+Object.assign(NoScaleType, EmptyPcset);
+Object.assign(NoScaleType, { intervals: [], aliases: [] });
+
 const scales = SCALES.map(dataToScaleType);
 const index = scales.reduce((index, scale) => {
     index[scale.name] = scale;
@@ -145,7 +144,10 @@ function keys() {
 }
 function dataToScaleType([ivls, name, ...aliases]) {
     const intervals = ivls.split(" ");
-    return { ...pcset(intervals), name, intervals, aliases };
+    const ret = {}
+    Object.assign(ret, pcset(intervals));
+    Object.assign(ret, { name, intervals, aliases });
+    return ret;
 }
 
 export { NoScaleType, entries, keys, scaleType };

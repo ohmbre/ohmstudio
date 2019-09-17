@@ -1,18 +1,23 @@
+import QtQuick 2.12
+
 CV {
     id: quantcv
 
     objectName: "QuantCV"
 
-    property var choices
-    onControlVoltsChanged: {
-        controlVolts = Math.round(((controlVolts+10)/20)*choices.length)/choices.length*20-10
-        engine.setControl(uuid(quantcv), controlVolts)
+    property var choices: []
+    property var choice: 0
+    onChoiceChanged: { engine.setControl(uuid(quantcv), Math.round(choice)) }
+
+
+    stream: `control(${uuid(quantcv)})`
+    controller: PickController {}
+    function toQML(indent) {
+        return choice.toString();
     }
-    reading: stream
-
-    stream: choices[
-                Math.max(Math.min(Math.round(((controlVolts+10)/20)*choices.length),choices.length-1),0)
-            ].toString()
-
+    onControlVoltsChanged: choice = controlVolts
+    Component.onCompleted: {
+        choiceChanged.connect(userChanges);
+    }
 
 }

@@ -18,7 +18,7 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'hold'
             from: '0.5s'
             logBase: 1.3

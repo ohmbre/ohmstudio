@@ -35,7 +35,7 @@ Model {
     function inStream(label) {
         return forEach(inJacks, (inJack) => {
             if (inJack.label === label)
-                return '('+inJack.stream+')'
+                return (inJack.stream && inJack.stream !== '0') ? '('+inJack.stream+')' : 0
         });
     }
 

@@ -4,10 +4,10 @@
 #include <cmath>
 #include <QtConcurrent/QtConcurrent>
 
-#include "common.h"
+#include "common.hpp"
 
-#define PI 3.14159265358979323846
-#define TAU 6.283185307179586
+constexpr auto PI = 3.14159265358979323846;
+constexpr auto TAU = 6.283185307179586;
 
 #define V double
 #define _comma_ ,
@@ -168,7 +168,7 @@ public:
 
     Q_INVOKABLE V next() {
         if (length == 0) return 0;
-        int idx = static_cast<int>(floor((10.0+index->get())/10.0 * length));
+        int idx = qRound(index->get());
         return data[idx % length]->get();
     }
 
@@ -177,11 +177,32 @@ public:
         for (int i = 0; i < length; i++)
             datareps << data[i]->repr();
         QString datarep = "[" + datareps.join(", ") + "]";
-        return QString("<list data:%1 index:%2>").arg(datarep).arg(index->repr());
+        return QString("<list data:%1 index:%2>").arg(datarep,index->repr());
 
     }
 };
 META_REGISTER(List)
+
+/*-------------------------------------------*/
+
+class CVList : public List {
+private:
+    Q_OBJECT
+    Q_INTERFACES(Ohm)
+    Q_CLASSINFO("ref", "cvlist")
+public:
+    Q_INVOKABLE CVList(QJSValue _data, QObject *_index) : List(_data, _index) {}
+
+    Q_INVOKABLE V next() {
+        if (length == 0) return 0;
+        int idx = static_cast<int>(floor((10.0+index->get())/10.0 * length));
+        return data[idx % length]->get();
+    }
+
+};
+META_REGISTER(CVList)
+
+
 
 /*-------------------------------------------*/
 
@@ -551,6 +572,7 @@ class Backend : public QObject {
     Q_OBJECT
     QQmlApplicationEngine *engine;
     QHash<long, Val*> controls;
+    //QHash<long, QVector<V>> quantrolMaps;
     QHash<QString, Ohm *> streams;
 public:
     QScopedPointer<QByteArray> scopebuf;
@@ -586,6 +608,24 @@ public:
         qscope = QJSValue::NullValue;
     }
 
+    /*Q_INVOKABLE void setQuantrolMap(long id, QJSValueList choices) {
+        QVector<V> map = quantrolMaps[id];
+        map.resize(choices.count());
+        int i = 0;
+        QJSValue choice;
+        foreach (choice, choices)
+            map[i++] = choice.toNumber();
+    }
+
+    Q_INVOKABLE void setQuantrol(long id, int choice) {
+        QVector<V> map = quantrolMaps[id];
+        if (!map.count()) {
+            qWarning() << "Error: no choices set on qantroller"  << id;
+            return;
+        }
+        setControl(id, map[choice % map.count()]);
+    }*/
+
     Q_INVOKABLE void setControl(long id, V val) {
         Val *control = controls[id];
         if (control) control->set(val);
@@ -610,11 +650,12 @@ public:
 
         if (in != nullptr) {
             bytesamples = reinterpret_cast<char*>(insamples);
-            taken = 0;
+            taken = in->read(bytesamples, BYTES_PER_PERIOD);
             while (taken < BYTES_PER_PERIOD) {
+                QEventLoop loop;
+                connect(in, &QIODevice::readyRead, &loop, &QEventLoop::quit);
+                loop.exec();
                 taken += in->read(bytesamples + taken, BYTES_PER_PERIOD - taken);
-                if (taken != BYTES_PER_PERIOD)
-                    QThread::msleep(7);
             }
         }
 
@@ -707,7 +748,7 @@ void initBackend(QQmlApplicationEngine *engine) {
         g.setProperty(meta->className(), engine->newQMetaObject(meta));
         for (int i = 0; i < meta->classInfoCount(); i++) {
             QMetaClassInfo info = meta->classInfo(i+meta->classInfoOffset());
-            if (!strcmp(info.name(),"ref")) {
+            if (info.name() && !strcmp(info.name(),"ref")) {
                 backend->refMap[info.value()] = engine->newQMetaObject(meta);
             }
         }
@@ -723,6 +764,17 @@ void initBackend(QQmlApplicationEngine *engine) {
 void ioloop(QIODevice *out, QIODevice *in) {
     backend->ioloop(out, in);
 }
+
+#include "external/exprtk.hpp"
+
+void test() {
+
+    SymbolTable symtable;
+      symtable.add_constant("pi", PI);
+      symtable.add_constant("hz", 2*PI/48000);
+
+}
+
 
 #include "backend.moc"
 

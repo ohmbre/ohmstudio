@@ -5,8 +5,8 @@
 #include <QDir>
 #include <QDirIterator>
 
-#include "common.h"
-#include "external/RtMidi.h"
+#include "common.hpp"
+//include "external/RtMidi.h"
 
 constexpr auto RD = QIODevice::ReadOnly|QIODevice::Text;
 constexpr auto WR = QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text;

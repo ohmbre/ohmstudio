@@ -17,6 +17,8 @@ constexpr auto FRAMES_PER_PERIOD = 1024LL;
 constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
 constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
 
+#define V double
+
 void ioloop(QIODevice *out, QIODevice *in);
 void initBackend(QQmlApplicationEngine *engine);
 void initHWIO(QQmlApplicationEngine *engine);

@@ -7,14 +7,19 @@ math.createUnit({hz: {definition: '1 Hz', prefixes: 'short'}})
 global.engine = {};
 
 engine.setStream = (key,stream) => {
+    console.log(stream)
     compiler.run(
         'process', [key, stream],
         ([assemblies,symbols]) => {
             const link = (assembly) => {
                 if (assembly.type === 'list') {
                     return new List(assembly.args[0].map(link), link(assembly.args[1]));
+                } else if (assembly.type === 'cvlist') {
+                    return new CVList(assembly.args[0].map(link), link(assembly.args[1]));
                 } else if (assembly.type === 'control') {
                     return Backend.getControl(assembly.args[0])
+                //} else if (assembly.type === 'quantrol') {
+                //    return Backend.getQuantrol(assembly.args[0])
                 } else if (assembly.type === 'symbol') {
                     const n = assembly.args[0]
                     if (symbols[n].objectName !== "Ohm")
@@ -49,7 +54,16 @@ engine.debugStream = (stream,view) => {
 }
 
 
-//import { note, interval } from './tonal/tonal.mjs'
+import * as tonal from './tonal/tonal.mjs'
+import * as midi from './tonal/midi.mjs'
+import * as interval from './tonal/interval.mjs'
+import * as scale from './tonal/scale.mjs'
+import * as scaledict from './tonal/scale-dictionary.mjs'
 
+global.tonal = tonal
+global.midi = midi
+global.interval = interval
+global.scale = scale
+global.scaledict = scaledict
 
 

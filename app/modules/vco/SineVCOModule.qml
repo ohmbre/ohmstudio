@@ -1,8 +1,8 @@
 import ohm 1.0
 
 Module {
-    objectName: 'SineOscModule'
-    label: 'Sine Osc'
+    objectName: 'SineVCOModule'
+    label: 'Sine VCO'
 
     outJacks: [
         OutJack {
@@ -17,14 +17,15 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            logBase: 1.598743737
-            from: '220hz'
+            logBase: 2
+            from: '440hz'
         },
         LinearCV {
             label: 'gain'
+            controlVolts: 3
             inVolts: inStream('gain')
         }
     ]

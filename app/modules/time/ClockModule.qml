@@ -17,7 +17,7 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             logBase: 1.2
             label: 'tempo'
             inVolts: inStream('tempo')

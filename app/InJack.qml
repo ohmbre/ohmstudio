@@ -8,15 +8,15 @@ Jack {
 
     signal cableRemoved(OutJack outJack)
     onCableRemoved: stream = (initStream === null) ? 0 : initStream
-    
+
 
     signal cableAdded(OutJack outJack)
     onCableAdded: {
-	if (initStream == null)
-	    initStream = stream
-	stream = Qt.binding(function() {
+        if (initStream == null)
+            initStream = stream
+        stream = Qt.binding(function() {
             return outJack.parsedStream
-	})
+        })
     }
 
 }

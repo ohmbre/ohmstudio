@@ -8,8 +8,8 @@ Model {
     property double controlVolts: 0
     onControlVoltsChanged: engine.setControl(uuid(cv),controlVolts)
 
-    property var inVolts: 0
-    property var voltStream: (vc,vi) => `(${vc} + ${vi})`
+    property var inVolts: null
+    property var voltStream: (vc,vi) => vi ? `(${vc} + ${vi})` : vc
     property var unitStream: v => v
     property var stream: unitStream(voltStream(`control(${uuid(cv)})`, inVolts))
     property Component controller: CVController {}

@@ -3,5 +3,5 @@ CV {
     objectName: 'LinearCV'
 
     property var offset: null
-    unitStream: v => offset ? `(${offset} + ${v})` : `${v}`
+    unitStream: v => offset ? `(${offset} + ${v})` : v
 }

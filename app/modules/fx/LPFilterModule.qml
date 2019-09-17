@@ -1,19 +1,18 @@
 import ohm 1.0
 
 Module {
-    objectName: 'NotchFilterModule'
+    objectName: 'LPFilterModule'
 
-    label: 'Notch Filter'
-
+    label: 'LP Filter'
 
     outJacks: [
         OutJack {
             label: '-12dB/oct'
-            stream: 'notchfilter($in,@f,@q)'
+            stream: 'lopass($in,@f,@q)'
         },
         OutJack {
             label: '-24dB/oct'
-            stream: 'notchfilter(notchfilter($in,@f,@q),@f,@q)'
+            stream: 'lopass(lopass($in,@f,@q),@f,@q)'
         }
     ]
 
@@ -24,13 +23,13 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'f'
             from: '220hz'
             logBase: 1.6
             inVolts: inStream('f')
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'q'
             from: 1.0
             logBase: 2.5

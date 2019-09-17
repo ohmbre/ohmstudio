@@ -27,24 +27,24 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'attack'
             inVolts: inStream('attack')
             from: '100ms'
             logBase: 1.5
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'atkshape'
             inVolts: inStream('atkshape')
             from: '1'
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'decay'
             inVolts: inStream('decay')
             from: '100ms'
             logBase: 1.5
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'decshape'
             inVolts: inStream('decshape')
             from: '1'

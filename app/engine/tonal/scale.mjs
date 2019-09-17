@@ -60,7 +60,9 @@ function scale(src) {
         ? st.intervals.map(i => transpose(tonic, i))
         : [];
     const name = tonic ? tonic + " " + type : type;
-    return { ...st, name, type, tonic, notes };
+    const ret = { name, type, tonic, notes };
+    Object.assign(ret, st);
+    return ret;
 }
 /**
  * Get all chords that fits a given scale

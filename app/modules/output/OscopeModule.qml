@@ -17,9 +17,9 @@ Module {
             label: 'vtrig'
             inVolts: 0
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'window'
-            logBase: 1.2
+            logBase: 1.3
             inVolts: 0
             from: '150ms'
         }

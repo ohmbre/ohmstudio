@@ -13,13 +13,13 @@ Module {
 
     cvs: [
         LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); },
-        LinearCV { label: 'ch1'; inVolts: inStream('ch1'); }
+        LinearCV { label: 'ch2'; inVolts: inStream('ch2'); },
+        LinearCV { label: 'ch3'; inVolts: inStream('ch3'); },
+        LinearCV { label: 'ch4'; inVolts: inStream('ch4'); },
+        LinearCV { label: 'ch5'; inVolts: inStream('ch5'); },
+        LinearCV { label: 'ch6'; inVolts: inStream('ch6'); },
+        LinearCV { label: 'ch7'; inVolts: inStream('ch7'); },
+        LinearCV { label: 'ch8'; inVolts: inStream('ch8'); }
     ]
 
     inJacks: [

@@ -129,13 +129,16 @@ const CHORDS = [
     ["1P 5P 7m 9m 11P", "", "11b9"]
 ];
 
-const NoChordType = {
-    ...EmptyPcset,
+const NoChordType = {}
+Object.assign(NoChordType, EmptyPcset)
+Object.assign(NoChordType, {
     name: "",
     quality: "Unknown",
     intervals: [],
     aliases: []
-};
+});
+
+
 const chords = CHORDS.map(dataToChordType);
 chords.sort((a, b) => a.setNum - b.setNum);
 const index = chords.reduce((index, chord) => {
@@ -182,7 +185,10 @@ function dataToChordType([ivls, name, abbrvs]) {
     const aliases = abbrvs.split(" ");
     const quality = getQuality(intervals);
     const set = pcset(intervals);
-    return { ...set, name, quality, intervals, aliases };
+    const ret = {};
+    Object.assign(ret, set);
+    Object.assign(ret, { name, quality, intervals, aliases });
+    return ret;
 }
 
 export { chordType, entries };

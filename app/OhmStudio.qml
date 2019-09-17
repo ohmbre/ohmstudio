@@ -8,8 +8,8 @@ ApplicationWindow {
     id: window
     visible: true
     flags: Qt.Window
-    width: 640
-    height: 480
+    width: 1280
+    height: 960
 
     title: "Ohm Studio"
     color: Style.patchBackgroundColor
@@ -164,7 +164,7 @@ ApplicationWindow {
         }
     }
 
-
+    property alias globalScale: overlay.scale
 
     Item {
         id: overlay

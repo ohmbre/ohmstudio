@@ -20,7 +20,7 @@ Module {
        MultiLogCV {
          label: 'sequence'
        },
-       LogScaleCV {
+       ExponentialCV {
          label: 'octave'
        },
        BinaryCV {

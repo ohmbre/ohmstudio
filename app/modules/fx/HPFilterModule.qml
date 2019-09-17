@@ -1,18 +1,18 @@
 import ohm 1.0
 
 Module {
-    objectName: 'BPFilterModule'
+    objectName: 'HPFilterModule'
 
-    label: 'BP Filter'
+    label: 'HP Filter'
 
     outJacks: [
         OutJack {
             label: '-12dB/oct'
-            stream: 'bandpass($in,@f,@q)'
+            stream: 'hipass($in,@f,@q)'
         },
         OutJack {
             label: '-24dB/oct'
-            stream: 'bandpass(bandpass($in,@f,@q),@f,@q)'
+            stream: 'hipass(hipass($in,@f,@q),@f,@q)'
         }
     ]
 
@@ -23,13 +23,13 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'f'
             from: '220hz'
             logBase: 1.6
             inVolts: inStream('f')
         },
-        LogScaleCV {
+    ExponentialCV {
             label: 'q'
             from: 1.0
             logBase: 2.5

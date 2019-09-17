@@ -4,12 +4,12 @@ CONFIG += c++latest
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     $$files(*.cpp, false) \
-    $$files(external/*.cpp, false)
+    $$files(external/*.cpp, true)
 
 HEADERS += \
-    $$files(*.h, false) \
-    $$files(external/*.h, false)
-
+    $$files(*.hpp, false) \
+    $$files(external/*.h, true) \
+    $$files(external/*.hpp, true)
 RESOURCES += \
     $$files(app/*.qml, true) \
     $$files(app/*.js, true) \
@@ -29,6 +29,8 @@ QMAKE_CLEAN *= -r ohmstudio \
     patches \
     Makefile
 
+QMAKE_CFLAGS=-Wno-variadic-macros
+QMAKE_CXXFLAGS=-Wno-variadic-macros
 
 QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =

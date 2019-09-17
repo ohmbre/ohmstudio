@@ -1,8 +1,8 @@
 import ohm 1.0
 
 Module {
-    objectName: 'RandomNoiseModule'
-    label: 'Random Noise'
+    objectName: 'NoiseVCOModule'
+    label: 'Noise VCO'
 
     outJacks: [
         OutJack {
@@ -18,6 +18,7 @@ Module {
     cvs: [
         LinearCV {
             label: 'gain'
+            controlVolts: 3
             inVolts: inStream('gain')
         }
     ]

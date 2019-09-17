@@ -1,40 +1,48 @@
 import ohm 1.0
 
 Module {
-    objectName: 'LPFilterModule'
+    objectName: 'PeakFilterModule'
 
-    label: 'LP Filter'
+    label: 'Peak Filter'
 
     outJacks: [
         OutJack {
             label: '-12dB/oct'
-            stream: 'lopass($in,@f,@q)'
+            stream: 'peakfilter($in,@f,@q,@gain)'
         },
         OutJack {
             label: '-24dB/oct'
-            stream: 'lopass(lopass($in,@f,@q),@f,@q)'
+            stream: 'peakfilter(peakfilter($in,@f,@q,@gain),@f,@q,@gain)'
         }
     ]
 
     inJacks: [
         InJack {label: 'in'},
         InJack {label: 'f'},
-        InJack {label: 'q'}
+        InJack {label: 'q'},
+        InJack {label: 'gain'}
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'f'
-            from: '220hz'
+            from: '200hz'
             logBase: 1.6
             inVolts: inStream('f')
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'q'
             from: 1.0
             logBase: 2.5
             inVolts: inStream('q')
+        },
+        ExponentialCV {
+            label: 'gain'
+            from: 1.0
+            logBase: 2.5
+            inVolts: inStream('gain')
         }
+
     ]
 
 

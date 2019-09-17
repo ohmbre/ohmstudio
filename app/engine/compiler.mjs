@@ -103,7 +103,7 @@ compiler.assembler = (node, symbols) => {
         if (!fn) throw new NodeLinkError(`fn missing name: ${node.toString()}`)
         if (fn === "control" || fn === "capture")
             return assembly(fn,node.args[0].evaluate())
-        if (fn === "list") {
+        if (fn === "list" || fn === "cvlist") {
             let elements = node.args[0];
             const index = assemble(node.args[1]);
             if (elements.isConstantNode)

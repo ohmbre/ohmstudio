@@ -1,48 +1,41 @@
 import ohm 1.0
 
 Module {
-    objectName: 'PeakFilterModule'
+    objectName: 'NotchFilterModule'
 
-    label: 'Peak Filter'
+    label: 'Notch Filter'
+
 
     outJacks: [
         OutJack {
             label: '-12dB/oct'
-            stream: 'peakfilter($in,@f,@q,@gain)'
+            stream: 'notchfilter($in,@f,@q)'
         },
         OutJack {
             label: '-24dB/oct'
-            stream: 'peakfilter(peakfilter($in,@f,@q,@gain),@f,@q,@gain)'
+            stream: 'notchfilter(notchfilter($in,@f,@q),@f,@q)'
         }
     ]
 
     inJacks: [
         InJack {label: 'in'},
         InJack {label: 'f'},
-        InJack {label: 'q'},
-        InJack {label: 'gain'}
+        InJack {label: 'q'}
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'f'
-            from: '200hz'
+            from: '220hz'
             logBase: 1.6
             inVolts: inStream('f')
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'q'
             from: 1.0
             logBase: 2.5
             inVolts: inStream('q')
-        },
-        LogScaleCV {
-            label: 'gain'
-            from: 1.0
-            logBase: 2.5
-            inVolts: inStream('gain')
         }
-
     ]
 
 

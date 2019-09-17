@@ -1,8 +1,8 @@
 import ohm 1.0
 
 Module {
-    objectName: 'HarmoOscModule'
-    label: 'Harmo Osc'
+    objectName: 'HarmoVCOModule'
+    label: 'Harmo VCO'
 
     outJacks: [
         OutJack {
@@ -19,16 +19,17 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            from: '220hz'
+            from: '440hz'
         },
         LinearCV {
             label: 'gain'
+            controlVolts: 3
             inVolts: inStream('gain')
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'decay'
             inVolts: inStream('decay')
             from: .0001

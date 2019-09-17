@@ -19,13 +19,13 @@ Module {
     ]
 
     cvs: [
-        LogScaleCV {
+        ExponentialCV {
             label: 'risedamp'
             inVolts: inStream('risedamp')
             from: '200ms'
             logBase: 1.5
         },
-        LogScaleCV {
+        ExponentialCV {
             label: 'falldamp'
             inVolts: inStream('falldamp')
             from: '200ms'
