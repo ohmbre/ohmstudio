@@ -1,4 +1,4 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Shapes 1.11
 
 Shape {

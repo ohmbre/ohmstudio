@@ -1,15 +1,29 @@
-QT += quickcontrols2 svg multimedia qml webview
-CONFIG += c++latest
-
+QT += quickcontrols2 svg multimedia qml
+CONFIG += c++latest precompile_header
+LANGUAGE = C++
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
-    $$files(*.cpp, false) \
-    $$files(external/*.cpp, true)
+    main.cpp \
+    conductor.cpp \
+    audio.cpp \
+    fileio.cpp \
+    function.cpp \
+    sink.cpp \
+    scope.cpp
+
 
 HEADERS += \
-    $$files(*.hpp, false) \
-    $$files(external/*.h, true) \
-    $$files(external/*.hpp, true)
+    common.hpp \
+    function.hpp \
+    audio.hpp \
+    conductor.hpp \
+    fileio.hpp \
+    sink.hpp \
+    scope.hpp \
+    pch.hpp
+
+PRECOMPILED_HEADER = pch.hpp
+
 RESOURCES += \
     $$files(app/*.qml, true) \
     $$files(app/*.js, true) \
@@ -22,15 +36,10 @@ RESOURCES += \
     qtquickcontrols2.conf
 
 
-QMAKE_CLEAN *= -r ohmstudio \
-    *.o *qml.cpp *js.cpp *qrc* *cache* \
-    compile_commands.json \
-    modules \
-    patches \
-    Makefile
+QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
 
-QMAKE_CFLAGS=-Wno-variadic-macros
-QMAKE_CXXFLAGS=-Wno-variadic-macros
+QMAKE_CFLAGS=-Wno-variadic-macros -O2
+QMAKE_CXXFLAGS=-Wno-variadic-macros -Wno-implicit-fallthrough -ftemplate-depth=4096 -O2
 
 QML_IMPORT_PATH =
 QML_DESIGNER_IMPORT_PATH =
@@ -65,10 +74,10 @@ android {
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/droid
 }
 
-DISTFILES += \
-    app/CVController.qml \
-    app/ModuleOverlay.qml
-
-
+TARGET=ohm
+OBJECTS_DIR=obj
+RCC_DIR=rcc
+UI_DIR=ui
+MOC_DIR=moc
 
 

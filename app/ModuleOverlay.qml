@@ -1,5 +1,5 @@
 
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.13
 
@@ -12,19 +12,17 @@ Rectangle {
     visible: module != null
     clip: true
     z: 10
-    color: 'black'
+    color: 'white'
     property Module module: null
 
     OhmButton {
         text: "←"
-        font.pixelSize: 35
+        font.pixelSize: 41
         padding: 0
-        width: 46
-        height:46
-        radius: 23
-        x:10
-        y:5
-        z:2
+        width: 54
+        height:54
+        radius: 26
+        x:0; y: 0; z:2
         verticalAlignment: Text.AlignTop
         onClicked: {
             mOver.module = null;
@@ -33,13 +31,13 @@ Rectangle {
 
 
     Rectangle {
-        color: Style.moduleColor
-        width: parent.width * .86
-        height: parent.height * .86
-        x: parent.width * .07
-        y: parent.height * .07
+        color: 'white'
+        width: parent.width * .94
+        height: parent.height * .94
+        x: parent.width * .03
+        y: parent.height * .03
         radius: 15
-        border.color: Style.moduleBorderColor
+        border.color: 'black'
         border.width: 5
 
         OhmText {
@@ -47,7 +45,7 @@ Rectangle {
             width: parent.width
             horizontalAlignment: Item.Center
             text: mOver.module ? mOver.module.label : ''
-            color: Style.moduleLabelColor
+            color: 'black'
             font.family: asapSemiBold.name
             font.weight: Font.DemiBold
             font.pixelSize: 10
@@ -59,12 +57,13 @@ Rectangle {
 
         Item {
             width: parent.width*.8
-            height: parent.height*.8
+            height: parent.height*.5
             x: parent.width*.1
-            y: parent.height*.1
+            y: parent.height*.19
             Loader {
                 id: displayLoader
-                anchors.fill: parent
+                width: Math.round(parent.width)
+                height: Math.round(parent.height)
                 sourceComponent: mOver.module ? mOver.module.display : null
                 active: mOver.module && mOver.module.display
             }
@@ -72,9 +71,10 @@ Rectangle {
 
         GridLayout {
             id: controllers
-            width: parent.width-parent.border.width*2;
-            height: parent.height-parent.border.width*2-30;
-            x: parent.border.width; y: parent.border.width+30
+            width: parent.width-parent.border.width*2
+            height:  (module && module.display) ? (parent.height*0.3) : (parent.height-parent.border.width*2-30)
+            x: parent.border.width
+            y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+30)
             columns: Math.floor(width / maxChildWidth())
             flow: GridLayout.LeftToRight
             rowSpacing: 0

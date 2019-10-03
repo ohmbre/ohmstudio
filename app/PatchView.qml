@@ -1,4 +1,4 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Controls 2.4
 import QtQml 2.11
 
@@ -62,24 +62,6 @@ Item {
                 zoom = newZoom;
                 content.x += center.x*(oldZoom-zoom);
                 content.y += center.y*(oldZoom-zoom);
-                /*if (zoom > 3.5 && zoomDelta > 0)
-                    forEach(patch.modules, function(m) {
-                        if (m.view.contains(content.mapToItem(m.view, center.x, center.y))) {
-                            scaler.max = Math.min(pView.width/m.view.width, pView.height/m.view.height);
-                            xAnim.to = -(m.view.x + m.view.width/2)*scaler.max + pView.width/2;
-                            yAnim.to = -(m.view.y + m.view.height/2 + 2)*scaler.max + pView.height/2
-                            zoomPanAnim.start();
-                            m.view.innerModule.state = "controlMode";
-                            return -1; // break
-                        }
-                    });
-                else if (zoomDelta <= -0.015)
-                    forEach(patch.modules, function(m) {
-                        if (m.view.innerModule.state == "controlMode" && !m.view.innerModule.controlAnim.running) {
-                            m.view.innerModule.state = "patchMode";
-                            return -1;
-                        }
-                    });*/
                 return true
             }
         }
@@ -173,17 +155,14 @@ Item {
         id: mMenu
         title: "Add Module"
         width: 95
-        height: 200
-        scale: 2
-        transformOrigin: Item.BottomRight
 
         property point popOrigin: Qt.point(content.width/2, content.height/2)
-        property string directory: 'modules'
+        property string directory: ':/app/modules'
         property string match: '*Module.qml'
         onOpened: {
             body.contentLoader.item.forceActiveFocus()
             body.contentLoader.item.folder = mMenu.directory
-            body.contentLoader.item.model = HWIO.listDir(mMenu.directory,match)
+            body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match,":/app/modules")
         }
         contents: ListView {
             id: moduleList
@@ -194,7 +173,7 @@ Item {
             focus: true
             property string folder: mMenu.directory
             property string match: mMenu.match
-            model: HWIO.listDir(folder,match)
+            model: FileIO.listDir(folder,match,":/app/modules")
             delegate: OhmText {
                 width: mMenu.width
                 height: 14
@@ -225,41 +204,41 @@ Item {
                             if (leaf=="..")
                                 moduleList.folder = parts.slice(0,-2).join('/')
                             else moduleList.folder = path
-                            moduleList.model = HWIO.listDir(moduleList.folder, moduleList.match)
+                            moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match, ":/app/modules")
                         } else {
-                            pView.patch.addModule(path, 80, 60);
+                            pView.placeModule(path)
+
                             mMenu.close();
                         }
                     }
                 }
             }
-            highlight: Rectangle {
-                color: Style.menuLitColor
-                radius: 2
-            }
+
             property Component emptyFooter: Item {}
-            property Component uploadFooter: OhmButton {
-                id: mFooter
-                font.pixelSize: 6
-                border: 2; padding: 6
-                x: (parent.width - width)/2
-                height: 13; z: 3
-                clip: true
-                text: 'Upload New'
-                onClicked: {
-                    HWIO.upload(mMenu.folder)
-                    mMenu.close()
-                }
-            }
-            property real footerHeight: 0
-            footer: emptyFooter
-            footerPositioning: ListView.OverlayFooter
+            footer: Item {}
             clip: true
             onModelChanged: {
-                mMenu.height = model.length * 14 + 13 + footerHeight
+                mMenu.height = model.length * 14 + 13
                 mMenu.body.height =  model.length * 14
             }
         }
+    }
+
+    function placeModule(path) {
+        const outside = (p1,p2) => ((p1.x-26)>(p2.x+26))||((p2.x-26)>(p1.x+26))||((p1.y-18)>(p2.y+18))||((p2.y-18)>(p1.y+18))
+        const fits = p => {
+            for (let i = 0; i < pView.patch.modules.length; i++)
+              if (!outside(p, Qt.point(pView.patch.modules[i].x, pView.patch.modules[i].y))) return false
+            return true;
+        }
+        // whip it round in an archimedes spiral
+        let t = 0
+        let p = Qt.point(0,0)
+        while (!fits(p)) {
+            t += Math.PI/(t+1)
+            p = Qt.point(13/9*t*Math.cos(t), t*Math.sin(t))
+        }
+        pView.patch.addModule(path, p.x, p.y);
     }
 
     property alias contentItem: content

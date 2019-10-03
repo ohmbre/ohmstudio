@@ -1,4 +1,4 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Shapes 1.11
 
 Shape {
@@ -37,17 +37,17 @@ Shape {
             id: dragCurve
             x: centerX(destination) - destination.dot.width/2
             y: centerY(destination) - destination.dot.height/2
-            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * Style.cableGravity
-            control2X: x; control2Y: y + gravityOn * Style.cableGravity;
+            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * 100
+            control2X: x; control2Y: y + gravityOn * 100;
             Behavior on control2X {
                 id: springX
                 enabled: animationOn
-                SpringAnimation { spring: .5; damping: 0.03}
+                SpringAnimation { spring: .1; damping: 0.03}
             }
             Behavior on control2Y {
                 id: springY
                 enabled: animationOn
-                SpringAnimation { spring: .5; damping: 0.03}
+                SpringAnimation { spring: .1; damping: 0.03}
             }
         }
         property alias dragCurve: dragCurve
@@ -55,7 +55,7 @@ Shape {
     property alias dragShape: dragShape
     property bool animationOn: false
     property real gravityOn: 0
-    Behavior on gravityOn { NumberAnimation { duration: 100 } }
+    Behavior on gravityOn { NumberAnimation { duration: 300 } }
 
     states: [
         State {
@@ -71,12 +71,12 @@ Shape {
             name: "dragging"
             PropertyChanges {
                 target: cableDragView
-                dragShape.strokeColor: Style.cableColor
+                dragShape.strokeColor: '#F55D3E'
                 dragShape.startX: startJackView.anchor2X
                 dragShape.startY: startJackView.anchor2Y
                 destination.visible: true
-                destination.x: dragPad.mouseX + dragPad.parentModuleView.x - Style.jackExtension
-                destination.y: dragPad.mouseY + dragPad.parentModuleView.y - Style.jackExtension
+                destination.x: dragPad.mouseX + dragPad.parentModuleView.x - 10
+                destination.y: dragPad.mouseY + dragPad.parentModuleView.y - 10
                 gravityOn: 1
             }
 
@@ -85,13 +85,12 @@ Shape {
 
     signal cableStarted(JackView jv)
     onCableStarted: function(jv) {
-        var cableResult = pView.patch.lookupCableFor(jv.jack);
         dragPad = jv.pad
-        if (cableResult.cable) {
-            pView.patch.deleteCable(cableResult.cable);
-            startJackView = cableResult.otherend.view;
+        if (jv.jack.hasCable && jv.jack.dir == 'inp') {
+            startJackView = jv.jack.cable.out.view
+            jv.jack.cable.remove()
             startJackView.extend()
-            endJackView = jv;
+            endJackView = jv
             jv.dropTargeted = true;
         } else
             startJackView = jv;
@@ -115,7 +114,7 @@ Shape {
                     jacklist = mv.module.inJacks;
                 }
                 forEach(jacklist, function(jack) {
-                    if (pView.patch.lookupCableFor(jack).cable) {
+                    if (jack.hasCable && jack.dir === 'inp') {
                         jack.view.collapse()
                         return;
                     }
@@ -151,16 +150,17 @@ Shape {
         state = "notdragging";
         animationOn = false;
         if (endJackView != null) {
-            var cComponent = Qt.createComponent("Cable.qml");
-            if (cComponent.status === Component.Ready) {
-                var cData = {};
-                cData[startJackView.jack.dir] = startJackView.jack;
-                cData[endJackView.jack.dir] = endJackView.jack;
-                var cObj = cComponent.createObject(pView.patch, cData);
-                pView.patch.addCable(cObj);
+            var cableComponent = Qt.createComponent("qrc:/app/Cable.qml");
+            if (cableComponent.status === Component.Ready) {
+                var cableData = {};
+                cableData[startJackView.jack.dir] = startJackView.jack;
+                cableData[endJackView.jack.dir] = endJackView.jack;
+                var cable = cableComponent.createObject(cableData['out'], cableData);
+
                 startJackView.parent.collapseAll();
                 endJackView.parent.collapseAll();
-            }
+            } else
+                console.log("error creating cable:", cComponent.errorString());
             endJackView.dropTargeted = false;
             endJackView = null;
         }

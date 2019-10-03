@@ -1,34 +1,21 @@
 import ohm 1.0
 
 Module {
-    objectName: 'SineVCOModule'
     label: 'Sine VCO'
 
-    outJacks: [
-        OutJack {
-            label: 'signal'
-            stream: '@gain*sinusoid(@freq)'
-        }
-    ]
-
-    inJacks: [
-        InJack { label: 'v/oct' },
-        InJack { label: 'gain' }
-    ]
-
-    cvs: [
-        ExponentialCV {
-            label: 'freq'
-            inVolts: inStream('v/oct')
-            logBase: 2
-            from: '440hz'
-        },
-        LinearCV {
-            label: 'gain'
-            controlVolts: 3
-            inVolts: inStream('gain')
-        }
-    ]
-
-
+    InJack { label: 'inFreq' }
+    InJack { label: 'inGain' }
+    CV {
+        label: 'ctrlFreq'
+        translate: v => 440 * 2**v
+        unit: 'Hz'
+    }
+    CV { label: 'ctrlGain'; volts: 3 }
+    OutJack {
+        label: 'sinusoid'
+        expression: [
+            'phase += 440Hz * 2^(ctrlFreq+inFreq)',
+            '(inGain + ctrlGain)*sin(phase)'
+        ]
+    }
 }

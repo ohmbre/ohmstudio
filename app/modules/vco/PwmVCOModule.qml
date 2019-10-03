@@ -1,39 +1,18 @@
 import ohm 1.0
 
 Module {
-    objectName: 'PwmVCOModule'
     label: 'PWM VCO'
-
-    outJacks: [
-        OutJack {
-            label: 'signal'
-            stream: '@gain * pwm(@freq,@duty/20)'
-        }
-    ]
-
-    inJacks: [
-        InJack { label: 'v/oct' },
-        InJack { label: 'duty' },
-        InJack { label: 'gain' }
-    ]
-
-    cvs: [
-        ExponentialCV {
-            label: 'freq'
-            inVolts: inStream('v/oct')
-            from: '440hz'
-        },
-        LinearCV {
-            label: 'duty'
-            inVolts: inStream('duty')
-            from: '10'
-        },
-        LinearCV {
-            label: 'gain'
-            controlVolts: 3
-            inVolts: inStream('gain')
-        }
-    ]
-
-
+    InJack { label: 'inFreq' }
+    InJack { label: 'inDuty' }
+    InJack { label: 'inGain' }
+    CV { label: 'ctrlFreq' }
+    CV { label: 'ctrlDuty' }
+    CV { label: 'ctrlGain'; volts: 3 }
+    OutJack {
+        label: 'pwm'
+        expression: [
+            'phase += 440Hz * 2^(ctrlFreq+inFreq)',
+            '(phase % tau)/tau < ((ctrlDuty+inDuty)/20+0.5) ? (inGain+ctrlGain) : 0'
+        ]
+    }
 }

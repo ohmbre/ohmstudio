@@ -1,27 +1,19 @@
 import ohm 1.0
 
 Module {
-    objectName: 'NoiseVCOModule'
+
     label: 'Noise VCO'
-
-    outJacks: [
-        OutJack {
-            label: 'signal'
-            stream: '@gain*random(1,-1v,1v,0)'
-        }
-    ]
-
-    inJacks: [
-        InJack { label: 'gain' }
-    ]
-
-    cvs: [
-        LinearCV {
-            label: 'gain'
-            controlVolts: 3
-            inVolts: inStream('gain')
-        }
-    ]
-
-
+    InJack { label: 'inGain' }
+    CV {
+        label: 'ctrlGain'
+        volts: 3
+    }
+    OutJack {
+        label: 'noise'
+        expression: [
+            'if (state == 0) state := 666',
+            'else state := (48271 * state) % 2147483647',
+            '(ctrlGain + inGain) * (2 * state / 2147483646 - 1)'
+        ]
+    }
 }

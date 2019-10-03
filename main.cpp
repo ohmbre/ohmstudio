@@ -3,21 +3,39 @@
 #include <QQuickStyle>
 
 #include "common.hpp"
+#include "conductor.hpp"
+#include "audio.hpp"
+#include "fileio.hpp"
+#include "symbolic.hpp"
+#include "scope.hpp"
 
 int main(int argc, char *argv[]) {
-    qputenv("QV4_MAX_CALL_DEPTH", "8192");
-    qputenv("QV4_JS_MAX_STACK_SIZE", "16777216");
+
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QSurfaceFormat format; format.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(format);
+
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    QtWebView::initialize();
-    engine.globalObject().setProperty("global", engine.globalObject());
+    QJSValue g = engine.globalObject();
+    AudioHWInfo audioHWInfo;
+    FileIO fileIO;
 
-    initBackend(&engine);
-    initHWIO(&engine);
+    g.setProperty("global", g);
+    g.setProperty("SymbolicFunction", engine.newQMetaObject(&SymbolicFunction::staticMetaObject));
+    g.setProperty("AudioHWInfo", engine.newQObject(&audioHWInfo));
+    g.setProperty("FileIO", engine.newQObject(&fileIO));
+    qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
+    qRegisterMetaType<AudioOut*>("AudioOut");
+    qRegisterMetaType<AudioIn*>("AudioIn");
+    qmlRegisterType<Scope>("ohm", 1, 0, "AudioScope");
+
+
+    maestro.moveToThread(&(maestro.thread));
+    QMetaObject::invokeMethod(&maestro,"start", Qt::ConnectionType::QueuedConnection);
+    maestro.thread.start();
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
-
 
     return app.exec();
 }

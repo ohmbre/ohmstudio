@@ -1,7 +1,6 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 
-import "qrc:/app/engine/engine.mjs" as Engine
 import "qrc:/app/util.mjs" as Util
 
 ApplicationWindow {
@@ -12,42 +11,20 @@ ApplicationWindow {
     height: 960
 
     title: "Ohm Studio"
-    color: Style.patchBackgroundColor
+    color: 'white'
     FontLoader { id: asapMedium; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
     FontLoader { id: asapSemiBold; source: "qrc:/app/ui/fonts/Asap-SemiBold.ttf" }
     font.family: asapMedium.name
 
-    WorkerScript {
-        id: compileWorker
-        source: "engine/compiler.mjs"
-        property var callbacks: ({})
-        property var callId: 0
-        function run(fn,args,callback) {
-            callbacks[++callId] = callback;
-            compileWorker.sendMessage({id: callId, fn:fn, args:args})
-        }
-        onMessage: (message) => {
-            const callback = callbacks[message.id]
-            delete callbacks[message.id]
-            try {
-                callback(message.result)
-            } catch(err) {
-                console.error(err.constructor.name, err.message, err.stack)
-            }
-        }
-        Component.onCompleted: {
-            global.compiler = this
-        }
-    }
 
     Drawer {
         id: setup
-        property real extension: (saveFileChoose.open || loadFileChoose.open || optionChoose.open)
+        property real extension: (saveFileChoose.open || loadFileChoose.open)
         width: 0.3*(1 + extension) * overlay.width * overlay.scale
         height: overlay.height * overlay.scale
         dragMargin: 15*overlay.scale
 
-        Behavior on width { SmoothedAnimation { velocity: 500 } }
+        Behavior on extension { SmoothedAnimation { duration: 1000; velocity: -1 } }
 
         background: Rectangle {
             height: setup.height + border.width * 2
@@ -55,16 +32,16 @@ ApplicationWindow {
             x: -border.width
             y: -border.width
 
-            color: Style.drawerColor
+            color: 'white'
             border.width: 4*overlay.scale
-            border.color: Style.buttonBorderColor
+            border.color: 'black'
         }
 
         Rectangle {
             id: header
             width: parent.width + 1;
             height: 18 * overlay.scale
-            color: Style.buttonBorderColor
+            color: 'black'
             Image {
                 source: "qrc:/app/ui/icons/logo.svg"
                 x: centerInX(this,parent)
@@ -98,7 +75,6 @@ ApplicationWindow {
             onClicked: {
                 saveFileChoose.open = false
                 loadFileChoose.open = true
-                optionChoose.open = false
             }
         }
 
@@ -112,24 +88,8 @@ ApplicationWindow {
                 if (!saveFileChoose.open) {
                     loadFileChoose.open = false;
                     saveFileChoose.open = true;
-                    optionChoose.open = false
                 } else {
                     saveFileChoose.fileChosen(saveFileChoose.saveFile)
-                }
-            }
-        }
-
-        OhmButton {
-            id: optionBtn
-            width: saveBtn.width
-            scale: overlay.scale
-            y: 200*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
-            text: "Options"
-            onClicked: {
-                if (!optionChoose.open) {
-                    loadFileChoose.open = false;
-                    saveFileChoose.open = false;
-                    optionChoose.open = true;
                 }
             }
         }
@@ -157,11 +117,6 @@ ApplicationWindow {
                 setup.close()
             }
         }
-
-        OhmOptionChoose {
-            id: optionChoose
-            scale: overlay.scale
-        }
     }
 
     property alias globalScale: overlay.scale
@@ -176,7 +131,7 @@ ApplicationWindow {
         function loadPatchQML(url) {
             var rawdata = readFile(url);
             if (!rawdata) return false
-            return loadPatch(rawdata)
+            return loadPatch(rawdata, url)
         }
 
         function loadPatch(raw,url) {
@@ -201,13 +156,7 @@ ApplicationWindow {
         }
 
         Component.onCompleted: {
-            loadPatchQML(Constants.autoSavePath)
-            let options = readFile(Constants.optionsPath)
-            options = options ? JSON.parse(options) : {}
-            if ("audioOut" in options)
-                HWIO.outName = options["audioOut"]
-            else
-                HWIO.resetAudio()
+            loadPatchQML("patches/autosave.qml")
             setup.open()
         }
     }

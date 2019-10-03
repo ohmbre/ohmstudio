@@ -1,9 +1,12 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Controls 2.4
 import QtQml 2.11
 
 Menu {
     id: menuHolder
+    scale: window.globalScale
+    transformOrigin: Item.BottomRight
+
     width: 70
     height: 70
     property int itemHeight: 16
@@ -14,12 +17,12 @@ Menu {
         width:parent.width
         height: 12.2
         color: "#00000000"
-    smooth: true
-    z: 2
-    x: 0
+        smooth: true
+        z: 2
+        x: 0
         Label {
             id: label
-        smooth: true
+            smooth: true
             height: 15
             color: "white"
             text: menuHolder.title;
@@ -32,7 +35,7 @@ Menu {
             bottomPadding: 0;
             background: Rectangle {
                 color: "#000000";
-                border.color: "white";  border.width: 1
+                border.color: "black";  border.width: 0
                 anchors.fill: parent
                 radius: 3;
             }
@@ -41,15 +44,17 @@ Menu {
 
     Rectangle {
         id: body
-        color: "#CAFFFFFF";
+        color: "white";
         height: menuHolder.height-header.height;
         width: menuHolder.width;
-    radius: 3
-    smooth: true
-    property alias contentLoader: contentLoader
+        radius: 3
+        smooth: true
+        border.color: 'black'
+        border.width: 2
+        property alias contentLoader: contentLoader
         Loader {
-        id: contentLoader
-        focus: true
+            id: contentLoader
+            focus: true
             sourceComponent: menuHolder.contents
         }
     }

@@ -1,27 +1,22 @@
 import ohm 1.0
 
 Module {
-    objectName: 'ClockModule'
-
     label: 'Clock'
 
-    outJacks: [
-        OutJack {
-            label: 'trig'
-            stream: 'smaller(mod(t,(1/@tempo)),10ms) ? (10v) : 0'
-        }
-    ]
+    InJack { label: 'inTempo'}
+    CV {
+        label: 'ctrlTempo'
+        translate: v => 240*1.5**v
+        unit: 'bpm'
+    }
 
-    inJacks: [
-        InJack {label: 'tempo'}
-    ]
 
-    cvs: [
-        ExponentialCV {
-            logBase: 1.2
-            label: 'tempo'
-            inVolts: inStream('tempo')
-            from: '240/mins'
-        }
-    ]
+    OutJack {
+        label: 'trig'
+        expression: [
+            't := t + 1',
+            't % (mins/240 * 1.5^(-inTempo-ctrlTempo)) < 5ms ? 10 : 0'
+        ]
+    }
+
 }

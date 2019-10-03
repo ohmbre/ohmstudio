@@ -1,24 +1,23 @@
-#include <QObject>
-#include <QString>
-#include <QDebug>
-#include <QThread>
-#include <QIODevice>
-#include <QJSValue>
-#include <QVariant>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-
-constexpr auto SAMPLES_PER_SECOND = 48000;
-constexpr auto BYTES_PER_SAMPLE = 2;
-constexpr auto NCHANNELS = 2;
-constexpr auto SAMPLES_PER_FRAME = NCHANNELS;
-constexpr auto BYTES_PER_FRAME = BYTES_PER_SAMPLE*NCHANNELS;
-constexpr auto FRAMES_PER_PERIOD = 1024LL;
-constexpr auto BYTES_PER_PERIOD = FRAMES_PER_PERIOD * BYTES_PER_FRAME; // 4096
-constexpr auto SAMPLES_PER_PERIOD = FRAMES_PER_PERIOD * SAMPLES_PER_FRAME;
+#ifndef INCLUDE_COMMON_HPP
+#define INCLUDE_COMMON_HPP
 
 #define V double
+#define Sample short
+#define MADRE QGuiApplication::instance()
+#define maestro Conductor::instance()
 
-void ioloop(QIODevice *out, QIODevice *in);
-void initBackend(QQmlApplicationEngine *engine);
-void initHWIO(QQmlApplicationEngine *engine);
+
+
+constexpr auto FRAMES_PER_SEC = 48000;
+constexpr auto FRAMES_PER_NSEC = 0.000048;
+constexpr auto BYTES_PER_SAMPLE = 2;
+constexpr auto FRAMES_PER_PERIOD = 3840;
+constexpr auto MSEC_PER_PERIOD = FRAMES_PER_PERIOD / 48;
+constexpr auto MAX_CHANNELS = 8;
+
+void register_symbolic();
+
+
+#endif
+
+

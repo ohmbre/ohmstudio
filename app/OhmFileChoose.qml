@@ -1,4 +1,4 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Controls 2.4
 
 Rectangle {
@@ -8,7 +8,7 @@ Rectangle {
     width: setup.width*0.65/scale;
     Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
     height: window.height*0.8/scale;
-    color: Style.fileChooseBgColor
+    color: 'white'
     x:15
     y: header.height+13
     transformOrigin: Item.TopLeft
@@ -28,17 +28,16 @@ Rectangle {
         anchors.fill: parent
         footerPositioning: ListView.OverlayFooter
         keyNavigationEnabled: fileChooseDialog.open
-        highlight: Rectangle { color: Style.fileChooseLitColor; radius: 7 }
         property bool open: fileChooseDialog.open
         onOpenChanged: {
             folder = fileChooseDialog.directory
-            model = HWIO.listDir(folder,match)
+            model = FileIO.listDir(folder,match,directory)
         }
         focus: fileChooseDialog.open
         property string folder: fileChooseDialog.directory
         property string ext: '*.'+fileChooseDialog.extension
         property string match: '*'+ext
-        model: HWIO.listDir(folder,match)
+        model: FileIO.listDir(folder,match,directory)
         delegate: OhmText {
             leftPadding: 5
             rightPadding: 5
@@ -50,7 +49,7 @@ Rectangle {
             property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
             property string stem: parts.slice(0,-1).join('/')
             text: leaf
-            color: Style.fileChooseTextColor
+            color: 'black'
             width: parent.width
             height: 13
             horizontalAlignment: Text.AlignLeft
@@ -71,7 +70,7 @@ Rectangle {
                         if (leaf == '..')
                             fileChoose.folder = parts.slice(0,-2).join('/')
                         else fileChoose.folder = path
-                        fileChoose.model = HWIO.listDir(fileChoose.folder,fileChoose.match)
+                        fileChoose.model = FileIO.listDir(fileChoose.folder,fileChoose.match,fileChoose.directory)
                     } else {
                         if (fileChooseDialog.forLoading)
                             fileChooseDialog.fileChosen(path)
@@ -86,14 +85,14 @@ Rectangle {
             height:17
             OhmText {
                 text: "Patch File"
-                color: Style.fileChooseTextColor
+                color: 'black'
                 font.pixelSize: 11
                 font.weight: Font.Bold
                 padding: 2
                 leftPadding: 4
                 horizontalAlignment: Text.AlignLeft
             }
-            color: Style.buttonBorderColor
+            color: 'white'
         }
         footer: forSaving ? saveBox : emptyFooter
         property Component emptyFooter: Item {}

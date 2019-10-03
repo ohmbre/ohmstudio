@@ -1,61 +1,51 @@
-import QtQuick 2.11
+import QtQuick 2.12
 
 Model {
-    objectName: "Module"
-
+    id: mod
     property string label
 
     property list<InJack> inJacks
     property list<OutJack> outJacks
     property list<CV> cvs
+
+    property var jacks: concatList(inJacks,outJacks)
+    property var jackMap: arrayToObject(jacks.map(j => [j.label, j]))
+
+    property int nJacks: jacks.length
+    function jack(index) {
+        return (typeof index == "number") ? jacks[index] : jackMap[index];
+    }
+
+    property var cvMap: arrayToObject(mapList(cvs,cv => [cv.label, cv]))
+    function cv(index) {
+        return (typeof index == "number") ? cvs[index] : cvMap[index];
+    }
+
+
+    property Component display: null
     property real x
     property real y
     property var view: null
-    property var overlay: null
-    property var savedControlVolts
-    onSavedControlVoltsChanged: {
-        if (cvs.length !== savedControlVolts.length) return;
-        forEach(cvs, function(cv,i) {
-            cv.controlVolts = savedControlVolts[i];
+
+    qmlExports: ({ objectName: 'objectName', x:'x', y:'y', cvs: 'default',})
+
+
+
+    default property var contents
+    onContentsChanged: {
+        contents.parent = this;
+        const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs]];
+        typeMap.forEach(([type,container]) => {
+            if (contents.objectName.endsWith(type)) {
+                const cur = filterList(container, i => i.label === contents.label)
+                if (cur.length) Object.keys(cur[0].qmlExports).forEach(key => { cur[0][key] = contents[key] })
+                else container.push(contents);
+            }
         });
     }
 
-    property Component display: null
-    function jack(index) {
-        if (typeof index == "number")
-            return (index < inJacks.length) ? inJacks[index] : outJacks[index - inJacks.length];
-        for (var j = 0; j < nJacks; j++) {
-            var ioJack = jack(j);
-            if (ioJack.label === index) return ioJack;
-        }
-        return undefined;
-    }
 
 
-    function inStream(label) {
-        return forEach(inJacks, (inJack) => {
-            if (inJack.label === label)
-                return (inJack.stream && inJack.stream !== '0') ? '('+inJack.stream+')' : 0
-        });
-    }
 
-    function outStream(label) {
-        return forEach(outJacks, (outJack) => {
-            if (outJack.label === label)
-                return outJack.stream
-        });
-    }
-
-    function cvStream(index) {
-        if (typeof index == "number")
-            return cvs[index].cv;
-        return forEach(cvs, function(cv) {
-            if (cv.label === index)
-                return cv.stream;
-        });
-    }
-
-    property int nJacks: inJacks.length + outJacks.length
-    qmlExports: ({x:'x', y:'y', savedControlVolts:'cvs'})
 
 }

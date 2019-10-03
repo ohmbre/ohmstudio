@@ -1,4 +1,4 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Shapes 1.11
 
 Shape {
@@ -8,17 +8,19 @@ Shape {
     ShapePath {
         id: cPath
         strokeWidth: 2.5
-        strokeColor: Style.cableColor
+        strokeColor: '#F55D3E'
         fillColor: "transparent"
-        startX: cable.out.view.anchor1X
-        startY: cable.out.view.anchor1Y
+        property var ok: cable && cable.out && cable.inp && cable.out.view && cable.inp.view
+        startX: ok ? cable.out.view.anchor1X : 0
+        startY: ok ? cable.out.view.anchor1Y : 0
         PathCubic {
-            control1X: cable.out.view.anchor3X
-            control1Y: cable.out.view.anchor3Y
-            control2X: cable.inp.view.anchor3X
-            control2Y: cable.inp.view.anchor3Y
-            x: cable.inp.view.anchor1X
-            y: cable.inp.view.anchor1Y
+            property alias ok: cPath.ok
+            control1X: ok ? cable.out.view.anchor3X : 0
+            control1Y: ok ? cable.out.view.anchor3Y : 0
+            control2X: ok ? cable.inp.view.anchor3X : 0
+            control2Y: ok ? cable.inp.view.anchor3Y : 0
+            x: ok ? cable.inp.view.anchor1X : 0
+            y: ok ? cable.inp.view.anchor1Y : 0
         }
     }
 

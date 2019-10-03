@@ -1,16 +1,16 @@
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Controls 2.5
 
 Switch {
     id: control
     text: displayLabel
     width: 30; height: 25
-    property double value: controlVolts
+    property double value: volts
     onValueChanged: {
-        if (controlVolts >= 3 && !checked) toggle()
-        else if (controlVolts < 3 && checked) toggle()
+        if (volts >= 3 && !checked) toggle()
+        else if (volts < 3 && checked) toggle()
     }
-    onCheckedChanged: controlVolts = checked ? 10 : 0
+    onCheckedChanged: volts = checked ? 10 : 0
     indicator: Item {
         x: 0; y: 0; width: 30; height: 25
         Image {
@@ -20,7 +20,7 @@ Switch {
         OhmText {
             x: 0; y: 15; width: 30; height: 6
             text: control.text
-            color: Style.moduleLabelColor
+            color: 'black'
             font.pixelSize: 6
             horizontalAlignment: Text.AlignHCenter
 

@@ -1,14 +1,28 @@
+import QtQuick 2.12
+
 Jack {
-    objectName: "OutJack"
+    id: outJack
     dir: "out"
-    property var stream: 0
-    property string parsedStream: {
-        var match, parsed=stream;
-        while (match = (/@[a-zA-z][a-zA-Z0-9]*/g).exec(parsed))
-            parsed = parsed.replace(match,'%1'.arg(cvStream(match[0].slice(1))));
-        while (match = (/\$[a-zA-z][a-zA-Z0-9]*/g).exec(parsed))
-            parsed = parsed.replace(match,'%1'.arg(inStream(match[0].slice(1))));
-        return '%1'.arg(parsed)
+    property var expression
+    property var func: new SymbolicFunction(label,
+                                            expression instanceof Array ? expression.join('; ') : expression,
+                                            mapList(parent.inJacks, ij=>ij.label))
+    property var funcRefs: mapList(parent.inJacks, ij=>[ij.label,ij.funcRef])
+    property var vars: mapList(parent.cvs, cv=>[cv.label,cv.volts])
+    property list<Cable> cables
+    property bool hasCable: cables.length > 0
+    onFuncRefsChanged: {
+        forEach(funcRefs, ([fname,ref]) => {func.setFuncRef(fname, ref)});
+    }
+    onVarsChanged: {
+        forEach(vars, ([vname, val]) => {func.setVar(vname,val)})
+    }
+    qmlExports: ({label: 'label'})
+
+    Component.onDestruction: {
+        while (cables.length) {
+            cables[0].destroy();
+        }
     }
 
 }

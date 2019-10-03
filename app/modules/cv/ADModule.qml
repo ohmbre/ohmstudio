@@ -1,61 +1,44 @@
 import ohm 1.0
 
 Module {
-    objectName: 'ADModule'
 
     label: 'A/D Envelope'
+    InJack {label: 'trig'}
+    InJack {label: 'inGain'}
+    InJack {label: 'inAttack'}
+    InJack {label: 'inDecay'}
+    CV {
+        label: 'ctrlAttack'
+        translate: v => 100 * 1.5**v
+        unit: 'ms'
+    }
+    CV {
+        label: 'atkShape'
+        translate: v => 2**v
+    }
+    CV {
+        label: 'ctrlDecay'
+        translate: v => 100 * 1.5**v
+        unit: 'ms'
+    }
+    CV {
+        label: 'decShape'
+        translate: v => 2**v
+    }
+    CV {
+        label: 'ctrlGain';
+        volts: 3
+    }
 
-    outJacks: [
-        OutJack {
-            label: 'envelope'
-            stream: `@offset + @gain * (
-                        (stopwatch($trig)<@attack) ?
-                              (stopwatch($trig)/@attack)^@atkshape :
-                              max(0,1-(stopwatch($trig)-@attack)/@decay)^@decshape)`
-        }
 
-    ]
+    OutJack {
+        label: 'envelope'
+        expression: "
+           t := (gate == 0) and (trig > 3) ? 0 : t+1;
+           gate := (trig > 3) ? 1 : 0;
+           var attack := 100ms * 1.5^(ctrlAttack+inAttack);
+           var decay := 100ms * 1.5^(ctrlDecay + inDecay);
+           (inGain+ctrlGain) * (t < attack ? (t/attack)^(2^atkShape) : max(0,1-(t-attack)/decay)^(2^decShape))"
+    }
 
-    inJacks: [
-        InJack {label: 'trig'},
-        InJack {label: 'gain'},
-        InJack {label: 'offset'},
-        InJack {label: 'attack'},
-        InJack {label: 'atkshape'},
-        InJack {label: 'decay'},
-        InJack {label: 'decshape'}
-    ]
-
-    cvs: [
-        ExponentialCV {
-            label: 'attack'
-            inVolts: inStream('attack')
-            from: '100ms'
-            logBase: 1.5
-        },
-        ExponentialCV {
-            label: 'atkshape'
-            inVolts: inStream('atkshape')
-            from: '1'
-        },
-        ExponentialCV {
-            label: 'decay'
-            inVolts: inStream('decay')
-            from: '100ms'
-            logBase: 1.5
-        },
-        ExponentialCV {
-            label: 'decshape'
-            inVolts: inStream('decshape')
-            from: '1'
-        },
-        LinearCV {
-            label: 'gain'
-            inVolts: inStream('gain')
-        },
-        LinearCV {
-            label: 'offset'
-            inVolts: inStream('offset')
-        }
-    ]
 }

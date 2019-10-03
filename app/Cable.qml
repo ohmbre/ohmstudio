@@ -1,27 +1,37 @@
-import QtQuick 2.11
+import QtQuick 2.12
 
 Model {
-    objectName: "Cable"
+    id: cmodel
     property Jack inp
     property Jack out
 
-    function toQML(indent) {
-        if (!(inp && out)) return "";
-        var qml = "Cable {\n";
-        forEach(parent.modules, function(module,m) {
-            if (module === inp.parent) {
-                qml += '    '.repeat(indent+1)
-		qml += 'inp: modules[' + m + '].jack("' + inp.label + '")\n'
-	    }
-            if (module === out.parent) {
-                qml += '    '.repeat(indent+1)
-		qml += 'out: modules[' + m + '].jack("' + out.label + '")\n';
-	    }
-        });
-        qml += '    '.repeat(indent) + '}'
-        return qml;
+    property var inModuleIndex: inp && inp.parent && inp.parent.parent && listIndex(inp.parent.parent.modules, inp.parent)
+    property var outModuleIndex: out && out.parent && out.parent.parent && listIndex(out.parent.parent.modules, out.parent)
+    property var exportInp: inModuleIndex !== null ? `#modules[${inModuleIndex}].jack('${inp.label}')` : null
+    property var exportOut: outModuleIndex !== null ? `#modules[${outModuleIndex}].jack('${out.label}')` : null
+
+    qmlExports: ({exportInp: 'inp', exportOut: 'out'})
+
+    function remove() {
+
+        if (inp) inp.cable = null;
+        if (out) out.cables = filterList(out.cables, c => c !== cmodel)
+        cmodel.destroy();
+        if (Qt.patch) Qt.patch.userChanges();
     }
 
-    Component.onCompleted: inp.cableAdded(out)
+    Component.onCompleted: {
+        if (!out || !inp) {
+            this.remove()
+            return
+        }
+        out = out
+        inp = inp
+        parent = out
+
+        out.cables.push(this)
+        inp.cable = this
+        if (Qt.patch) Qt.patch.userChanges()
+    }
 
 }

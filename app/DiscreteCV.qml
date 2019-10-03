@@ -1,6 +1,5 @@
 CV {
     id: discretecv
-    objectName: 'DiscreteCV'
     property var step: 1
     property var start: -10
     property var end: 10

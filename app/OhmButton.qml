@@ -1,5 +1,5 @@
 import QtQuick.Controls 2.5
-import QtQuick 2.11
+import QtQuick 2.12
 
 RoundButton {
     id: control
@@ -11,16 +11,16 @@ RoundButton {
     background: Rectangle {
         radius: control.radius
         anchors.fill: control
-        color: control.imageUrl ? "#00000000" : (control.down ? Style.buttonOverColor : Style.buttonColor)
+        color: control.imageUrl ? "#00000000" : (control.down ? 'black' : 'white')
         border.width: control.border
-        border.color: Style.buttonBorderColor
+        border.color: 'black'
     }
     contentItem: OhmText {
         text: control.text
         font.family: asapSemiBold.name
         font.pixelSize: control.font.pixelSize
         font.weight: Font.DemiBold
-        color: Style.buttonTextColor
+        color: control.down ? 'white' : 'black'
         padding: control.padding
         verticalAlignment: control.verticalAlignment
     }

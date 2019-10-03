@@ -1,18 +1,13 @@
 import ohm 1.0
 
 Module {
-    objectName: 'FlipFlopModule'
-
     label: 'Flip Flop'
-
-    outJacks: [
-        OutJack {
-            label: 'out'
-            stream: 'sequence($trig,[0v,10v])'
-        }
-    ]
-
-    inJacks: [
-        InJack {label: 'trig'}
-    ]
+    InJack {label: 'trig'}
+    OutJack {
+        label: 'out'
+        expression: "
+           state := ((gate == 0) and (trig > 3)) ? (10 - state) : state;
+           gate := (trig > 3) ? 1 : 0;
+           state"
+    }
 }

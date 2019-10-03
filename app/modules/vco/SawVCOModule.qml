@@ -1,33 +1,17 @@
 import ohm 1.0
 
 Module {
-    objectName: 'SawVCOModule'
+
     label: 'Saw VCO'
-
-    outJacks: [
-        OutJack {
-            label: 'signal'
-            stream: '@gain * sawtooth(@freq)'
-        }
-    ]
-
-    inJacks: [
-        InJack { label: 'v/oct' },
-        InJack { label: 'gain' }
-    ]
-
-    cvs: [
-        ExponentialCV {
-            label: 'freq'
-            inVolts: inStream('v/oct')
-            from: '440hz'
-        },
-        LinearCV {
-            controlVolts: 3
-            label: 'gain'
-            inVolts: inStream('gain')
-        }
-    ]
-
-
+    InJack { label: 'inFreq' }
+    InJack { label: 'inGain' }
+    CV { label: 'ctrlFreq' }
+    CV { label: 'ctrlGain'; volts: 3 }
+    OutJack {
+        label: 'saw'
+        expression: [
+            'phase += 440Hz * 2^(ctrlFreq+inFreq)',
+            '(inGain+ctrlGain) * ((phase % tau)/pi - 1)'
+        ]
+    }
 }

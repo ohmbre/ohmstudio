@@ -70,7 +70,10 @@ function chord(src) {
         ? st.intervals.map(i => transpose$1(tonic, i))
         : [];
     const name = tonic ? tonic + " " + type : type;
-    return { ...st, name, type, tonic, notes };
+    const ret = {}
+    Object.assign(ret,st);
+    Object.assign(ret, {name, type, tonic, notes });
+    return ret;
 }
 /**
  * Transpose a chord name

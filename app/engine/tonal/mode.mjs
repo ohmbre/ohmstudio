@@ -10,15 +10,16 @@ const DATA = [
     [6, 3434, 5, "locrian", "dim", "m7b5"]
 ];
 
-const NoMode = {
-    ...EmptyPcset,
+const NoMode = {}
+Object.assign(NoMode, EmptyPcset)
+Object.assign(NoMode, {
     name: "",
     alt: 0,
     modeNum: NaN,
     triad: "",
     seventh: "",
     aliases: []
-};
+});
 const all = DATA.map(toMode);
 const index = {};
 all.forEach(mode => {

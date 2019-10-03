@@ -1,41 +1,27 @@
 import ohm 1.0
 
 Module {
-    objectName: 'HPFilterModule'
-
     label: 'HP Filter'
-
-    outJacks: [
-        OutJack {
-            label: '-12dB/oct'
-            stream: 'hipass($in,@f,@q)'
-        },
-        OutJack {
-            label: '-24dB/oct'
-            stream: 'hipass(hipass($in,@f,@q),@f,@q)'
-        }
-    ]
-
-    inJacks: [
-        InJack {label: 'in'},
-        InJack {label: 'f'},
-        InJack {label: 'q'}
-    ]
-
-    cvs: [
-        ExponentialCV {
-            label: 'f'
-            from: '220hz'
-            logBase: 1.6
-            inVolts: inStream('f')
-        },
-    ExponentialCV {
-            label: 'q'
-            from: 1.0
-            logBase: 2.5
-            inVolts: inStream('q')
-        }
-    ]
-
-
+    InJack {label: 'input'}
+    InJack {label: 'inFreq'}
+    InJack {label: 'inQ'}
+    CV { label: 'ctrlFreq' }
+    CV { label: 'ctrlQ' }
+    OutJack {
+        label: 'out'
+        expression: [
+            'var f := 440hz * 2^(ctrlFreq + inFreq)',
+            'var cs := cos(f)',
+            'var sn := sin(f)',
+            'var alpha := sn * sinh(log(2)/2 * f / (sn * 1.5^(ctrlQ + inQ)))',
+            'var cs1 := 1+cs',
+            'var b02 := cs1/2',
+            'var y := (b02*input - cs1*x1 + b02*x2 +2*cs*y1 + (alpha-1)*y2) / (1 + alpha)',
+            'x2 := x1',
+            'x1 := input',
+            'y2 := y1',
+            'y1 := y',
+            'y'
+        ]
+    }
 }

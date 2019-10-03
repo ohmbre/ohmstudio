@@ -1,5 +1,5 @@
 JackView {
     isOut: false
-    bgColor: Style.inJackColor
-    bgColorLit: Style.inJackLitColor
+    bgColor: '#70A87C'
+    bgColorLit: Qt.lighter(bgColor)
 }

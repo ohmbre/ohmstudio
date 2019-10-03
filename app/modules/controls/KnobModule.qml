@@ -1,21 +1,12 @@
 import ohm 1.0
 
 Module {
-    objectName: 'KnobModule'
+    label: 'CV Slider'
 
-    label: 'Knob'
+    CV { label: 'slider' }
+    OutJack {
+        label: 'cv'
+        expression: 'slider'
+    }
 
-    outJacks: [
-        OutJack {
-            label: 'output'
-            stream: '@cv'
-        }
-    ]
-
-    cvs: [
-        LinearCV {
-            label: 'cv'
-            inVolts: 0
-        }
-    ]
 }

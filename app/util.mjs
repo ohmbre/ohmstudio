@@ -9,6 +9,36 @@ global.forEach = (arr,fn) => {
     }
 }
 
+global.concatList = (l1,l2) => {
+    const l3 = []
+    let i;
+    if (l1) {
+        for (i = 0; i < l1.length; i++) l3.push(l1[i])
+    }
+    if (l2) {
+        for (i = 0; i < l2.length; i++) l3.push(l2[i])
+    }
+    return l3
+}
+
+global.mapList = (l,fn) => {
+    const l2 = []
+    if (!l) return l2
+    for (let i = 0; i < l.length; i++)
+      l2.push(fn(l[i]))
+    return l2
+}
+
+global.filterList = (l,fn) => {
+    const l2 = []
+    if (!l) return l2;
+    for (let i = 0; i < l.length; i++)
+      if (fn(l[i]))
+        l2.push(l[i])
+    return l2;
+}
+
+
 global.centerX = (rect) => rect.x + rect.width/2
 global.centerY = (rect) => rect.y + rect.height/2
 global.centerInX = (insideRect, outsideRect) => outsideRect.width/2 - insideRect.width/2;
@@ -19,10 +49,10 @@ global.readFile = (fileUrl) => {
         fileUrl = fileUrl.substr(5)
     if (fileUrl.startsWith('./'))
         fileUrl = fileUrl.substr(2)
-    return HWIO.read(fileUrl)
+    return FileIO.read(fileUrl)
 }
 
-global.writeFile = (fileUrl, contents) => HWIO.write(fileUrl, contents)
+global.writeFile = (fileUrl, contents) => FileIO.write(fileUrl, contents)
 
 global.dbg = (obj) => {
     console.error(obj);
@@ -30,23 +60,25 @@ global.dbg = (obj) => {
     console.error("      "+prop+": "+obj[prop]);
 }
 
-global.uuids = {}
-global.uuid = (cv) => {
-    if (!uuids[cv])
-        uuids[cv] = Object.keys(uuids).length + 1
-    return uuids[cv];
-}
 
 global.clip = (min,v,max) => (v > max) ? max : ((v < min) ? min : v)
 
-global.checked = (fn,extra) => {try { fn() } catch (err) { console.error(`
+global.listToArray = (l) => {
+    const a = new Array(l.length)
+    for (var i = 0; i < l.length; i++)
+        a[i] = l[i];
+    return a;
+}
 
---- CHECKED EXCEPTION ---
-   call:
-      ${ fn.toString() + (extra?('\n      '+extra):'') }
-   exception:
-      ${ err.constructor.name }: ${ err.message }
-   stack:
-      ${ err.stack.split('\n').map(l=>'      '+l).join('\n') }
+global.listIndex = (l,o) => {
+    if (!l) return null;
+    for (let i = 0; i < l.length; i++)
+        if (l[i] === o) return i;
+    return null;
+}
 
-`)}}
+global.arrayToObject = (a) => {
+    const o = {};
+    a.forEach(([k,v]) => { o[k] = v });
+    return o;
+}

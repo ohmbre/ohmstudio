@@ -1,6 +1,5 @@
 Model {
-    objectName: "Jack"
-
+    id: jk
     property string label
     property string dir // "inp" or "out"
 }

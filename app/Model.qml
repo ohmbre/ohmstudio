@@ -1,57 +1,38 @@
-import QtQuick 2.11
+import QtQuick 2.12
 
 QtObject {
-    objectName: "EmptyModel"
+    objectName: this.toString().split('_')[0]
     property QtObject view
     property QtObject parent
     property var qmlExports: []
 
-    function toQML(indent) {
-        if (!indent) indent = 0
-
-        function objToQML(someObj,indent) {
-            if (someObj.toQML) return someObj.toQML(indent)
-            else if (typeof someObj == "string" || typeof someObj == "number")
-                return JSON.stringify(someObj);
-            else {
-                console.log("couldn't serialize "+someObj);
-                return "";
-            }
+    function toQML() {
+        const valToQML = (o) => {
+                if (typeof(o) == 'string' && o.startsWith('#'))
+                    return o.slice(1)
+                if (o.toQML) return o.toQML()
+                return JSON.stringify(o)
         }
-
-        var qml = objectName + ' {';
-        for (var q in qmlExports) {
-            var prop = qmlExports[q];
-            var obj = this[prop];
-            if (typeof q != 'number') prop = q;
-            if (typeof obj == 'undefined') continue
-            var propQml = '\n' + '    '.repeat(indent+1) + prop + ': ';
-            if (obj.push) {
-                var listQml = '['
-                if (obj.length > 0) listQml += '\n' + '    '.repeat(indent+2);
-                for (var i in obj) {
-                    var objQml = objToQML(obj[i], indent+2);
-                    if (objQml) {
-                        listQml += objQml;
-                        if (i < obj.length - 1) {
-                            listQml += ',';
-                            if (obj.length > 0)
-                                listQml += '\n' + '    '.repeat(indent+2);
-                        }
-                    }
+        let entries =
+            Object.entries(qmlExports)
+            .map(([propKey,lbl]) => {
+                const propVal = this[propKey]
+                if (propVal === undefined || propVal === null || propVal.length === 0) return [lbl,null]
+                if (propVal.push) {
+                    const listVals = mapList(propVal,valToQML).filter(qml=>qml !== null)
+                    if (listVals.length === 0) return [lbl,null];
+                    if (lbl === 'default') return [lbl, listVals.join(' ')]
+                    return [lbl, '[' + listVals.join(', ') + ']'];
                 }
-                if (obj.length > 0) listQml += '\n' + '    '.repeat(indent+1)
-                listQml += ']'
-                qml += propQml + listQml;
-            } else {
-                var subQml = objToQML(obj, indent+1);
-                if (subQml)
-                    qml += propQml + subQml;
-            }
-        }
-        if (qmlExports.length) qml += '\n' + '    '.repeat(indent)
-        return qml + '\n' + '    '.repeat(indent) + '}\n';
+                return [lbl, valToQML(propVal)]
+            })
+            .filter(([lbl,qml]) => qml !== null)
+            .map(([lbl,qml]) => lbl == 'default' ? qml : `${ lbl }: ${ qml }`).join('\n')
+        return `${objectName} { ${entries} }`
     }
 
 
 }
+
+
+
