@@ -5,7 +5,7 @@ OhmChoiceBox {
     width: 110
     height: 16
     label.text: displayLabel
-    control.currentIndex: choice
+    control.currentIndex: volts
     choiceLabels: choices
-    onChosen: choice = index
+    onChosen: volts = index
 }

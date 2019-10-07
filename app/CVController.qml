@@ -91,7 +91,9 @@ Item {
 
             handle: Rectangle {
                 z: 1
-                scale: control.pressed ? 2 : 1
+                antialiasing: true
+                smooth: true
+                scale: control.pressed ? 1.5 : 1
                 Behavior on scale { NumberAnimation { duration: 250 } }
                 x: control.position * (control.width - 3) - width/2 + 1.5;
                 y: (control.height - height) /2; width: 9; height: width;

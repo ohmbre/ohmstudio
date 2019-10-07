@@ -16,15 +16,11 @@ Module {
             if (ijComponent.status === Component.Ready) {
                 const ij = ijComponent.createObject(audioOutModule, {label: pos, parent: audioOutModule})
                 audioOutModule.inJacks.push(ij)
+                ij.inFuncUpdated.connect((lbl,func) => { audioOutModule.hw.setChannel(parseInt(lbl), func) })
             } else
                 console.log("error creating injack:", component.errorString());
         }
 
-    }
-
-    property var channels: mapList(inJacks, ij => ij.funcRef)
-    onChannelsChanged: {
-        channels.forEach((chan,i)=> { hw.setChannel(i,chan) })
     }
 
     property var devChoice

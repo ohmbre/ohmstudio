@@ -32,7 +32,8 @@ Item {
                 value = mouse.x / slider.width * (to-from) + from
                 p = mapToItem(handleItem, mouse.x, mouse.y)
             }
-            dragbegin = p.x;
+            dragbegin = p.x
+            slider.pressed = true
         }
         onPositionChanged: {
             if (dragbegin === null) return
@@ -45,6 +46,7 @@ Item {
         }
         onReleased: {
             dragbegin = null;
+            slider.pressed = false;
             slider.value = Math.round(100*slider.value) / 100
         }
 

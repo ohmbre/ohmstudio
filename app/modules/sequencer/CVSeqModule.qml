@@ -4,26 +4,24 @@ import ohm 1.0
 Module {
     label: 'CV Sequencer'
 
+    InJack {label: 'clock'}
+    InJack {label: 'randseed'}
 
-        OutJack {
-            label: 'v/oct'
-            stream: 0
-        }
+    CV {
+        label: 'sequence'
+    }
+
+    CV {
+        label: 'flipper'
+    }
+
+    OutJack {
+        label: 'v/oct'
+        stream: 0
+    }
 
 
 
-        InJack {label: 'clock'}
-        InJack {label: 'randseed'}
 
-
-       MultiLogCV {
-         label: 'sequence'
-       }
-       ExponentialCV {
-         label: 'octave'
-       }
-       BinaryCV {
-         label: 'flipper'
-       }
 
 }

@@ -7,10 +7,6 @@ Model {
     property var cables: mapList(modules, m=>mapList(m.outJacks, oj=>oj.cables).reduce(concatList,[])).reduce(concatList,[])
 
     function deleteModule(dModule) {
-        forEach(dModule.outJacks, oj => {
-                    while (oj.cables.length !== 0)
-                      oj.cables[0].remove()
-                })
         modules = filterList(modules, m => m !== dModule);
         dModule.destroy()
         userChanges()

@@ -1,7 +1,7 @@
 #ifndef INCLUDE_SINK_HPP
 #define INCLUDE_SINK_HPP
 
-#include "common.hpp"
+#include "conductor.hpp"
 #include "function.hpp"
 
 #define RINGBUFLEN 131072

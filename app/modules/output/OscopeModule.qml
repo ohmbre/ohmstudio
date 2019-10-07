@@ -16,13 +16,15 @@ Module {
         unit: 'ms'
     }
 
+
+
     display: Rectangle {
         color: 'white'
         border.color: '#4B4B4B'
         border.width: 1.5
         anchors.fill: parent
 
-        AudioScope {
+        Scope {
             id: scope
             anchors.fill: parent
             trig: scopemod.cv('vtrig').volts
@@ -35,17 +37,18 @@ Module {
                     scope.update()
                 }
             }
-            property var channels: mapList(scopemod.inJacks, ij => ij.funcRef)
-            onChannelsChanged: {
-                channels.forEach((chan,i) => { scope.setChannel(i,chan)})
-            }
+
             Component.onCompleted: {
-                if (channels && channels.length)
-                    channels.forEach((chan,i) => { scope.setChannel(i,chan)})
+                forEach(inJacks,(ij,i) => {
+                    if (ij.inFunc) scope.setChannel(i, ij.inFunc);
+                    ij.inFuncUpdated.connect((lbl,func) => { if (scope) scope.setChannel(i, func) })
+                })
             }
+
         }
 
     }
+
 
 
 }

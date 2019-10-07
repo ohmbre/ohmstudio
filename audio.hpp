@@ -2,7 +2,7 @@
 #ifndef INCLUDE_AUDIO_HPP
 #define INCLUDE_AUDIO_HPP
 
-#include "common.hpp"
+#include "conductor.hpp"
 #include "function.hpp"
 #include "sink.hpp"
 

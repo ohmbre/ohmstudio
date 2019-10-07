@@ -47,7 +47,7 @@ Q_INVOKABLE  QVariant FileIO::listDir(const QString dname, const QString match, 
 }
 
 
-FileIO::FileIO() : QObject(MADRE) {
+FileIO::FileIO() : QObject(QGuiApplication::instance()) {
     QDirIterator qrcIt(":/app", QStringList() << "*.qml", QDir::Files, QDirIterator::Subdirectories);
     while (qrcIt.hasNext()) {
         QString fname = qrcIt.next();

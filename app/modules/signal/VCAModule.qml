@@ -2,28 +2,13 @@ import ohm 1.0
 
 Module {
     label: 'VCA'
-
-        OutJack {
-            label: 'out'
-
-            stream: '(@gain) * ($in + @inshift)'
-        }
-
-        InJack {
-            label: 'gain'
-        }
-        InJack {
-            label: 'in'
-            stream: 5
-        }
-
-
-        LinearCV {
-            label: 'gain'
-            inVolts: inStream('gain')
-        }
-        LinearCV {
-            label: 'inshift'
-        }
-
+    InJack { label: 'inGain' }
+    InJack { label: 'inShift' }
+    InJack { label: 'input' }
+    CV { label: 'ctrlGain' }
+    CV { label: 'ctrlShift' }
+    OutJack {
+        label: 'out'
+        expression: '(inGain + ctrlGain) * (input + inShift + ctrlShift)'
+    }
 }

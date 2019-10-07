@@ -1,8 +1,24 @@
 #ifndef INCLUDE_CONDUCTOR_HPP
 #define INCLUDE_CONDUCTOR_HPP
 
-#include "common.hpp"
-#include "sink.hpp"
+constexpr auto FRAMES_PER_SEC = 48000;
+constexpr auto FRAMES_PER_NSEC = 0.000048;
+constexpr auto BYTES_PER_SAMPLE = 2;
+constexpr auto FRAMES_PER_PERIOD = 3840;
+constexpr auto MSEC_PER_PERIOD = FRAMES_PER_PERIOD / 48;
+constexpr auto MAX_CHANNELS = 8;
+#define V double
+#define Sample short
+
+
+
+class Sink;
+
+
+
+
+
+#define maestro Conductor::instance()
 
 class Conductor : public QObject {
     Q_OBJECT

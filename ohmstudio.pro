@@ -5,21 +5,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     conductor.cpp \
-    audio.cpp \
-    fileio.cpp \
     function.cpp \
     sink.cpp \
-    scope.cpp
+    audio.cpp \
+    scope.cpp \
+    fileio.cpp
 
 
 HEADERS += \
-    common.hpp \
-    function.hpp \
-    audio.hpp \
     conductor.hpp \
-    fileio.hpp \
+    function.hpp \
     sink.hpp \
+    audio.hpp \
     scope.hpp \
+    fileio.hpp \
     pch.hpp
 
 PRECOMPILED_HEADER = pch.hpp

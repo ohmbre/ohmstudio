@@ -1,7 +1,7 @@
 import QtQuick 2.12
 
 Model {
-    id: cmodel
+
     property Jack inp
     property Jack out
 
@@ -12,25 +12,27 @@ Model {
 
     qmlExports: ({exportInp: 'inp', exportOut: 'out'})
 
-    function remove() {
-
-        if (inp) inp.cable = null;
-        if (out) out.cables = filterList(out.cables, c => c !== cmodel)
-        cmodel.destroy();
+    Component.onDestruction: {
+        if (inp) inp.cableRemoved(this);
+        if (out) out.cableRemoved(this);
         if (Qt.patch) Qt.patch.userChanges();
     }
 
     Component.onCompleted: {
         if (!out || !inp) {
-            this.remove()
+            this.destroy()
             return
         }
+
         out = out
         inp = inp
         parent = out
 
-        out.cables.push(this)
-        inp.cable = this
+        out.cableAdded(this);
+        inp.cableAdded(this);
+
+        out.outFuncUpdated.connect(inp.updateInFunc);
+
         if (Qt.patch) Qt.patch.userChanges()
     }
 

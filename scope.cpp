@@ -1,5 +1,4 @@
 #include "scope.hpp"
-#include "conductor.hpp"
 
 Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(2), trigpos(-1), trackpos(-1), ntracked(0) {
     maestro.registerSink(this);
@@ -107,6 +106,121 @@ int Scope::writeData(Sample *buf, long long count) {
             }
         }
         lastVal = buf[i];
+    }
+    return count;
+}
+
+
+FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), writePos(0) {
+    maestro.registerSink(this);
+    setTextureSize(QSize(241*5,113*1.3*5));
+    setRenderTarget(QQuickPaintedItem::FramebufferObject);
+}
+
+void FFTScope::paint(QPainter *painter) {
+    qreal w = width();
+    qreal h = height();
+
+    QPen pen;
+    painter->setRenderHints(QPainter::Antialiasing, true);
+
+    pen.setColor(QColor(175,175,175,128));
+    pen.setWidthF(0.4);
+    pen.setStyle(Qt::DotLine);
+    painter->setPen(pen);
+    painter->drawLine(    0, .25*h,     w, .25*h);
+    painter->drawLine(    0,  .5*h,     w,  .5*h);
+    painter->drawLine(    0, .75*h,     w, .75*h);
+
+    pen.setWidthF(1);
+    pen.setStyle(Qt::SolidLine);
+    pen.setColor(QColor(255,64,16,200));
+    painter->setPen(pen);
+
+    if (channels[0]) {
+        QVector<QPointF> polyline(FFTSAMPLES);
+        for (long i = 0; i < FFTSAMPLES; i++)
+            polyline[i] = QPointF(w*i/(FFTSAMPLES-1), h*(1-fftBuf[i]));
+        painter->drawPolyline(polyline);
+    }
+
+    pen.setStyle(Qt::DotLine);
+    pen.setWidthF(0.4);
+    painter->setPen(pen);
+    painter->setFont(QFont("Asap SemiBold", 3));
+
+    QHash<int,QString> lf = {
+        {20,""},
+        {30,""},
+        {40,""},
+        {50,""},
+        {60,""},
+        {70,""},
+        {80,""},
+        {90,""},
+        {100,"100Hz"},
+        {200,""},
+        {300,""},
+        {400,""},
+        {500,""},
+        {600,""},
+        {700,""},
+        {800,""},
+        {900,""},
+        {1000,"1kHz"},
+        {2000,""},
+        {3000,""},
+        {4000,""},
+        {5000,""},
+        {6000,""},
+        {7000,""},
+        {8000,""},
+        {9000,""},
+        {10000,"10kHz"},
+        {20000,""}
+    };
+    foreach(int f, lf.keys()) {
+        double x = freqToX(f,w);
+        if (lf[f] != "") {
+            pen.setColor(QColor(0,0,0));
+            painter->setPen(pen);
+            painter->drawText(QRect(x-8,h-7,16,7), Qt::AlignHCenter | Qt::AlignVCenter, lf[f]);
+            pen.setColor(QColor(64,64,64,128));
+        } else
+            pen.setColor(QColor(175,175,175,128));
+
+        painter->setPen(pen);
+        painter->drawLine(x, 2, x, h-1);
+    }
+
+
+
+
+
+}
+
+
+int FFTScope::writeData(Sample *buf, long long count) {
+    long i,j,k;
+    double f,coeff,prev,prev2,cur,mag;
+    for (i = 0; i < count; i++) {
+        dataBuf[writePos++] = buf[i]/ 32768.0 ;
+        if (writePos >= FFTSAMPLES) {
+            for (j = 0; j < FFTSAMPLES; j++) {
+                f = binToFreq(j);
+                coeff = 2*cos(2*M_PI*f/FRAMES_PER_SEC);
+                prev = 0;
+                prev2 = 0;
+                for (k = 0; k < FFTSAMPLES; k++) {
+                    cur = dataBuf[k] + coeff*prev - prev2;
+                    prev2 = prev;
+                    prev = cur;
+                }
+                mag = 2*sqrt(prev2*prev2 + prev*prev - coeff*prev*prev2)/FFTSAMPLES;
+                fftBuf[j] = mag;
+            }
+            writePos = 0;
+        }
     }
     return count;
 }

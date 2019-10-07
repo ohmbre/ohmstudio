@@ -3,10 +3,12 @@ import ohm 1.0
 Module {
     label: 'Not'
 
-        OutJack {
-            label: 'out'
-            stream: '($in >= 3) ? 0 : 10v'
-        }
+    InJack {label: 'input'}
 
-        InJack {label: 'in'}
+    OutJack {
+        label: 'out'
+        expression: 'input >= 3 ? 0 : 10'
+    }
+
+
 }

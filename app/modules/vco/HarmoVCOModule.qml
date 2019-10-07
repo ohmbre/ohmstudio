@@ -14,7 +14,7 @@ Module {
         ExponentialCV {
             label: 'freq'
             inVolts: inStream('v/oct')
-            from: '440hz'
+            from: '220hz'
         }
         LinearCV {
             label: 'gain'

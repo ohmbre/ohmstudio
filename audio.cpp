@@ -1,7 +1,6 @@
 #include "audio.hpp"
-#include "conductor.hpp"
 
-AudioHWInfo::AudioHWInfo() : QObject(MADRE) {}
+AudioHWInfo::AudioHWInfo() : QObject(QGuiApplication::instance()) {}
 
 QAudioFormat AudioHWInfo::getFormat() {
     QAudioFormat format;
@@ -68,7 +67,7 @@ AudioIn::AudioIn(QAudioDeviceInfo info)
 }
 
 AudioOut::AudioOut(QAudioDeviceInfo info)
-    : QObject(MADRE), Sink(AudioHWInfo::getFormat().channelCount()), devInfo(info) {
+    : QObject(QGuiApplication::instance()), Sink(AudioHWInfo::getFormat().channelCount()), devInfo(info) {
     dev = new QAudioOutput(devInfo, AudioHWInfo::getFormat());
     dev->setBufferSize(FRAMES_PER_PERIOD * channels.count() * BYTES_PER_SAMPLE);
     iodev = dev->start();

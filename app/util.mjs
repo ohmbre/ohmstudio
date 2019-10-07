@@ -1,5 +1,17 @@
 "use strict;"
 
+import * as tonal from './external/tonal/tonal.mjs'
+import * as midi from './external/tonal/midi.mjs'
+import * as interval from './external/tonal/interval.mjs'
+import * as scale from './external/tonal/scale.mjs'
+import * as scaledict from './external/tonal/scale-dictionary.mjs'
+
+global.tonal = tonal
+global.midi = midi
+global.interval = interval
+global.scale = scale
+global.scaledict = scaledict
+
 global.forEach = (arr,fn) => {
     var len = arr.length;
     for (var i = 0; i < len; i++) {

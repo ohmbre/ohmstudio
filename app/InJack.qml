@@ -1,17 +1,30 @@
 import QtQuick 2.12
 
 Jack {
-    id: inJack
     dir: "inp"
     property var cable: null
     property bool hasCable: cable !== null
-    property var funcRef: null
-    qmlExports: ({label:'label'})
-    onCableChanged: {
-        if (cable) funcRef = Qt.binding(()=> cable.out.func );
-        else funcRef = null
+    signal cableRemoved()
+    onCableRemoved: {
+        this.cable = null;
+        this.inFunc = null;
+        this.inFuncUpdated(this.label, null);
     }
+    signal cableAdded(Cable newCable)
+    onCableAdded: {
+        this.cable = newCable;
+        updateInFunc();
+    }
+
+    property var inFunc: null
+    signal inFuncUpdated(string lbl, var func)
+    function updateInFunc() {
+        inFunc = cable && cable.out ? cable.out.outFunc : null;
+        inFuncUpdated(label, inFunc)
+    }
+
+    qmlExports: ({label:'label'})
     Component.onDestruction: {
-        if (cable) cable.destroy();
+        if (cable) cable.destroy()
     }
 }

@@ -1,4 +1,6 @@
 #include "conductor.hpp"
+#include "function.hpp"
+#include "sink.hpp"
 
 Conductor::Conductor() : QObject() {}
 
@@ -49,6 +51,8 @@ void Conductor::commit(Sink *sink) {
 }
 
 Conductor::~Conductor() {
+    timer->stop();
+    thread.quit();
     delete timer;
 }
 

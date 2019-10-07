@@ -88,7 +88,7 @@ Shape {
         dragPad = jv.pad
         if (jv.jack.hasCable && jv.jack.dir == 'inp') {
             startJackView = jv.jack.cable.out.view
-            jv.jack.cable.remove()
+            jv.jack.cable.destroy()
             startJackView.extend()
             endJackView = jv
             jv.dropTargeted = true;

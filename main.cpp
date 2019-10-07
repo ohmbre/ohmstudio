@@ -2,11 +2,9 @@
 #include <QtWebView/QtWebView>
 #include <QQuickStyle>
 
-#include "common.hpp"
 #include "conductor.hpp"
 #include "audio.hpp"
 #include "fileio.hpp"
-#include "symbolic.hpp"
 #include "scope.hpp"
 
 int main(int argc, char *argv[]) {
@@ -28,7 +26,8 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
     qRegisterMetaType<AudioOut*>("AudioOut");
     qRegisterMetaType<AudioIn*>("AudioIn");
-    qmlRegisterType<Scope>("ohm", 1, 0, "AudioScope");
+    qmlRegisterType<Scope>("ohm", 1, 0, "Scope");
+    qmlRegisterType<FFTScope>("ohm", 1, 0, "FFTScope");
 
 
     maestro.moveToThread(&(maestro.thread));

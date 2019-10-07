@@ -10,10 +10,9 @@ Module {
     }
     OutJack {
         label: 'noise'
-        expression: [
-            'if (state == 0) state := 666',
-            'else state := (48271 * state) % 2147483647',
-            '(ctrlGain + inGain) * (2 * state / 2147483646 - 1)'
-        ]
+        stateVars: ({state: 666})
+        expression:
+            'state := (48271 * state) % 2147483647;
+             (ctrlGain + inGain) * (2 * state / 2147483646 - 1)'
     }
 }

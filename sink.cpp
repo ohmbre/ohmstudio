@@ -1,5 +1,4 @@
 #include "sink.hpp"
-#include "conductor.hpp"
 
 Sink::Sink(int nchannels) : channels(nchannels), bi(0), bf(0) {
     for (int i = 0; i < nchannels; i++)

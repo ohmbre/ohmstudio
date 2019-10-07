@@ -1,7 +1,7 @@
 #ifndef INCLUDE_FUNCTION_HPP
 #define INCLUDE_FUNCTION_HPP
 
-#include "common.hpp"
+#include "conductor.hpp"
 
 typedef exprtk::ifunction<V> IFunction;
 
@@ -42,37 +42,38 @@ public:
 typedef exprtk::symbol_table<V> SymbolTable;
 typedef exprtk::parser<V> Parser;
 typedef exprtk::expression<V> Expression;
+typedef exprtk::vector_view<V> VectorView;
+typedef exprtk::parser_error::type ParseError;
+
 
 class SymbolicFunction : public Function {
     Q_OBJECT
     QString name;
     QString expstr;
     NullFunction nullfunc;
-    QHash<QString,V*> variables;
-    QHash<QString,Function*> refs;
+    QHash<QString,V> variables;
+    QHash<QString,Function*> inFuncs;
+    QHash<QString,QVector<V>> sequences;
     SymbolTable st;
-    SymbolTable unknowns;
     Parser par;
     Expression expr;
+    bool compiled;
     V curVoltage;
     long long ticks;
 
 public:
-    Q_INVOKABLE SymbolicFunction(QString label, QString expression, QJSValue funcRefs);
+    Q_INVOKABLE SymbolicFunction(QString label, QString expression, QVariantMap stateVars);
+    Q_INVOKABLE void addVar(QString name);
+    Q_INVOKABLE void addSeq(QString name);
+    Q_INVOKABLE void addInFunc(QString name);
     Q_INVOKABLE void setVar(QString var, V value);
-    Q_INVOKABLE void setFuncRef(QString fname, QJSValue funcRef);
+    Q_INVOKABLE void setSeq(QString name, QVector<V> entries);
+    Q_INVOKABLE void setInFunc(QString fname, QJSValue funcRef);
+    Q_INVOKABLE void compile();
+
     Q_INVOKABLE V eval() override;
     Function* function;
-    Q_INVOKABLE QString repr() override {
-        QStringList varstr;
-        foreach (QString var, variables.keys())
-            varstr << QString("%1 = %2").arg(var).arg(*(variables[var]));
-        QStringList refstr;
-        foreach (QString name, refs.keys())
-            refstr << QString("%1 = %2").arg(name, refs[name]->repr());
-        return QString("name: %1 | expr: { %2 } | vars: (%3) | refs: (%4)").arg(name, expstr, varstr.join("; "), refstr.join("; "));
-    }
-
+    Q_INVOKABLE QString repr() override;
 };
 
 
