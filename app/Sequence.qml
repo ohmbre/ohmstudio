@@ -6,7 +6,7 @@ Model {
     property var entries: [0]
 
     Component.onCompleted: {
-        entriesChanged.connect(userChanges);
+        if (userChanges) entriesChanged.connect(userChanges);
     }
 
 }

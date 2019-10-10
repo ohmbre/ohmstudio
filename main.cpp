@@ -6,6 +6,7 @@
 #include "audio.hpp"
 #include "fileio.hpp"
 #include "scope.hpp"
+#include "midi.hpp"
 
 int main(int argc, char *argv[]) {
 
@@ -21,15 +22,17 @@ int main(int argc, char *argv[]) {
 
     g.setProperty("global", g);
     g.setProperty("SymbolicFunction", engine.newQMetaObject(&SymbolicFunction::staticMetaObject));
+    g.setProperty("MIDIInFunction", engine.newQMetaObject(&MIDIInFunction::staticMetaObject));
     g.setProperty("AudioHWInfo", engine.newQObject(&audioHWInfo));
     g.setProperty("FileIO", engine.newQObject(&fileIO));
     qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
     qRegisterMetaType<AudioOut*>("AudioOut");
     qRegisterMetaType<AudioIn*>("AudioIn");
+    qRegisterMetaType<MIDIInFunction*>("MIDIInFunction*");
     qmlRegisterType<Scope>("ohm", 1, 0, "Scope");
     qmlRegisterType<FFTScope>("ohm", 1, 0, "FFTScope");
 
-
+    maestro.setEngine(&engine);
     maestro.moveToThread(&(maestro.thread));
     QMetaObject::invokeMethod(&maestro,"start", Qt::ConnectionType::QueuedConnection);
     maestro.thread.start();

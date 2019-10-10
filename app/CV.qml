@@ -23,7 +23,7 @@ Model {
 
     qmlExports: ({label: 'label', volts: 'volts'})
     Component.onCompleted: {
-        voltsChanged.connect(userChanges);
+        if (userChanges) voltsChanged.connect(userChanges);
     }
 
 }

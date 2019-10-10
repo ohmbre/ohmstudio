@@ -78,9 +78,8 @@ Q_INVOKABLE void SymbolicFunction::compile() {
                 qDebug() << "   Position:" << err.token.position;
                 qDebug() << "   Type: [" << err.mode << "]";
                 qDebug() << "   Message:" << err.diagnostic.c_str();
-                qDebug(     "   Expr: " + expstr.toUtf8());
-                qDebug(     "   here: "+ expstr.mid(err.token.position,20).toUtf8() + "...");
-                qDebug(     "   Func: " + repr().toUtf8());
+                qDebug(QString("   Expr: %1").arg(expstr).toUtf8());
+                qDebug(QString("   Position: ... %1 ...").arg(expstr.mid(err.token.position, 100)).toUtf8());
                 break;
             }
         }

@@ -29,9 +29,11 @@ public:
     }
     void registerSink(Sink *sink);
     void deregisterSink(Sink *sink);
+    void setEngine(QQmlApplicationEngine *e) { engine = e; }
 
     long long ticks;
     QThread thread;
+    QQmlApplicationEngine *engine;
     QElapsedTimer clock;
     QTimer *timer;
     QList<Sink*> sinks;

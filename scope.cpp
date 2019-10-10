@@ -23,29 +23,30 @@ void Scope::paint(QPainter *painter) {
     pen.setWidthF(0.5);
     pen.setStyle(Qt::DotLine);
     painter->setPen(pen);
-    painter->drawLine(.25*w,     0, .25*w,     h);
-    painter->drawLine(.75*w,     0, .75*w,     h);
-    painter->drawLine(    0, .25*h,     w, .25*h);
-    painter->drawLine(    0, .75*h,     w, .75*h);
+
+    painter->drawLine(QLineF(.25*w,     0, .25*w,     h));
+    painter->drawLine(QLineF(.75*w,     0, .75*w,     h));
+    painter->drawLine(QLineF(    0, .25*h,     w, .25*h));
+    painter->drawLine(QLineF(    0, .75*h,     w, .75*h));
 
     pen.setWidthF(0.7);
     pen.setColor(QColor(100,100,100));
     pen.setStyle(Qt::DotLine);
     painter->setPen(pen);
-    painter->drawLine(    0,  .5*h,     w,  .5*h);
-    painter->drawLine( .5*w,     0,  .5*w,     h);
+    painter->drawLine(QLineF(    0,  .5*h,     w,  .5*h));
+    painter->drawLine(QLineF( .5*w,     0,  .5*w,     h));
 
     pen.setColor(QColor(0,0,0));
     painter->setPen(pen);
     painter->setFont(QFont("Asap SemiBold", 4));
     painter->drawText(QRect(0,0,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "10V" );
-    painter->drawText(QRect(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
+    painter->drawText(QRectF(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
 
-    long long nsamples = round(m_timeWindow*48);
+    long long nsamples = qRound(m_timeWindow*48);
 
     double timeinc = w/nsamples;
 
-    QVector<QPointF> polyline(nsamples);
+    QVector<QPointF> polyline(static_cast<int>(nsamples));
 
     long long start,end;
 
@@ -54,17 +55,18 @@ void Scope::paint(QPainter *painter) {
         end = trigpos + (nsamples+1)/2*2;
         pen.setColor(QColor(0,128,7));
         painter->setPen(pen);
-        painter->drawText(QRect(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) lock");
+        painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) lock");
     } else {
         start = bf - nsamples*2;
         end = bf;
         pen.setColor(QColor(128,7,0));
         painter->setPen(pen);
-        painter->drawText(QRect(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) no lock");
+        painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) no lock");
     }
 
     double xpos;
-    long long i,idx;
+    int i;
+    long long idx;
     pen.setWidthF(1);
     pen.setStyle(Qt::SolidLine);
 

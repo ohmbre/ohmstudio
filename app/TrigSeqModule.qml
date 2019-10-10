@@ -7,11 +7,6 @@ Module {
     InJack {label: 'clock'}
     InJack {label: 'reset'}
 
-    Sequence {
-        label: 'values'
-        entries: Array.from(Array(32).keys()).map(key=>cv(key.toString()).volts)
-    }
-
     BinaryCV { label: '1' }
     BinaryCV { label: '2' }
     BinaryCV { label: '3' }
@@ -47,11 +42,21 @@ Module {
     BinaryCV {
         label: 'reset'
     }
+
+    Sequence {
+        label: 'values'
+        entries: Array.from(Array(32).keys()).map(key=>{
+                    const bcv = cv(key.toString())
+                    return bcv ? bcv.volts : 0
+                })
+    }
+
     OutJack {
         label: 'trig'
         stateVars: ({ gate: 0, count: 0})
         expression:
-            'count := reset > 3 ? 0 : ((gate == 0) and (trig > 3) ? (count + 1)%32 : count);
+            'count := (gate == 0) and (trig > 3) ? ((count + 1) % 32) : count;
+             count := reset > 3 ? 0 : count;
              gate := (trig > 3) ? 1 : 0;
              values[count]'
     }

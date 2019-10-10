@@ -21,7 +21,8 @@ Module {
            'var f := 220hz * 2^(ctrlFreq + inFreq);
             var cs := cos(f);
             var sn := sin(f);
-            var alpha := sn * sinh(log(2)/2 * f / (sn * 1.5^(ctrlQ + inQ)));
+            var q := 1.5^(ctrlQ + inQ);
+            var alpha := sn * sinh(log(2)/2 * f / (sn * q));
             var b1 := 1-cs;
             var b02 := b1/2;
             var tmp := clamp(-10, (b02*input + b1*x1 + b02*x2 + 2*cs*y1 + (alpha-1)*y2) / (1 + alpha), 10);
@@ -36,7 +37,8 @@ Module {
         expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
                      var cs := cos(f);
                      var sn := sin(f);
-                     var alpha := sn * sinh(log(2)/2 * f / (sn * 1.5^(ctrlQ + inQ)));
+                     var q := 1.5^(ctrlQ + inQ);
+                     var alpha := sn * sinh(log(2)/2 * f / (sn * q));
                      var b1 := 1-cs;
                      var b02 := b1/2;
                      var tmp := clamp(-10, (b02*input +b1*x1 + b02*x2 + 2*cs*y1 + (alpha-1)*y2) / (1 + alpha), 10);

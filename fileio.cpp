@@ -4,8 +4,7 @@ constexpr auto RD = QIODevice::ReadOnly|QIODevice::Text;
 constexpr auto WR = QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text;
 constexpr auto PERM = QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther;
 
-
-
+FileIO::FileIO() : QObject(QGuiApplication::instance()) {}
 
 Q_INVOKABLE bool FileIO::write(const QString fname, const QString content) {
     QDir("").mkpath(fname.section('/',0,-2));
@@ -47,12 +46,4 @@ Q_INVOKABLE  QVariant FileIO::listDir(const QString dname, const QString match, 
 }
 
 
-FileIO::FileIO() : QObject(QGuiApplication::instance()) {
-    QDirIterator qrcIt(":/app", QStringList() << "*.qml", QDir::Files, QDirIterator::Subdirectories);
-    while (qrcIt.hasNext()) {
-        QString fname = qrcIt.next();
-        QString typeName = fname.split('/').last().chopped(4);
-        qmlRegisterType("qrc" + fname, "ohm", 1, 0, typeName.toLatin1().data());
-    }
-}
 

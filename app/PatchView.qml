@@ -1,6 +1,7 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.4
+import QtQuick 2.13
+import QtQuick.Controls 2.5
 import QtQml 2.11
+import Fluid.Templates 1.0
 
 Item {
     id: pView
@@ -148,78 +149,75 @@ Item {
         font.pixelSize: 20
         font.weight: Font.DemiBold
         verticalAlignment: Text.AlignBottom
-        onClicked: mMenu.popup(addModuleBtn)
+        onClicked: mMenu.visible = true
     }
 
-    OhmPopup {
+    Rectangle {
+        visible: false
+        width: 100
+        height: window.globalHeight
+        x: window.globalWidth-width
+        clip: true
         id: mMenu
-        title: "Add Module"
-        width: 95
-
-        property point popOrigin: Qt.point(content.width/2, content.height/2)
-        property string directory: ':/app/modules'
-        property string match: '*Module.qml'
-        onOpened: {
-            body.contentLoader.item.forceActiveFocus()
-            body.contentLoader.item.folder = mMenu.directory
-            body.contentLoader.item.model = FileIO.listDir(mMenu.directory,match,":/app/modules")
-        }
-        contents: ListView {
-            id: moduleList
-            width: mMenu.width
-            contentHeight: model.length * 13
-            height: contentHeight
-            keyNavigationEnabled: mMenu.opened
-            focus: true
-            property string folder: mMenu.directory
-            property string match: mMenu.match
-            model: FileIO.listDir(folder,match,":/app/modules")
-            delegate: OhmText {
-                width: mMenu.width
+        color: 'white'
+        border.width: 2
+        radius: 4
+        border.color: 'black'
+        ListView {
+            anchors.fill: parent
+            function listModules() {
+                return FileIO.listDir(':/app','*Module.qml',":/app")
+                       .filter(m => m !== ':/app/Module.qml' && m.endsWith('.qml'))
+                       .map(fname => {
+                                try {
+                                    const obj = Qt.createQmlObject(FileIO.read(fname), pView.patch, 'qrc:/app/fake.qml')
+                                    const label = obj.label
+                                    obj.destroy()
+                                    return {path: fname, label: label}
+                                } catch (err) {
+                                    console.log("Error in module",fname,":",err)
+                                    const parts = fname.split('/')
+                                    return {path: fname, label: parts[parts.length-1]}
+                                }
+                            })
+                .sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
+            }
+            model: listModules()
+            header: Rectangle {
+                width: parent.width
+                radius: 4
                 height: 14
-                property string path: modelData
-                property var parts: modelData.split('/')
-                property string leaf: parts[parts.length-1]
-                property bool isDir: leaf == '..' || leaf.indexOf('.') == -1
-                property string stem: parts.slice(0,-1).join('/')
-                text: isDir ? leaf : leaf.replace(/Module\.qml$/,'')
+                color: 'black'
+                OhmText {
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    font.bold: true
+                    color: 'white'
+                    text: 'Add Module'
+                }
+                Rectangle {
+                    x: 0; y: parent.height - 4
+                    width: parent.width; height: 4
+                    color: 'black'
+                }
+
+            }
+            delegate: OhmText {
+                width: parent.width
+                height: 14
+                text: modelData.label
                 color: "black"
                 horizontalAlignment: Text.AlignRight
                 padding: 2
-                rightPadding: 14
-                Image {
-                    source: 'qrc:/app/ui/icons/arrow.svg'
-                    width: 8
-                    height: 3.5
-                    visible: isDir
-                    horizontalAlignment: Text.AlignRight
-                    y: 5.5
-                    x: parent.width - 10
-                }
+                rightPadding: 5
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if (isDir) {
-                            if (leaf=="..")
-                                moduleList.folder = parts.slice(0,-2).join('/')
-                            else moduleList.folder = path
-                            moduleList.model = FileIO.listDir(moduleList.folder, moduleList.match, ":/app/modules")
-                        } else {
-                            pView.placeModule(path)
-
-                            mMenu.close();
-                        }
+                        pView.placeModule(modelData.path)
+                        mMenu.visible = false;
                     }
                 }
-            }
-
-            property Component emptyFooter: Item {}
-            footer: Item {}
-            clip: true
-            onModelChanged: {
-                mMenu.height = model.length * 14 + 13
-                mMenu.body.height =  model.length * 14
             }
         }
     }

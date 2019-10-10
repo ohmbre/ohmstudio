@@ -120,6 +120,8 @@ ApplicationWindow {
     }
 
     property alias globalScale: overlay.scale
+    property var globalHeight: window.height/globalScale
+    property var globalWidth: window.width/globalScale
 
     Item {
         id: overlay
@@ -128,10 +130,10 @@ ApplicationWindow {
         scale: window.width / width
         transformOrigin: Item.TopLeft
 
-        function loadPatchQML(url) {
-            var rawdata = readFile(url);
-            if (!rawdata) return false
-            return loadPatch(rawdata, url)
+        function loadAutoSave() {
+            var rawdata = readFile("file:autosave.qml");
+            if (rawdata)
+                loadPatch(rawdata, 'qrc:/app/autosave.qml')
         }
 
         function loadPatch(raw,url) {
@@ -156,7 +158,7 @@ ApplicationWindow {
         }
 
         Component.onCompleted: {
-            loadPatchQML("patches/autosave.qml")
+            loadAutoSave()
             setup.open()
         }
     }

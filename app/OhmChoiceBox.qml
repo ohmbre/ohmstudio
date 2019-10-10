@@ -43,7 +43,7 @@ Item {
                 font.pixelSize: 6
             }
         }
-        popup.height: Math.min(popup.contentItem.implicitHeight, window.height/window.globalScale * 0.75)
+        popup.height: Math.min(popup.contentItem.implicitHeight, window.globalHeight * 0.75)
         popup.width: control.width*1.2
 
         popup.scale: window.globalScale

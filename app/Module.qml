@@ -52,10 +52,11 @@ Model {
     Component.onCompleted: {
         forEach(outJacks, oj => {
             const outFunc = oj.createOutFunc();
+            if (!outFunc) return;
             forEach(cvs, cv => { outFunc.addVar(cv.label) })
             forEach(seqs, seq => { outFunc.addSeq(seq.label) })
             forEach(inJacks, ij => { outFunc.addInFunc(ij.label) })
-            outFunc.compile();
+            if (outFunc.compile) outFunc.compile();
 
             forEach(cvs, cv => {
                 outFunc.setVar(cv.label,cv.volts);

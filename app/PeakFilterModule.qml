@@ -20,10 +20,11 @@ Module {
         stateVars: ({x1: 0, x2: 0, y1: 0, y2: 0})
         expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
                      var sn := sin(f);
-                     var alpha := sn * sinh(log(2)/2 * f / (sn * 1.5^(ctrlQ + inQ)));
-                     var adivg := alpha/q;
-                     var ag := alpha*q;
-                     var b1 = -2*cos(f);
+                     var q := 1.5^(ctrlQ + inQ);
+                     var alpha := sn * sinh(log(2)/2 * f / (sn * q));
+                     var adivg := alpha / q;
+                     var ag := alpha * q;
+                     var b1 := -2*cos(f);
                      var tmp := clamp(-10, ((1+ag)*input + b1*(x1-y1) + (1-ag)*x2 - (1-adivg)*y2)/(1+adivg), 10);
                      x2 := x1;
                      x1 := input;
@@ -35,10 +36,11 @@ Module {
         stateVars: ({x1: 0, x2: 0, y1: 0, y2: 0, u1: 0, u2: 0, v1:0, v2: 0})
         expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
                      var sn := sin(f);
-                     var alpha := sn * sinh(log(2)/2 * f / (sn * 1.5^(ctrlQ + inQ)));
-                     var adivg := alpha/q;
-                     var ag := alpha*q;
-                     var b1 = -2*cos(f);
+                     var q := 1.5^(ctrlQ + inQ);
+                     var alpha := sn * sinh(log(2)/2 * f / (sn * q));
+                     var adivg := alpha / q;
+                     var ag := alpha * q;
+                     var b1 := -2 * cos(f);
                      var tmp := clamp(-10, ((1+ag)*input + b1*(x1-y1) + (1-ag)*x2 - (1-adivg)*y2)/(1+adivg), 10);
                      x2 := x1;
                      x1 := input;

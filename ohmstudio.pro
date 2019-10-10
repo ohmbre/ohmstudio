@@ -9,7 +9,9 @@ SOURCES += \
     sink.cpp \
     audio.cpp \
     scope.cpp \
-    fileio.cpp
+    fileio.cpp \
+    midi.cpp \
+    external/RtMidi.cpp
 
 
 HEADERS += \
@@ -19,7 +21,8 @@ HEADERS += \
     audio.hpp \
     scope.hpp \
     fileio.hpp \
-    pch.hpp
+    pch.hpp \
+    midi.hpp
 
 PRECOMPILED_HEADER = pch.hpp
 
@@ -37,11 +40,16 @@ RESOURCES += \
 
 QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
 
-QMAKE_CFLAGS=-Wno-variadic-macros -O2
-QMAKE_CXXFLAGS=-Wno-variadic-macros -Wno-implicit-fallthrough -ftemplate-depth=4096 -O2
+QMAKE_CFLAGS=-O2
+QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -O2
+linux {
+    QMAKE_CXXFLAGS += -D__LINUX_ALSA__
+    QMAKE_LFLAGS += -lasound
+}
 
-QML_IMPORT_PATH =
-QML_DESIGNER_IMPORT_PATH =
+
+QML_IMPORT_PATH += ohmstudio ohmstudio/app app
+
 QMAKE_MAC_SDK = macosx10.14
 
 android {

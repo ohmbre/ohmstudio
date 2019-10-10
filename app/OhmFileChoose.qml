@@ -7,7 +7,7 @@ Rectangle {
     visible: opacity > 0
     width: setup.width*0.65/scale;
     Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
-    height: window.height*0.8/scale;
+    height: window.globalHeight*0.8
     color: 'white'
     x:15
     y: header.height+13

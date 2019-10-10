@@ -13,9 +13,10 @@ Module {
     OutJack {
         label: 'gate'
         stateVars: ({ gate: 0, t: 0})
-        stream: 't := (gate == 0) and (trig > 3) ? 0 : t+1;
-                 gate := (trig > 3) ? 1 : 0;
-                 (t < 500ms*1.3**(inHold+ctrlHold)) ? 10 : 0'
+        expression:
+            't := (gate == 0) and (trig > 3) ? 0 : t+1;
+             gate := (trig > 3) ? 1 : 0;
+             (t < 500ms*1.3^(inHold+ctrlHold)) ? 10 : 0'
     }
 
 }

@@ -20,7 +20,8 @@ Jack {
 
     signal outFuncUpdated(var outFunc)
     function createOutFunc() {
-        outFunc = new SymbolicFunction(label, expression, stateVars)
+        if (expression)
+            outFunc = new SymbolicFunction(label, expression, stateVars)
         outFuncUpdated(outFunc)
         return outFunc
     }

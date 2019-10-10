@@ -17,11 +17,11 @@ Rectangle {
 
     OhmButton {
         text: "←"
-        font.pixelSize: 41
+        font.pixelSize: 39
         padding: 0
-        width: 54
-        height:54
-        radius: 26
+        width: 50
+        height:50
+        radius: 25
         x:0; y: 0; z:2
         verticalAlignment: Text.AlignTop
         onClicked: {
@@ -74,7 +74,7 @@ Rectangle {
             width: parent.width-parent.border.width*2
             height:  (module && module.display) ? (parent.height*0.3) : (parent.height-parent.border.width*2-30)
             x: parent.border.width
-            y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+30)
+            y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+35)
             columns: Math.floor(width / maxChildWidth())
             flow: GridLayout.LeftToRight
             rowSpacing: 0

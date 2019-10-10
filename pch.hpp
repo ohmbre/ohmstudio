@@ -30,3 +30,4 @@
 #include <functional>
 
 #include "external/exprtk.hpp"
+#include "external/RtMidi.h"
