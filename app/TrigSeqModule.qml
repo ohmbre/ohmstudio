@@ -43,22 +43,19 @@ Module {
         label: 'reset'
     }
 
-    Sequence {
-        label: 'values'
-        entries: Array.from(Array(32).keys()).map(key=>{
-                    const bcv = cv(key.toString())
-                    return bcv ? bcv.volts : 0
-                })
+    Variable { label: 'gate' }
+    Variable { label: 'count' }
+    Variable {
+        label: 'values';
+        value: mapList(cvs, cv => cv.volts)
     }
 
     OutJack {
         label: 'trig'
-        stateVars: ({ gate: 0, count: 0})
         expression:
-            'count := (gate == 0) and (trig > 3) ? ((count + 1) % 32) : count;
-             count := reset > 3 ? 0 : count;
-             gate := (trig > 3) ? 1 : 0;
-             values[count]'
+            'count := reset > 3 ? 0 : ((gate == 0) and (clock > 3) ? ((count + 1) % 32) : count);
+             gate := (clock > 3) ? 1 : 0;
+             gate == 0 ? 0 : values[count]'
     }
 
 }

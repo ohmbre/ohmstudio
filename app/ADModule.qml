@@ -30,10 +30,11 @@ Module {
         volts: 3
     }
 
+    Variable { label: 't' }
+    Variable { label: 'gate' }
 
     OutJack {
         label: 'envelope'
-        stateVars: ({t: 0, gate: 0})
         expression: "
            t := (gate == 0) and (trig > 3) ? 0 : t+1;
            gate := (trig > 3) ? 1 : 0;

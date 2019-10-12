@@ -22,6 +22,7 @@ Model {
             m.xChanged.connect(userChanges)
             m.yChanged.connect(userChanges)
             modules.push(m);
+            userChanges();
         } else
             console.error("Couldn't create module:", c.errorString())
 
@@ -34,7 +35,7 @@ Model {
 
     function autosave() {
         cueAutoSave = false;
-        this.saveTo('patches/autosave.qml');
+        this.saveTo('autosave.qml');
     }
 
     property bool cueAutoSave: false
@@ -53,6 +54,10 @@ Model {
             module.xChanged.connect(userChanges)
             module.yChanged.connect(userChanges)
             module.parent = Qt.patch
+            forEach(module.cvs, cv => {
+                        cv.voltsChanged.connect(userChanges)
+                    })
+
         })
     }
 

@@ -14,10 +14,13 @@ Module {
     CV { label: 'vmin'; volts: 0 }
     CV { label: 'vmax'; volts: 1 }
     CV { label: 'seed' }
+    Variable { label: 'count' }
+    Variable { label: 'state'; value: 1 }
+    Variable { label: 'sample' }
+    Variable { label: 'gate' }
 
     OutJack {
         label: 'voct'
-        stateVars: ({count: 0, state: 1, sample: 0, gate: 0})
         expression: 'if ((gate == 0) and (trig > 3))
                      {
                        state := (count == 0) ? round(6666 + 100*seed) : state;

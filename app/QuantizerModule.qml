@@ -10,11 +10,10 @@ Module {
         choices: scaledict.entries().map(entry=>entry.name)
     }
 
-    Sequence {
+    Variable {
         label: 'intervals'
-        entries: scaledict.entries().map(entry=>entry.intervals.map(i=>tonal.interval(i).semitones))[Math.round(cv('scale').volts)]
+        value: scaledict.entries().map(entry=>entry.intervals.map(i=>tonal.interval(i).semitones))[Math.round(cv('scale').volts)]
     }
-
     OutJack {
         label: 'quantized'
         expression: 'var whole := (input < 0) ? (ceil(input)-1) : floor(input);

@@ -56,6 +56,7 @@ Item {
             property real min: 0.5
 
             function zoomContent(zoomDelta, center) {
+                if (mMenu.visible && mMenu.contains(mMenu.mapFromItem(mousePinch,center.x,center.y))) return false;
                 if (zoomPanAnim.running) return false;
                 var oldZoom = zoom;
                 var newZoom = zoom * (1 + zoomDelta);
@@ -82,7 +83,9 @@ Item {
                 anchors.fill: parent
                 drag.target: content
                 propagateComposedEvents: false
-                onWheel: wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
+                onWheel: {
+                    wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
+                }
 
                 Repeater {
                     model: patch.modules
@@ -96,6 +99,10 @@ Item {
                     CableView {
                         cable: modelData
                     }
+                }
+
+                onClicked: {
+                    mMenu.visible = false;
                 }
 
                 CableDragView {id: childCableDragView; }
@@ -153,32 +160,28 @@ Item {
     }
 
     Rectangle {
+        id: mMenu
         visible: false
         width: 100
         height: window.globalHeight
         x: window.globalWidth-width
         clip: true
-        id: mMenu
         color: 'white'
         border.width: 2
         radius: 4
         border.color: 'black'
         ListView {
+            id: mlv
             anchors.fill: parent
             function listModules() {
                 return FileIO.listDir(':/app','*Module.qml',":/app")
                        .filter(m => m !== ':/app/Module.qml' && m.endsWith('.qml'))
                        .map(fname => {
-                                try {
-                                    const obj = Qt.createQmlObject(FileIO.read(fname), pView.patch, 'qrc:/app/fake.qml')
-                                    const label = obj.label
-                                    obj.destroy()
-                                    return {path: fname, label: label}
-                                } catch (err) {
-                                    console.log("Error in module",fname,":",err)
-                                    const parts = fname.split('/')
-                                    return {path: fname, label: parts[parts.length-1]}
-                                }
+                                const contents = FileIO.read(fname)
+                                let label = contents.match(/label:\s*[\'\"\`]([^\"\'\`]+)[\'\"\`]/)
+                                if (label) return {path: fname, label: label[1]}
+                                const parts = fname.split('/')
+                                return {path: fname, label: parts[parts.length-1]}
                             })
                 .sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
             }
@@ -219,6 +222,12 @@ Item {
                     }
                 }
             }
+            onFocusChanged: {
+                console.log('focus',focus)
+                if (!focus)
+                    visible = false
+            }
+
         }
     }
 

@@ -7,7 +7,9 @@ constexpr auto PERM = QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice
 FileIO::FileIO() : QObject(QGuiApplication::instance()) {}
 
 Q_INVOKABLE bool FileIO::write(const QString fname, const QString content) {
-    QDir("").mkpath(fname.section('/',0,-2));
+    QString path = fname.section('/',0,-2);
+    if (path != "")
+        QDir("").mkpath(fname.section('/',0,-2));
     QFile f(fname);
     if (!f.open(WR))
         return false;

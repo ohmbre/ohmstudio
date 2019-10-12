@@ -18,7 +18,7 @@ Q_INVOKABLE V BufferFunction::eval() {
     }
 };*/
 
-Q_INVOKABLE SymbolicFunction::SymbolicFunction(QString label, QString expression, QVariantMap stateVars)
+Q_INVOKABLE SymbolicFunction::SymbolicFunction(QString label, QString expression)
     : Function(), name(label), expstr(expression), variables(), inFuncs(), sequences(), compiled(false), curVoltage(0), ticks(maestro.ticks - 1) {
 
     st.add_constant("pi", M_PI);
@@ -29,36 +29,7 @@ Q_INVOKABLE SymbolicFunction::SymbolicFunction(QString label, QString expression
     st.add_constant("mins", 60*FRAMES_PER_SEC);
     st.add_constant("Hz", 2*M_PI/FRAMES_PER_SEC);
 
-    for(QVariantMap::const_iterator i = stateVars.constBegin(); i != stateVars.constEnd(); ++i) {
-        QString svname = i.key();
-        variables[svname] = i.value().toDouble();
-        st.add_variable(svname.toStdString(), variables[svname]);
-    }
-
-
-    /*if (funcRefs.isArray()) {
-        int nrefs = funcRefs.property("length").toInt();
-        for (int r = 0 ; r < nrefs; r++) {
-            QJSValue name = funcRefs.property(r);
-            if (name.isString()) {
-                st.add_function(name.toString().toStdString(), nullfunc);
-                refs[name.toString()] = &nullfunc;
-            }
-        }
-    }*/
-
-    //expr.register_symbol_table(unknowns);
     expr.register_symbol_table(st);
-    //par.enable_unknown_symbol_resolver();
-    //if (!par.compile(expression.toStdString(), expr))
-    //    qDebug() << "Error compiling {" << expstr << "}" << QString::fromStdString(par.error());
-
-    /*std::vector<std::string> variable_list;
-    unknowns.get_variable_list(variable_list);
-    for (std::string name : variable_list) {
-        V& val = unknowns.variable_ref(name);
-        variables[QString::fromStdString(name)] = &val;
-    }*/
 
 }
 
@@ -71,67 +42,76 @@ Q_INVOKABLE void SymbolicFunction::compile() {
             ParseError err = par.get_error(i);
             if (err.mode != exprtk::parser_error::e_symtab && !err.diagnostic.starts_with("ERR193 ")) {
                 qDebug() << "Compile Error";
-                qDebug() << "   line:" << err.line_no;
-                qDebug() << "   column:" << err.column_no;
                 qDebug() << "   token:" << err.token.value.c_str();
-                qDebug() << "   srcloc:" << err.src_location.c_str();
                 qDebug() << "   Position:" << err.token.position;
-                qDebug() << "   Type: [" << err.mode << "]";
                 qDebug() << "   Message:" << err.diagnostic.c_str();
                 qDebug(QString("   Expr: %1").arg(expstr).toUtf8());
-                qDebug(QString("   Position: ... %1 ...").arg(expstr.mid(err.token.position, 100)).toUtf8());
+                qDebug(QString("   Position: ... %1 ...").arg(expstr.mid(err.token.position, 50)).toUtf8());
+                qDebug(repr().toUtf8());
                 break;
             }
         }
     }
 }
 
-Q_INVOKABLE void SymbolicFunction::addVar(QString vname) {
-    variables[vname] = 0;
-    st.add_variable(vname.toStdString(), variables[vname]);
-}
-
-Q_INVOKABLE void SymbolicFunction::addSeq(QString sname) {
-    sequences[sname] = {0};
-    st.add_vector(sname.toStdString(),sequences[sname].data(),sequences[sname].size());
-}
-
-Q_INVOKABLE void SymbolicFunction::addInFunc(QString fname) {
-    st.add_function(fname.toStdString(), nullfunc);
-    inFuncs[fname] = &nullfunc;
-}
 
 
-Q_INVOKABLE void SymbolicFunction::setVar(QString vname, V value) {
-    if (variables.contains(vname))
-        variables[vname] = value;
-}
 
-Q_INVOKABLE void SymbolicFunction::setSeq(QString sname, QVector<V> entries) {
-    if (!sequences.contains(sname)) return;
-    int curSize = sequences[sname].size();
-    if (entries.size() == curSize) {
-        for (int i = 0; i < curSize; i++)
-            sequences[sname][i] = entries[i];
-    } else {
-        compiled = false;
-        st.remove_vector(sname.toStdString());
-        sequences[sname] = entries;
-        st.add_vector(sname.toStdString(),sequences[sname].data(),sequences[sname].size());
-        compile();
+Q_INVOKABLE void SymbolicFunction::setVar(QString vname, QVariant value) {
+    bool wasCompiled;
+    if (value.canConvert(QMetaType::QVariantList)) {
+        QVariantList vlist = value.toList();
+        QVector<V> seq;
+        foreach(QVariant listval, vlist) {
+            if (listval.canConvert(QMetaType::Double))
+                seq << listval.toDouble();
+            else seq << 0;
+        }
+        if (!sequences.contains(vname)) {
+            sequences[vname] = seq;
+            st.add_vector(vname.toStdString(),sequences[vname].data(),sequences[vname].size());
+        } else {
+            int curSize = sequences[vname].size();
+            if (seq.size() == curSize) {
+                for (int i = 0; i < curSize; i++)
+                    sequences[vname][i] = seq[i];
+            } else {
+                wasCompiled = compiled;
+                compiled = false;
+                st.remove_vector(vname.toStdString());
+                sequences[vname] = seq;
+                st.add_vector(vname.toStdString(),sequences[vname].data(),sequences[vname].size());
+                if (wasCompiled) compile();
+            }
+        }
+    } else if (value.canConvert(QMetaType::Double)) {
+        V val = value.toDouble();
+        if (!variables.contains(vname)) {
+            variables[vname] = val;
+            st.add_variable(vname.toStdString(), variables[vname]);
+        } else {
+            variables[vname] = val;
+        }
+    } else if (value.isNull() || value.canConvert<Function*>()) {
+        Function *func;
+        if (value.isNull()) func = &nullfunc;
+        else func = value.value<Function*>();
+        if (!inFuncs.contains(vname)) {
+            st.add_function(vname.toStdString(), *func);
+            inFuncs[vname] = func;
+        } else {
+            wasCompiled = compiled;
+            compiled = false;
+            st.remove_function(vname.toStdString());
+            st.add_function(vname.toStdString(), *func);
+            inFuncs[vname] = func;
+            if (wasCompiled) compile();
+        }
     }
+
 }
 
-Q_INVOKABLE void SymbolicFunction::setInFunc(QString fname, QJSValue funcRef) {
-    Function *func;
-    if (funcRef.isNull()) func = &nullfunc;
-    else func = qobject_cast<Function*>(funcRef.toQObject());
-    compiled = false;
-    st.remove_function(fname.toStdString());
-    st.add_function(fname.toStdString(), *func);
-    inFuncs[fname] = func;
-    compile();
-}
+
 
 Q_INVOKABLE V SymbolicFunction::eval() {
     if (!compiled) return 0;

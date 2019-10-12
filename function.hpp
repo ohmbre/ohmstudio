@@ -62,13 +62,8 @@ class SymbolicFunction : public Function {
     long long ticks;
 
 public:
-    Q_INVOKABLE SymbolicFunction(QString label, QString expression, QVariantMap stateVars);
-    Q_INVOKABLE void addVar(QString name);
-    Q_INVOKABLE void addSeq(QString name);
-    Q_INVOKABLE void addInFunc(QString name);
-    Q_INVOKABLE void setVar(QString var, V value);
-    Q_INVOKABLE void setSeq(QString name, QVector<V> entries);
-    Q_INVOKABLE void setInFunc(QString fname, QJSValue funcRef);
+    Q_INVOKABLE SymbolicFunction(QString label, QString expression);
+    Q_INVOKABLE void setVar(QString var, QVariant value);
     Q_INVOKABLE void compile();
 
     Q_INVOKABLE V eval() override;

@@ -72,11 +72,12 @@ Rectangle {
         GridLayout {
             id: controllers
             width: parent.width-parent.border.width*2
-            height:  (module && module.display) ? (parent.height*0.3) : (parent.height-parent.border.width*2-30)
+            height:  (module && module.display) ? (parent.height*0.3) : (parent.height-parent.border.width*2-40)
             x: parent.border.width
             y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+35)
-            columns: Math.floor(width / maxChildWidth())
-            flow: GridLayout.LeftToRight
+            columns: 8
+            rows: 8
+            flow: GridLayout.TopToBottom
             rowSpacing: 0
             columnSpacing: 0
             property var cvs: module ? module.cvs : []
@@ -89,16 +90,15 @@ Rectangle {
                     active: module != null
                 }
             }
-
-            function maxChildWidth() {
-                var w = 0
-                for (var i = 0; i < children.length; i++)
-                    w = Math.max(children[i].width, w)
-                return w
-            }
         }
     }
 
     property Module lastModule: null
 
 }
+
+/*##^##
+Designer {
+    D{i:0;autoSize:true;height:960;width:1280}
+}
+##^##*/

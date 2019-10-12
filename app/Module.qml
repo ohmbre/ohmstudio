@@ -7,14 +7,14 @@ Model {
     property list<InJack> inJacks
     property list<OutJack> outJacks
     property list<CV> cvs
-    property list<Sequence> seqs
+    property list<Variable> variables
 
     property var jacks: concatList(inJacks,outJacks)
     property var jackMap: arrayToObject(jacks.map(j => [j.label, j]))
 
     property int nJacks: jacks.length
     function jack(index) {
-        return (typeof index == "number") ? jacks[index] : jackMap[index];
+        return (typeof index == "number") ? jacks[index] : jackMap[index]
     }
 
     property var cvMap: arrayToObject(mapList(cvs,cv => [cv.label, cv]))
@@ -22,9 +22,9 @@ Model {
         return (typeof index == "number") ? cvs[index] : cvMap[index];
     }
 
-    property var seqMap: arrayToObject(mapList(seqs,seq => [seq.label, seq]))
-    function seq(index) {
-        return (typeof index == "number") ? seqs[index] : seqMap[index];
+    property var variableMap: arrayToObject(mapList(variables, v => [v.label, v]))
+    function variable(index) {
+        return (typeof index == 'number') ? variables[index] : variableMap[index]
     }
 
     property Component display: null
@@ -39,7 +39,7 @@ Model {
     default property var contents
     onContentsChanged: {
         contents.parent = this;
-        const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs], ['Sequence', seqs]];
+        const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs], ['Variable',variables]];
         typeMap.forEach(([type,container]) => {
             if (contents.objectName.endsWith(type)) {
                 const cur = filterList(container, i => i.label === contents.label)
@@ -53,25 +53,21 @@ Model {
         forEach(outJacks, oj => {
             const outFunc = oj.createOutFunc();
             if (!outFunc) return;
-            forEach(cvs, cv => { outFunc.addVar(cv.label) })
-            forEach(seqs, seq => { outFunc.addSeq(seq.label) })
-            forEach(inJacks, ij => { outFunc.addInFunc(ij.label) })
-            if (outFunc.compile) outFunc.compile();
 
             forEach(cvs, cv => {
-                outFunc.setVar(cv.label,cv.volts);
+                outFunc.setVar(cv.label, cv.volts)
                 cv.voltsChanged.connect(() => { outFunc.setVar(cv.label, cv.volts) })
             })
             forEach(inJacks, ij => {
-                if (ij.inFunc) outFunc.setInFunc(ij.label,ij.inFunc)
-                ij.inFuncUpdated.connect((lbl,func) => { outFunc.setInFunc(lbl, func) })
+                outFunc.setVar(ij.label, ij.inFunc)
+                ij.inFuncUpdated.connect((lbl,func) => { outFunc.setVar(lbl, func) })
             })
-            forEach(seqs, seq => {
-                if (seq.entries) outFunc.setSeq(seq.label,seq.entries)
-                seq.entriesChanged.connect(() => { outFunc.setSeq(seq.label, seq.entries) })
+            forEach(variables, v => {
+                outFunc.setVar(v.label, v.value)
+                v.valueChanged.connect(() => { outFunc.setVar(v.label, v.value) })
             })
 
-
+            if (outFunc.compile) outFunc.compile();
         })
     }
 
@@ -80,7 +76,6 @@ Model {
         forEach(inJacks, ij => ij.destroy())
         forEach(outJacks, oj => oj.destroy())
         forEach(cvs, cv => cv.destroy())
-        forEach(seqs, seq => seq.destroy())
     }
 
 

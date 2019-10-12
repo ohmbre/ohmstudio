@@ -12,9 +12,9 @@ Module {
     }
     CV { label: 'ctrlDuty' }
     CV { label: 'ctrlGain'; volts: 3 }
+    Variable { label: 'phase' }
     OutJack {
         label: 'pwm'
-        stateVars: ({phase: 0})
         expression: 'phase += 220Hz * 2^(ctrlFreq+inFreq);
                      (phase % tau)/tau < ((ctrlDuty+inDuty)/20+0.5) ? (inGain+ctrlGain) : 0'
     }

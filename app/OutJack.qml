@@ -4,7 +4,6 @@ Jack {
     id: outJack
     dir: "out"
     property var expression
-    property var stateVars: ({})
     property var outFunc: null
 
     property list<Cable> cables
@@ -21,9 +20,14 @@ Jack {
     signal outFuncUpdated(var outFunc)
     function createOutFunc() {
         if (expression)
-            outFunc = new SymbolicFunction(label, expression, stateVars)
+            outFunc = new SymbolicFunction(label, expression)
         outFuncUpdated(outFunc)
         return outFunc
+    }
+
+    function setVar(key,val) {
+        console.log('setvar',key,val);
+        if (outFunc) outFunc.setVar(key,val);
     }
 
     qmlExports: ({label: 'label'})

@@ -18,7 +18,7 @@ void Scope::paint(QPainter *painter) {
 
     QPen pen;
     painter->setRenderHints(QPainter::Antialiasing, true);
-
+    painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
     pen.setColor(QColor(150,150,150));
     pen.setWidthF(0.5);
     pen.setStyle(Qt::DotLine);
@@ -69,18 +69,19 @@ void Scope::paint(QPainter *painter) {
     long long idx;
     pen.setWidthF(1);
     pen.setStyle(Qt::SolidLine);
+    painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
 
     if (channels[0]) {
         for (i = 0, idx = start, xpos = 0; idx < end; i++, idx += 2, xpos += timeinc)
             polyline[i] = QPointF(xpos,h/2*(1-ringbuf[((idx < 0) ? (idx+RINGBUFLEN) : idx) % RINGBUFLEN]/32768.0));
-        pen.setColor(QColor(255,64,16,200));
+        pen.setColor(QColor(211,81,42,200));
         painter->setPen(pen);
         painter->drawPolyline(polyline);
     }
     if (channels[1]) {
         for (i = 0, idx = start+1, xpos = 0; idx < end; i++, idx += 2, xpos += timeinc)
             polyline[i] = QPointF(xpos,h/2*(1-ringbuf[((idx < 0) ? (idx+RINGBUFLEN) : idx) % RINGBUFLEN]/32768.0));
-        pen.setColor(QColor(16,64,255,200));
+        pen.setColor(QColor(0,176,186,200));
         painter->setPen(pen);
         painter->drawPolyline(polyline);
     }

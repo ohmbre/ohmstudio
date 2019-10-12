@@ -15,22 +15,23 @@ Module {
         unit: 'Hz'
     }
     CV {
-        label: 'gain'
+        label: 'ctrlGain'
         volts: 3
     }
     CV {
         label: 'ctrlDecay'
-        translate: v => 200 * 2**v
+        translate: v => 200 * 1.5**v
         unit: 'ms'
     }
-
+    Variable { label: 'phase' }
+    Variable { label: 't'; value: 99999999 }
+    Variable { label: 'gate' }
     OutJack {
         label: 'signal'
-        stateVars: ({phase: 0, t: 9999999, gate: 0})
         expression:
             't := (gate == 0) and (trig > 3) ? 0 : t + 1;
              gate := trig > 3 ? 1 : 0;
              phase += 220Hz * 2^(ctrlFreq+inFreq);
-             atan(sin(phase)/(cos(phase)+exp(200ms * 2^(inDecay + ctrlDecay) * t)))'
+             (inGain+ctrlGain)*atan(sin(phase)/(cos(phase)+exp(t/(200ms * 1.5^(inDecay + ctrlDecay)))))'
     }
 }

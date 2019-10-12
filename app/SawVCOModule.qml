@@ -11,9 +11,9 @@ Module {
         unit: 'Hz'
     }
     CV { label: 'ctrlGain'; volts: 3 }
+    Variable { label: 'phase' }
     OutJack {
         label: 'saw'
-        stateVars: ({phase: 0})
         expression: 'phase += 220Hz * 2^(ctrlFreq+inFreq);
                      (inGain+ctrlGain) * ((phase % tau)/pi - 1)'
     }

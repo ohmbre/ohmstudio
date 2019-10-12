@@ -4,45 +4,53 @@ import QtQuick.Shapes 1.12
 import QtQuick.Controls.Material 2.12
 
 Item {
-    width: 200
-    height: 24
+    width: 130
+    height: 18
+    antialiasing: true
     OhmText {
         color: 'black'
-        x: 0; y: parent.height/2-height; width: 40; height: 8
+        width: parent.width*.05; height: parent.height
         text: displayLabel
-        horizontalAlignment: Text.AlignLeft
+        horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 8
+        font.pixelSize: 6
+        rightPadding:6
     }
 
     Item {
-        x: 60
-        width: 100
-        height: 24
-        scale: 1.3
-
+        x: parent.width*.05
+        width: parent.width*.95
+        height: 18
+        antialiasing: true
+        transformOrigin: Item.Left
         OhmText {
             color: Material.color(Material.Grey, Material.Shade800)
-            x:-3; y:parent.height/2-1; width: 6; height: 4
+            x:-3; width: 6; height: parent.height
             font.pixelSize: 3
             text: '-10V'
             horizontalAlignment: Text.AlignLeft
+            verticalAlignment: Text.AlignBottom
+            bottomPadding: 2
         }
 
         OhmText {
             color: Material.color(Material.Grey, Material.Shade800)
-            x:parent.width/2-3; y:parent.height/2-1; width: 6; height: 4
+            x:parent.width/2-3; width: 6; height: parent.height
             font.pixelSize: 3
             text: '0V'
             horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignBottom
+            bottomPadding: 2
         }
 
         OhmText {
             color: Material.color(Material.Grey, Material.Shade800)
-            x:parent.width-4; y:parent.height/2-1; width: 6; height: 4
+            x:parent.width-4; width: 6; height: parent.height
             font.pixelSize: 3
             text: '10V'
             horizontalAlignment: Text.AlignRight
+            verticalAlignment: Text.AlignBottom
+            bottomPadding: 2
         }
 
 
@@ -51,6 +59,7 @@ Item {
         OhmSlider {
             id: control
             width: parent.width; height: 18
+            antialiasing: true
 
             value: volts;
             onValueChanged: {
