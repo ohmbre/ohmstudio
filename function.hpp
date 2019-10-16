@@ -38,6 +38,16 @@ public:
     Q_INVOKABLE QString repr() override { return "BufferFunction()"; }
 };
 
+class MutableFunction : public Function {
+        Q_OBJECT
+public:
+    V val;
+    MutableFunction(V v);
+    V eval() override { return val; }
+    V operator()() override { return val; }
+    Q_INVOKABLE QString repr() override { return QString("MutableFunction(%1)").arg(val); }
+};
+
 
 typedef exprtk::symbol_table<V> SymbolTable;
 typedef exprtk::parser<V> Parser;

@@ -1,12 +1,16 @@
 #include "external/RtMidi.h"
 #include "function.hpp"
 
-class MIDIInFunction : public Function {
+#define MIDIPOLY 3
+
+class MIDIInFunction : public QObject {
     Q_OBJECT
 private:
     RtMidiIn midiin;
     QJSValue jsCallback;
-    V curVal;
+    QSet<int> chanFilter;
+    QSet<int> typeFilter;
+    QSet<int> keyFilter;
 
 public:
 
@@ -17,12 +21,22 @@ public:
     Q_INVOKABLE void open(unsigned int portNum);
 
     Q_INVOKABLE void setJSCallback(QJSValue cb);
+    Q_INVOKABLE void setChanFilter(QVariantList chans);
+    Q_INVOKABLE void setTypeFilter(QStringList types);
+    Q_INVOKABLE void setKeyFilter(QVariantList keys);
 
     void callback(double deltatime, std::vector<unsigned char> *message);
 
-    V eval() override;
-    V operator()() override;
-    Q_INVOKABLE QString repr() override;
+    MutableFunction gate1,gate2,gate3,voct1,voct2,voct3,vel1,vel2,vel3, cv, wheel;
+    QVector<MutableFunction *> gates, vocts, vels;
+    QVector<int> keyed;
+    QVector<int> keys;
+    int keyPos;
+    Q_INVOKABLE Function* getGate(int n) { return gates[n%MIDIPOLY]; }
+    Q_INVOKABLE Function* getVoct(int n) { return vocts[n%MIDIPOLY]; }
+    Q_INVOKABLE Function* getVel(int n) { return vels[n%MIDIPOLY]; }
+    Q_INVOKABLE Function* getCv() { return &cv; }
+    Q_INVOKABLE Function* getWheel() { return &wheel; }
 
 };
 
@@ -44,12 +58,13 @@ public:
             val = data[2];
     }
 
+    static QMap<quint8,QString> nibToType;
+    static QMap<QString,quint8> typeToNib;
+
     QVariant asVariant() {
-        QMap<quint8,QString> typemap = {{0x8, "noteOn"}, {0x9, "noteOff"}, {0xA, "polyPressure"}, {0xB, "ctrlChange"}, {0xC, "progChange"},
-                                        {0xD, "chanPressure"}, {0xE, "pitchWheel"}};
         QVariantMap obj = {};
-        if (!typemap.contains(type)) return obj;
-        obj["type"] = typemap[type];
+        if (!nibToType.contains(type)) return obj;
+        obj["type"] = nibToType[type];
         obj["channel"] = channel;
         obj["key"] = key;
         obj["val"] = val;

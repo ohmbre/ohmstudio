@@ -4,19 +4,11 @@ Function::Function() : QObject(QGuiApplication::instance()), IFunction(0) {}
 
 NullFunction::NullFunction() : Function() {}
 BufferFunction::BufferFunction() : Function(), buffer() {}
+MutableFunction::MutableFunction(V v) : Function(), val(v) {}
 
 Q_INVOKABLE V BufferFunction::eval() {
     return buffer.dequeue();
 }
-
-/*struct Resolver : public Parser::unknown_symbol_resolver {
-    bool process(const std::string &symbol, SymbolTable &st, double &default_value, std::string &error_message) {
-        bool result = false;
-        if (symbol.ends_with("_seq")) {
-            st.add_variable(symbol
-        }
-    }
-};*/
 
 Q_INVOKABLE SymbolicFunction::SymbolicFunction(QString label, QString expression)
     : Function(), name(label), expstr(expression), variables(), inFuncs(), sequences(), compiled(false), curVoltage(0), ticks(maestro.ticks - 1) {
@@ -38,18 +30,12 @@ Q_INVOKABLE void SymbolicFunction::compile() {
         compiled = true;
     } else {
         compiled = false;
+        qDebug() << "---------- Compile Error(s) ----------";
         for (unsigned long i = 0; i < par.error_count(); i++) {
             ParseError err = par.get_error(i);
-            if (err.mode != exprtk::parser_error::e_symtab && !err.diagnostic.starts_with("ERR193 ")) {
-                qDebug() << "Compile Error";
-                qDebug() << "   token:" << err.token.value.c_str();
-                qDebug() << "   Position:" << err.token.position;
-                qDebug() << "   Message:" << err.diagnostic.c_str();
-                qDebug(QString("   Expr: %1").arg(expstr).toUtf8());
-                qDebug(QString("   Position: ... %1 ...").arg(expstr.mid(err.token.position, 50)).toUtf8());
-                qDebug(repr().toUtf8());
-                break;
-            }
+            qDebug().noquote() << i << ") " << err.diagnostic.c_str() << endl
+                               << "   at position ...:" << expstr.mid((int)err.token.position, 50)
+                               << "   full function dump: " << repr();
         }
     }
 }
@@ -69,7 +55,7 @@ Q_INVOKABLE void SymbolicFunction::setVar(QString vname, QVariant value) {
         }
         if (!sequences.contains(vname)) {
             sequences[vname] = seq;
-            st.add_vector(vname.toStdString(),sequences[vname].data(),sequences[vname].size());
+            st.add_vector(vname.toStdString(),sequences[vname].data(), (size_t)sequences[vname].size());
         } else {
             int curSize = sequences[vname].size();
             if (seq.size() == curSize) {
@@ -80,7 +66,7 @@ Q_INVOKABLE void SymbolicFunction::setVar(QString vname, QVariant value) {
                 compiled = false;
                 st.remove_vector(vname.toStdString());
                 sequences[vname] = seq;
-                st.add_vector(vname.toStdString(),sequences[vname].data(),sequences[vname].size());
+                st.add_vector(vname.toStdString(),sequences[vname].data(), (size_t) sequences[vname].size());
                 if (wasCompiled) compile();
             }
         }

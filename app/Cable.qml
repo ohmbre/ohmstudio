@@ -15,7 +15,6 @@ Model {
     Component.onDestruction: {
         if (inp) inp.cableRemoved(this);
         if (out) out.cableRemoved(this);
-        if (Qt.patch) Qt.patch.userChanges();
     }
 
     Component.onCompleted: {
@@ -32,8 +31,6 @@ Model {
         inp.cableAdded(this);
 
         out.outFuncUpdated.connect(inp.updateInFunc);
-
-        if (Qt.patch) Qt.patch.userChanges()
     }
 
 }

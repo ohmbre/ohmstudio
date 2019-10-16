@@ -21,6 +21,7 @@ Shape {
             width: 5; height: 5; radius: 2.5
             visible: parent.visible
             x: -width/2; y: -height/2
+            color: 'black'
         }
         property alias dot: dot
     }
@@ -37,25 +38,22 @@ Shape {
             id: dragCurve
             x: centerX(destination) - destination.dot.width/2
             y: centerY(destination) - destination.dot.height/2
-            control1X: dragShape.startX; control1Y: dragShape.startY + gravityOn * 100
-            control2X: x; control2Y: y + gravityOn * 100;
+            control1X: dragShape.startX; control1Y: dragShape.startY + 100
+            control2X: x; control2Y: y + 100;
             Behavior on control2X {
                 id: springX
-                enabled: animationOn
-                SpringAnimation { spring: .1; damping: 0.03}
+                enabled: state == "dragging"
+                SpringAnimation { spring: 1; damping: 0.1}
             }
             Behavior on control2Y {
                 id: springY
-                enabled: animationOn
-                SpringAnimation { spring: .1; damping: 0.03}
+                enabled: state == "dragging"
+                SpringAnimation { spring: 1; damping: 0.1}
             }
         }
         property alias dragCurve: dragCurve
     }
     property alias dragShape: dragShape
-    property bool animationOn: false
-    property real gravityOn: 0
-    Behavior on gravityOn { NumberAnimation { duration: 300 } }
 
     states: [
         State {
@@ -64,11 +62,11 @@ Shape {
                 target: cableDragView
                 dragShape.strokeColor: "transparent"
                 destination.visible: false
-                gravityOn: 0
             }
         },
         State {
             name: "dragging"
+
             PropertyChanges {
                 target: cableDragView
                 dragShape.strokeColor: '#F55D3E'
@@ -77,7 +75,6 @@ Shape {
                 destination.visible: true
                 destination.x: dragPad.mouseX + dragPad.parentModuleView.x - 10
                 destination.y: dragPad.mouseY + dragPad.parentModuleView.y - 10
-                gravityOn: 1
             }
 
         }
@@ -86,7 +83,7 @@ Shape {
     signal cableStarted(JackView jv)
     onCableStarted: function(jv) {
         dragPad = jv.pad
-        if (jv.jack.hasCable && jv.jack.dir == 'inp') {
+        if (jv.jack.hasCable && jv.jack.dir === 'inp') {
             startJackView = jv.jack.cable.out.view
             jv.jack.cable.destroy()
             startJackView.extend()
@@ -94,10 +91,12 @@ Shape {
             jv.dropTargeted = true;
         } else
             startJackView = jv;
+
+        destination.x = dragPad.mouseX + dragPad.parentModuleView.x - 10
+        destination.y = dragPad.mouseX + dragPad.parentModuleView.x - 10
         state = "dragging";
         dragPad.positionChanged.connect(cableDragView.cableMoved);
         dragPad.released.connect(cableDragView.cableDropped);
-        animationOn = true;
     }
 
     signal cableMoved
@@ -148,7 +147,6 @@ Shape {
         dragPad.positionChanged.disconnect(cableDragView.cableMoved);
         dragPad.released.disconnect(cableDragView.cableDropped);
         state = "notdragging";
-        animationOn = false;
         if (endJackView != null) {
             var cableComponent = Qt.createComponent("qrc:/app/Cable.qml");
             if (cableComponent.status === Component.Ready) {

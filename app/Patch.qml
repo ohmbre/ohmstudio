@@ -9,7 +9,6 @@ Model {
     function deleteModule(dModule) {
         modules = filterList(modules, m => m !== dModule);
         dModule.destroy()
-        userChanges()
     }
 
     function addModule(fileUrl, x, y) {
@@ -19,10 +18,7 @@ Model {
         if (c.status === Component.Ready) {
             const m = c.createObject(this, {x: x, y: y, objectName: name})
             m.parent = this;
-            m.xChanged.connect(userChanges)
-            m.yChanged.connect(userChanges)
             modules.push(m);
-            userChanges();
         } else
             console.error("Couldn't create module:", c.errorString())
 
@@ -33,31 +29,16 @@ Model {
         writeFile(fileName, qml)
     }
 
-    function autosave() {
-        cueAutoSave = false;
-        this.saveTo('autosave.qml');
-    }
-
-    property bool cueAutoSave: false
-
-    signal userChanges
-    onUserChanges: {
-        cueAutoSave = true
-    }
 
     qmlExports: ({name:'name', modules:'modules', cables: 'default'})
 
+
+
+
     Component.onCompleted: {
         Qt.patch = this;
-        modulesChanged.connect(userChanges)
         forEach(modules, function(module) {
-            module.xChanged.connect(userChanges)
-            module.yChanged.connect(userChanges)
             module.parent = Qt.patch
-            forEach(module.cvs, cv => {
-                        cv.voltsChanged.connect(userChanges)
-                    })
-
         })
     }
 

@@ -1,7 +1,3 @@
-#include <QProcessEnvironment>
-#include <QtWebView/QtWebView>
-#include <QQuickStyle>
-
 #include "conductor.hpp"
 #include "audio.hpp"
 #include "fileio.hpp"
@@ -10,6 +6,7 @@
 
 int main(int argc, char *argv[]) {
 
+    qputenv("QSG_RENDER_LOOP", "threaded");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QSurfaceFormat format; format.setSamples(4);
     QSurfaceFormat::setDefaultFormat(format);
@@ -26,6 +23,7 @@ int main(int argc, char *argv[]) {
     g.setProperty("AudioHWInfo", engine.newQObject(&audioHWInfo));
     g.setProperty("FileIO", engine.newQObject(&fileIO));
     qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
+    qRegisterMetaType<Function*>("Function*");
     qRegisterMetaType<AudioOut*>("AudioOut");
     qRegisterMetaType<AudioIn*>("AudioIn");
     qRegisterMetaType<MIDIInFunction*>("MIDIInFunction*");
@@ -38,6 +36,7 @@ int main(int argc, char *argv[]) {
     maestro.thread.start();
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
-
-    return app.exec();
+    int ret = app.exec();
+    maestro.thread.quit();
+    return ret;
 }

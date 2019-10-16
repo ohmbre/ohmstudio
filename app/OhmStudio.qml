@@ -119,6 +119,7 @@ ApplicationWindow {
         }
     }
 
+
     property alias globalScale: overlay.scale
     property var globalHeight: window.height/globalScale
     property var globalWidth: window.width/globalScale

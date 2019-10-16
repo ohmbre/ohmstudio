@@ -15,11 +15,12 @@ QAudioFormat AudioHWInfo::getFormat() {
 
 QStringList AudioHWInfo::availableDevs(QAudio::Mode mode) {
     QStringList names;
-    qDebug() << "\n\n\n-------------------------------------------------------------------------------";
+    freopen("/dev/null","w",stderr);
     foreach(QAudioDeviceInfo dev, QAudioDeviceInfo::availableDevices(mode))
         if (dev.deviceName() != "pulse" && dev.isFormatSupported(getFormat()))
             names << dev.deviceName();
-    qDebug() << "-------------------------------------------------------------------------------\n\n\n";
+    freopen("/dev/tty","w",stderr);
+
     return names;
 }
 
@@ -72,7 +73,7 @@ AudioOut::AudioOut(QAudioDeviceInfo info)
     dev->setBufferSize(FRAMES_PER_PERIOD * channels.count() * BYTES_PER_SAMPLE);
     iodev = dev->start();
     maestro.registerSink(this);
-    qDebug() << "plugin went with bufsz" << dev->bufferSize() << "period size" << dev->periodSize();
+    //qDebug() << "plugin went with bufsz" << dev->bufferSize() << "period size" << dev->periodSize();
 }
 
 void AudioIn::start() {

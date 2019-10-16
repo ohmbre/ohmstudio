@@ -141,8 +141,7 @@ Item {
         Timer {
             interval: 3000; running: true; repeat: true
             onTriggered: {
-                if (patch.cueAutoSave)
-                    patch.autosave();
+                patch.saveTo('autosave.qml');
             }
         }
 

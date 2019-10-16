@@ -33,7 +33,6 @@ Module {
 
         if (currentChoiceIndex >= 0)
             hw = AudioHWInfo.createOutput(devChoice);
-        userChanges()
     }
     property var currentChoiceIndex: -1
     display: Item {

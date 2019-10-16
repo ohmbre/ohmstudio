@@ -25,6 +25,8 @@
 #include <QPen>
 #include <QPainter>
 #include <QByteArray>
+#include <QProcessEnvironment>
+#include <QSurfaceFormat>
 #include <cmath>
 #include <cstdlib>
 #include <functional>

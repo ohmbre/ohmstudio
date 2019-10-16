@@ -32,7 +32,7 @@ Model {
     property real y
     property var view: null
 
-    qmlExports: ({ objectName: 'objectName', x:'x', y:'y', cvs: 'default',})
+    qmlExports: ({ objectName: 'objectName', x:'x', y:'y', cvs: 'default'})
 
 
 
