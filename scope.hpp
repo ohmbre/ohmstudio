@@ -11,8 +11,8 @@ public:
     void setTimeWindow(double timeWindow);
     double trig();
     void setTrig(double trig);
-    void paint(QPainter *painter);
-    int writeData(Sample *buf, long long count);
+    void paint(QPainter *painter) override;
+    int writeData(Sample *buf, long long count) override;
     Q_INVOKABLE qint64 channelCount() { return sinkChannelCount(); }
     Q_INVOKABLE void setChannel(int i, QObject *function) { sinkSetChannel(i, function); }
 private:
@@ -32,8 +32,8 @@ class FFTScope : public QQuickPaintedItem, public Sink {
     Q_OBJECT
 public:
     FFTScope(QQuickItem *parent = nullptr);
-    void paint(QPainter *painter);
-    int writeData(Sample *buf, long long count);
+    void paint(QPainter *painter) override;
+    int writeData(Sample *buf, long long count) override;
     Q_INVOKABLE qint64 channelCount() { return sinkChannelCount(); }
     Q_INVOKABLE void setChannel(int i, QObject *function) { sinkSetChannel(i, function); }
     double binToFreq(double i) { return 35*pow(2,i*log2(FRAMES_PER_SEC/2/35.0)/FFTSAMPLES); }
@@ -44,3 +44,5 @@ private:
     V fftBuf[FFTSAMPLES];
     long writePos;
 };
+
+

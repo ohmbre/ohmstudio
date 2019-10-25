@@ -2,7 +2,7 @@
 #include "function.hpp"
 #include "sink.hpp"
 
-Conductor::Conductor() : QObject() {}
+Conductor::Conductor() : QObject(QGuiApplication::instance()), ticks(0), timer(nullptr) {}
 
 void Conductor::start() {
     timer = new QTimer(this);
@@ -40,11 +40,11 @@ void Conductor::commit(Sink *sink) {
         qDebug() << "ran out of audio buffer space, discarding samples";
         sink->bi = sink->bf - RINGBUFLEN;
     }
-    int written,towrite;
+
     while (true) {
-        towrite = qMin(RINGBUFLEN - sink->bi % RINGBUFLEN, sink->bf - sink->bi);
+        int towrite = qMin(RINGBUFLEN - sink->bi % RINGBUFLEN, sink->bf - sink->bi);
         if (!towrite) break;
-        written = sink->writeData(sink->ringbuf + sink->bi % RINGBUFLEN, towrite);
+        int written = sink->writeData(sink->ringbuf + sink->bi % RINGBUFLEN, towrite);
         sink->bi += written;
         if (!written) break;
     }

@@ -5,6 +5,10 @@ Model {
     property string name
     property list<Module> modules
     property var cables: mapList(modules, m=>mapList(m.outJacks, oj=>oj.cables).reduce(concatList,[])).reduce(concatList,[])
+    signal cablesUpdated()
+    onCablesUpdated: {
+        cables = mapList(modules, m=>mapList(m.outJacks, oj=>oj.cables).reduce(concatList,[])).reduce(concatList,[])
+    }
 
     function deleteModule(dModule) {
         modules = filterList(modules, m => m !== dModule);

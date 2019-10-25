@@ -12,25 +12,25 @@ int main(int argc, char *argv[]) {
     QSurfaceFormat::setDefaultFormat(format);
 
     QGuiApplication app(argc, argv);
+    app.setOrganizationName("Ohm");
+    app.setOrganizationDomain("life");
     QQmlApplicationEngine engine;
     QJSValue g = engine.globalObject();
-    AudioHWInfo audioHWInfo;
     FileIO fileIO;
-
+    QQmlEngine::setContextForObject(&fileIO, engine.rootContext());
     g.setProperty("global", g);
     g.setProperty("SymbolicFunction", engine.newQMetaObject(&SymbolicFunction::staticMetaObject));
     g.setProperty("MIDIInFunction", engine.newQMetaObject(&MIDIInFunction::staticMetaObject));
-    g.setProperty("AudioHWInfo", engine.newQObject(&audioHWInfo));
+    g.setProperty("AudioOut", engine.newQMetaObject(&AudioOut::staticMetaObject));
     g.setProperty("FileIO", engine.newQObject(&fileIO));
+    g.setProperty("FRAMES_PER_SEC", FRAMES_PER_SEC);
     qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
-    qRegisterMetaType<Function*>("Function*");
-    qRegisterMetaType<AudioOut*>("AudioOut");
-    qRegisterMetaType<AudioIn*>("AudioIn");
     qRegisterMetaType<MIDIInFunction*>("MIDIInFunction*");
+    qRegisterMetaType<AudioOut*>("AudioOut");
+
     qmlRegisterType<Scope>("ohm", 1, 0, "Scope");
     qmlRegisterType<FFTScope>("ohm", 1, 0, "FFTScope");
 
-    maestro.setEngine(&engine);
     maestro.moveToThread(&(maestro.thread));
     QMetaObject::invokeMethod(&maestro,"start", Qt::ConnectionType::QueuedConnection);
     maestro.thread.start();

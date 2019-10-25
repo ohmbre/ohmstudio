@@ -18,19 +18,15 @@ Model {
     }
 
     Component.onCompleted: {
-        if (!out || !inp) {
-            this.destroy()
-            return
-        }
 
-        out = out
-        inp = inp
-        parent = out
+        if (out) out = out
+        if (inp) inp = inp
+        if (out) parent = out
 
-        out.cableAdded(this);
-        inp.cableAdded(this);
+        if (out) out.cableAdded(this);
+        if (inp) inp.cableAdded(this);
 
-        out.outFuncUpdated.connect(inp.updateInFunc);
+        if (out && inp && inp.updateInFunc) out.outFuncUpdated.connect(inp.updateInFunc);
     }
 
 }

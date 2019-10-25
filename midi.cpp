@@ -9,13 +9,11 @@ QMap<QString,quint8> MIDIEvent::typeToNib = {{"Note On", 0x9}, {"Note Off",0x8},
 
 Q_INVOKABLE MIDIInFunction::MIDIInFunction(): QObject(QGuiApplication::instance()),
      gate1(0), gate2(0), gate3(0), voct1(0), voct2(0), voct3(0),
-     vel1(0), vel2(0), vel3(0), cv(0), wheel(0), keyPos(0)
+     vel1(0), vel2(0), vel3(0), cv(0), wheel(0), keyed({0,0,0}), keys({0,0,0}), keyPos(0)
 {
     gates = {&gate1, &gate2, &gate3};
     vocts = {&voct1, &voct2, &voct3};
     vels = {&vel1, &vel2, &vel3};
-    keyed = { 0, 0, 0 };
-    keys = {0, 0, 0};
 }
 
 QStringList MIDIInFunction::listDevices() {
@@ -42,7 +40,7 @@ void MIDIInFunction::callback(double, std::vector<unsigned char> *message) {
     if (!chanFilter.contains(ev.channel)) return;
     if (!typeFilter.contains(ev.type)) return;
     if (!keyFilter.contains(ev.key)) return;
-    jsCallback.call(QJSValueList() << maestro.engine->toScriptValue(ev.asVariant()));
+    jsCallback.call(QJSValueList() << QQmlEngine::contextForObject(this)->engine()->toScriptValue(ev.asVariant()));
     int pos;
 
     if (ev.type == 0x9) {

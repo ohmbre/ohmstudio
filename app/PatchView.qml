@@ -1,7 +1,6 @@
 import QtQuick 2.13
 import QtQuick.Controls 2.5
 import QtQml 2.11
-import Fluid.Templates 1.0
 
 Item {
     id: pView
@@ -69,8 +68,8 @@ Item {
         }
         property alias scaler: scaler
 
-
         PinchArea {
+            id: mousePinch
             anchors.fill: parent
             onPinchUpdated: {
                 pinch.accepted = scaler.zoomContent(
@@ -78,8 +77,7 @@ Item {
                             Qt.point(pinch.startCenter.x, pinch.startCenter.y))
             }
             MouseArea {
-                id: mousePinch
-                hoverEnabled: true
+
                 anchors.fill: parent
                 drag.target: content
                 propagateComposedEvents: false
@@ -138,12 +136,7 @@ Item {
             delModuleMenu.popup();
         }
 
-        Timer {
-            interval: 3000; running: true; repeat: true
-            onTriggered: {
-                patch.saveTo('autosave.qml');
-            }
-        }
+
 
     }
 
@@ -249,6 +242,21 @@ Item {
 
     property alias contentItem: content
     property alias cableDragView: childCableDragView
+
+
+    Timer {
+        id: autoSaveTimer
+        interval: 2000; running: true; repeat: true
+        property var lastSave: ''
+        onTriggered: {
+            gc()
+            const qml = 'import ohm 1.0\n' + patch.toQML();
+            if (qml !== lastSave) {
+                writeFile('autosave.qml', qml)
+                lastSave = qml;
+            }
+        }
+    }
 
     Component.onCompleted: {
         patch.view = pView;

@@ -101,7 +101,7 @@ ApplicationWindow {
             directory: 'patches'
             extension: 'qml'
             onFileChosen: function(fileURL) {
-                if (overlay.loadPatchQML(fileURL))
+                if (overlay.loadPatch(FileIO.read(fileURL)))
                     setup.close()
             }
         }

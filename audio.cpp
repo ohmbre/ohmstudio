@@ -1,8 +1,6 @@
 #include "audio.hpp"
 
-AudioHWInfo::AudioHWInfo() : QObject(QGuiApplication::instance()) {}
-
-QAudioFormat AudioHWInfo::getFormat() {
+QAudioFormat AudioOut::getFormat() {
     QAudioFormat format;
     format.setChannelCount(2);
     format.setSampleRate(FRAMES_PER_SEC);
@@ -13,10 +11,10 @@ QAudioFormat AudioHWInfo::getFormat() {
     return format;
 }
 
-QStringList AudioHWInfo::availableDevs(QAudio::Mode mode) {
+Q_INVOKABLE QStringList AudioOut::availableDevs() {
     QStringList names;
     freopen("/dev/null","w",stderr);
-    foreach(QAudioDeviceInfo dev, QAudioDeviceInfo::availableDevices(mode))
+    foreach(QAudioDeviceInfo dev, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
         if (dev.deviceName() != "pulse" && dev.isFormatSupported(getFormat()))
             names << dev.deviceName();
     freopen("/dev/tty","w",stderr);
@@ -24,17 +22,8 @@ QStringList AudioHWInfo::availableDevs(QAudio::Mode mode) {
     return names;
 }
 
-QStringList AudioHWInfo::availableInDevs() {
-    return availableDevs(QAudio::AudioInput);
-}
-
-QStringList AudioHWInfo::availableOutDevs() {
-    return availableDevs(QAudio::AudioOutput);
-}
-
-
-QAudioDeviceInfo AudioHWInfo::devInfo(const QString name, QAudio::Mode mode) {
-    QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(mode);
+QAudioDeviceInfo AudioOut::devInfo(const QString &name) {
+    QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
     QList<QAudioDeviceInfo>::iterator dev;
     for (dev = devs.begin(); dev != devs.end(); ++dev)
         if (dev->deviceName() == name && dev->isFormatSupported(getFormat()))
@@ -43,72 +32,37 @@ QAudioDeviceInfo AudioHWInfo::devInfo(const QString name, QAudio::Mode mode) {
     return QAudioDeviceInfo();
 }
 
-Q_INVOKABLE AudioOut* AudioHWInfo::createOutput(const QString devName) {
-    QAudioDeviceInfo info = devInfo(devName, QAudio::AudioOutput);
-    if (info.isNull()) return nullptr;
-    AudioOut *out = new AudioOut(info);
-    return out;
+Q_INVOKABLE qint64 AudioOut::channelCount() {
+    return sinkChannelCount();
 }
 
-Q_INVOKABLE AudioIn* AudioHWInfo::createInput(const QString devName) {
-    QAudioDeviceInfo info = devInfo(devName, QAudio::AudioInput);
-    if (info.isNull()) return nullptr;
-    AudioIn *in = new AudioIn(info);
-    return in;
+Q_INVOKABLE void AudioOut::setChannel(int i, QObject *function) {
+    sinkSetChannel(i, function);
 }
 
+AudioOut::AudioOut()  : QObject(QGuiApplication::instance()), Sink(getFormat().channelCount()), dev(nullptr), iodev(nullptr) {}
 
-AudioIn::AudioIn(QAudioDeviceInfo info)
-    : QIODevice(), devInfo(info) {
-    int nchannels = AudioHWInfo::getFormat().channelCount();
-    channels = QVector<BufferFunction*>(nchannels);
-    for (int i = 0; i < nchannels; i++) {
-        channels[i] = new BufferFunction();
+void AudioOut::setDevice(const QString &name) {
+    if (dev != nullptr) {
+        dev->stop();
+        delete dev;
     }
-}
-
-AudioOut::AudioOut(QAudioDeviceInfo info)
-    : QObject(QGuiApplication::instance()), Sink(AudioHWInfo::getFormat().channelCount()), devInfo(info) {
-    dev = new QAudioOutput(devInfo, AudioHWInfo::getFormat());
+    dev = new QAudioOutput(devInfo(name), getFormat());
     dev->setBufferSize(FRAMES_PER_PERIOD * channels.count() * BYTES_PER_SAMPLE);
     iodev = dev->start();
     maestro.registerSink(this);
-    //qDebug() << "plugin went with bufsz" << dev->bufferSize() << "period size" << dev->periodSize();
 }
-
-void AudioIn::start() {
-    dev = new QAudioInput(devInfo, AudioHWInfo::getFormat());
-    open(QIODevice::WriteOnly);
-    dev->start(this);
-}
-
 
 int AudioOut::writeData(Sample *buf, long long count) {
     return iodev->write((char*)buf, count * BYTES_PER_SAMPLE) / BYTES_PER_SAMPLE;
 }
 
-AudioIn::~AudioIn() {
-    dev->stop();
-    delete dev;
-    for (int i = 0; i < channels.count(); i++) {
-        delete channels[i];
+AudioOut::~AudioOut() {
+    if (dev != nullptr) {
+        dev->stop();
+        delete dev;
     }
 }
 
-AudioOut::~AudioOut() {
-    dev->stop();
-    delete dev;
-}
-
-qint64 AudioIn::writeData(const char *data, qint64 len) {
-    Sample *samples = (Sample*)data;
-    qint64 nsamples = len / BYTES_PER_SAMPLE;
-    int idx = 0;
-    int chan = 0;
-    int nchannels = channels.count();
-    while (idx < nsamples)
-        channels[chan++ % nchannels]->put((samples[idx]+0.5) / 3276.75);
-    return len;
-}
 
 

@@ -157,6 +157,7 @@ Shape {
 
                 startJackView.parent.collapseAll();
                 endJackView.parent.collapseAll();
+                pView.patch.cables = pView.patch.cables
             } else
                 console.log("error creating cable:", cComponent.errorString());
             endJackView.dropTargeted = false;

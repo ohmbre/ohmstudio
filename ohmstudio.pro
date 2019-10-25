@@ -41,13 +41,11 @@ RESOURCES += \
 QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
 
 linux {
-    QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-stype-cast
-    QMAKE_CXXFLAGS += -D__LINUX_ALSA__
+    QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-style-cast -O2 -D__LINUX_ALSA__
     QMAKE_LFLAGS += -lasound
 }
 
 
-QML_IMPORT_PATH += ohmstudio ohmstudio/app app
 
 QMAKE_MAC_SDK = macosx10.14
 

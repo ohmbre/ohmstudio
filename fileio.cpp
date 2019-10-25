@@ -1,28 +1,26 @@
 #include "fileio.hpp"
+#include "conductor.hpp"
 
-constexpr auto RD = QIODevice::ReadOnly|QIODevice::Text;
-constexpr auto WR = QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text;
-constexpr auto PERM = QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther;
 
-FileIO::FileIO() : QObject(QGuiApplication::instance()) {}
+Q_INVOKABLE FileIO::FileIO() : QObject(QGuiApplication::instance()) {}
 
-Q_INVOKABLE bool FileIO::write(const QString fname, const QString content) {
+Q_INVOKABLE bool FileIO::write(const QString &fname, const QString &content) {
     QString path = fname.section('/',0,-2);
     if (path != "")
         QDir("").mkpath(fname.section('/',0,-2));
     QFile f(fname);
-    if (!f.open(WR))
+    if (!f.open(QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text))
         return false;
     QTextStream out(&f);
     out << content << endl;
     f.close();
-    QFile::setPermissions(fname, PERM);
+    QFile::setPermissions(fname, QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther);
     return true;
 }
 
-Q_INVOKABLE  QString FileIO::read(const QString fname) {
+Q_INVOKABLE  QString FileIO::read(const QString &fname) {
         QFile f(fname);
-        if (!f.open(RD))
+        if (!f.open(QIODevice::ReadOnly|QIODevice::Text))
             return "";
         return QTextStream(&f).readAll();
 }
@@ -31,7 +29,7 @@ Q_INVOKABLE  QString FileIO::pwd() {
     return QDir::currentPath();
 }
 
-Q_INVOKABLE  QVariant FileIO::listDir(const QString dname, const QString match, const QString base) {
+Q_INVOKABLE  QVariant FileIO::listDir(const QString &dname, const QString &match, const QString &base) {
     QDirIterator modIt(dname,QStringList()<<match,QDir::Files|QDir::NoDot|QDir::NoDotDot|QDir::AllDirs,QDirIterator::FollowSymlinks);
     QStringList fnames,subnames;
     if (dname != base) subnames << dname + "/..";
@@ -48,4 +46,48 @@ Q_INVOKABLE  QVariant FileIO::listDir(const QString dname, const QString match, 
 }
 
 
+Q_INVOKABLE QJSValue FileIO::samplesFromFile(QUrl url) {
+    QAudioDecoder decoder;
+    QList<double> samples;
+    QAudioFormat fmt;
+    QTimer timer;
+    QEventLoop loop;
+
+    decoder.setSourceFilename(QFileInfo(url.path()).absoluteFilePath());
+    fmt.setChannelCount(1);
+    fmt.setSampleSize(32);
+    fmt.setSampleRate(FRAMES_PER_SEC);
+    fmt.setCodec("audio/pcm");
+    fmt.setSampleType(QAudioFormat::Float);
+    fmt.setByteOrder(QAudioFormat::LittleEndian);
+    decoder.setAudioFormat(fmt);
+    timer.setSingleShot(true);
+    connect(&decoder, &QAudioDecoder::finished, &loop, &QEventLoop::quit);
+    connect(&decoder, &QAudioDecoder::bufferReady, &loop, &QEventLoop::quit);
+    connect(&decoder, &QAudioDecoder::stateChanged, &loop, &QEventLoop::quit);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    decoder.start();
+
+    bool started = decoder.state() == QAudioDecoder::DecodingState;
+    while (decoder.error() == QAudioDecoder::NoError) {
+        while (decoder.bufferAvailable()) {
+            QAudioBuffer buf = decoder.read();
+            float *data = (float*)buf.constData();
+            for (int i = 0; i < buf.frameCount(); i++)
+                samples.append(data[i]);
+        }
+        started = started || decoder.state() == QAudioDecoder::DecodingState;
+        if (started && decoder.state() == QAudioDecoder::StoppedState)
+            break;
+        timer.start(2000);
+        loop.exec();
+    }
+
+
+    QJSValue ret = qmlEngine(this)->newArray(samples.size());
+    for (int i = 0; i < samples.size(); i++)
+        ret.setProperty(i, samples[i]*10);
+    return ret;
+
+}
 

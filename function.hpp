@@ -42,7 +42,7 @@ class MutableFunction : public Function {
         Q_OBJECT
 public:
     V val;
-    MutableFunction(V v);
+    explicit MutableFunction(V v);
     V eval() override { return val; }
     V operator()() override { return val; }
     Q_INVOKABLE QString repr() override { return QString("MutableFunction(%1)").arg(val); }
@@ -72,12 +72,10 @@ class SymbolicFunction : public Function {
     long long ticks;
 
 public:
-    Q_INVOKABLE SymbolicFunction(QString label, QString expression);
+    Q_INVOKABLE SymbolicFunction(const QString &label, const QString &expression);
     Q_INVOKABLE void setVar(QString var, QVariant value);
     Q_INVOKABLE void compile();
-
     Q_INVOKABLE V eval() override;
-    Function* function;
     Q_INVOKABLE QString repr() override;
 };
 

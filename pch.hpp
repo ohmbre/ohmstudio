@@ -12,6 +12,7 @@
 #include <QAudioOutput>
 #include <QAudioInput>
 #include <QAudioDeviceInfo>
+#include <QAudioDecoder>
 #include <QFile>
 #include <QDir>
 #include <QDirIterator>
@@ -27,6 +28,7 @@
 #include <QByteArray>
 #include <QProcessEnvironment>
 #include <QSurfaceFormat>
+#include <QtEndian>
 #include <cmath>
 #include <cstdlib>
 #include <functional>

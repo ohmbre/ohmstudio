@@ -94,3 +94,5 @@ global.arrayToObject = (a) => {
     a.forEach(([k,v]) => { o[k] = v });
     return o;
 }
+
+

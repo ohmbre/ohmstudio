@@ -11,7 +11,7 @@ Module {
         unit: 'ms'
     }
     Variable { label: 'gate' }
-    Variable { label: 't' }
+    Variable { label: 't'; value: 99999999 }
     OutJack {
         label: 'gate'
         expression:

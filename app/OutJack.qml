@@ -11,10 +11,12 @@ Jack {
     signal cableRemoved(Cable cable)
     onCableRemoved: {
         cables = filterList(cables, c => c !== cable)
+        if (parent && parent.parent) parent.parent.cablesUpdated()
     }
     signal cableAdded(Cable cable)
     onCableAdded: {
         cables.push(cable)
+        if (parent && parent.parent) parent.parent.cablesUpdated()
     }
 
     signal outFuncUpdated(var outFunc)

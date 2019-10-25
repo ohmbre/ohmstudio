@@ -42,7 +42,7 @@ void Scope::paint(QPainter *painter) {
     painter->drawText(QRect(0,0,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "10V" );
     painter->drawText(QRectF(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
 
-    long long nsamples = qRound(m_timeWindow*48);
+    long long nsamples = qRound(m_timeWindow*FRAMES_PER_SEC/1000);
 
     double timeinc = w/nsamples;
 
@@ -89,7 +89,7 @@ void Scope::paint(QPainter *painter) {
 }
 
 int Scope::writeData(Sample *buf, long long count) {
-    long long nsamples = round(m_timeWindow*48);
+    long long nsamples = round(m_timeWindow*FRAMES_PER_SEC/1000);
     long long needed = (nsamples+1)/2;
 
     if (bf-trigpos > RINGBUFLEN) trigpos = -1;

@@ -64,7 +64,8 @@ Model {
             })
             forEach(variables, v => {
                 outFunc.setVar(v.label, v.value)
-                v.valueChanged.connect(() => { outFunc.setVar(v.label, v.value) })
+                v.valueChanged.connect(() => { console.log('setvvar',v.label); outFunc.setVar(v.label, v.value) })
+
             })
 
             if (outFunc.compile) outFunc.compile();

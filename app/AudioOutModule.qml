@@ -2,39 +2,39 @@ import QtQuick 2.12
 import ohm 1.0
 
 Module {
-    id: audioOutModule
+    id: audioOut
     label: 'Audio Out'
 
     property var hw: null
-    onHwChanged: {
-        audioOutModule.inJacks = []
-        if (hw == null) return;
+    property var devChoices: []
+    property var devChoice
+    onDevChoiceChanged: {
+        instantiate();
+        if (devChoices.indexOf(devChoice) == -1) return;
+        hw.setDevice(devChoice);
+        audioOut.inJacks = []
         const nchan = hw.channelCount()
+        console.log('devchoice changed w nchan',nchan)
         for (let i = 0; i < nchan; i++) {
             const pos = i
             var ijComponent = Qt.createComponent("qrc:/app/InJack.qml");
             if (ijComponent.status === Component.Ready) {
-                const ij = ijComponent.createObject(audioOutModule, {label: pos, parent: audioOutModule})
-                audioOutModule.inJacks.push(ij)
-                ij.inFuncUpdated.connect((lbl,func) => { audioOutModule.hw.setChannel(parseInt(lbl), func) })
+                const ij = ijComponent.createObject(audioOut, {label: pos, parent: audioOut})
+                audioOut.inJacks.push(ij)
+                ij.inFuncUpdated.connect((lbl,func) => { audioOut.hw.setChannel(parseInt(lbl), func) })
             } else
                 console.log("error creating injack:", component.errorString());
         }
 
     }
 
-    property var devChoice
-    onDevChoiceChanged: {
-        currentChoiceIndex = AudioHWInfo.availableOutDevs().indexOf(devChoice)
-        if (hw != null) {
-            hw.destroy();
-            hw = null;
+    function instantiate() {
+        if (!hw) {
+            hw = new AudioOut();
+            devChoices = hw.availableDevs();
         }
-
-        if (currentChoiceIndex >= 0)
-            hw = AudioHWInfo.createOutput(devChoice);
     }
-    property var currentChoiceIndex: -1
+
     display: Item {
         OhmChoiceBox {
             width: 150
@@ -42,21 +42,21 @@ Module {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             label.text: "Device"
-            control.currentIndex: audioOutModule.currentChoiceIndex
-            choiceLabels: AudioHWInfo.availableOutDevs()
+            choiceLabels: audioOut.devChoices
+            control.currentIndex: audioOut.devChoices.indexOf(audioOut.devChoice);
             onChosen: {
-                audioOutModule.devChoice = choiceLabels[index]
+                audioOut.devChoice = audioOut.devChoices[index]
             }
         }
     }
-    qmlExports: ({x:'x', y:'y', devChoice:'devChoice'})
+    qmlExports: ({objectName: 'objectName', x:'x', y:'y', devChoice:'devChoice'})
 
-    Component.onDestruction: {
-        if (hw!= null) {
-            hw.destroy();
-            hw = null;
-        }
+    Component.onCompleted: {
+        instantiate();
     }
+    Component.onDestruction: {
+        if (hw) hw.destroy();
+   }
 }
 
 

@@ -10,7 +10,7 @@ Q_INVOKABLE V BufferFunction::eval() {
     return buffer.dequeue();
 }
 
-Q_INVOKABLE SymbolicFunction::SymbolicFunction(QString label, QString expression)
+Q_INVOKABLE SymbolicFunction::SymbolicFunction(const QString &label, const QString &expression)
     : Function(), name(label), expstr(expression), variables(), inFuncs(), sequences(), compiled(false), curVoltage(0), ticks(maestro.ticks - 1) {
 
     st.add_constant("pi", M_PI);
