@@ -21,7 +21,7 @@ Module {
                 anchors.fill: parent
                 id: fft
                 Timer {
-                    interval: 50
+                    interval: 200
                     running: true
                     repeat: true
                     onTriggered: {

@@ -16,6 +16,9 @@ public:
     }
     virtual Q_INVOKABLE QString repr() { return "Function()"; }
 };
+Q_DECLARE_INTERFACE(Function, "Function")
+
+
 
 class NullFunction : public Function {
     Q_OBJECT
@@ -29,12 +32,14 @@ public:
 class BufferFunction : public Function {
     Q_OBJECT
 public:
+    V curVoltage;
+    long long ticks;
+
     QQueue<V> buffer;
     BufferFunction();
     Q_INVOKABLE V eval() override;
-    void put(V val) {
-        buffer.enqueue(val);
-    }
+    void put(V val);
+    void trim();
     Q_INVOKABLE QString repr() override { return "BufferFunction()"; }
 };
 

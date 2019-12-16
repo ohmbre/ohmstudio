@@ -7,6 +7,7 @@ class Scope : public QQuickPaintedItem, public Sink {
     Q_PROPERTY(double trig READ trig WRITE setTrig)
 public:
     Scope(QQuickItem *parent = nullptr);
+    ~Scope();
     double timeWindow();
     void setTimeWindow(double timeWindow);
     double trig();
@@ -25,24 +26,28 @@ private:
 };
 
 
-#define FFTSAMPLES 2000
+#define FFTSAMPLES 4096
 #define FFTPOW 1.05
 
 class FFTScope : public QQuickPaintedItem, public Sink {
     Q_OBJECT
 public:
     FFTScope(QQuickItem *parent = nullptr);
+    ~FFTScope();
     void paint(QPainter *painter) override;
     int writeData(Sample *buf, long long count) override;
     Q_INVOKABLE qint64 channelCount() { return sinkChannelCount(); }
     Q_INVOKABLE void setChannel(int i, QObject *function) { sinkSetChannel(i, function); }
-    double binToFreq(double i) { return 35*pow(2,i*log2(FRAMES_PER_SEC/2/35.0)/FFTSAMPLES); }
-    double freqToBin(double f) { return log2(f/35)*FFTSAMPLES/log2(FRAMES_PER_SEC/2/35); }
-    double freqToX(double f, double width) { return freqToBin(f)/FFTSAMPLES * width; }
+    double binToFreq(double i);
+    double freqToBin(double f);
+    double freqToX(double f, double width);
 private:
-    V dataBuf[FFTSAMPLES];
-    V fftBuf[FFTSAMPLES];
-    long writePos;
+    V data[FFTSAMPLES];
+    V bins[FFTSAMPLES];
+    QVector<QPointF> polyline;
+    V constants[FFTSAMPLES][FFTSAMPLES];
+    QMutex dataLock;
+    QQueue<V> dataBuf;
 };
 
 

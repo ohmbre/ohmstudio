@@ -28,7 +28,7 @@ Module {
     Variable { label: 'z1' }
     Variable { label: 'z2' }
     OutJack {
-        label: 'out'
+        label: '12db'
         expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
                      var sn := sin(f);
                      var q := 1.5^(ctrlQ + inQ);

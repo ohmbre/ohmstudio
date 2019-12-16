@@ -136,8 +136,8 @@ Item {
     property double anchor1Y: cy + mView.y
     property double anchor2X: posRef.x - direction * extRadHalf * Math.cos(shapeData.theta) + mView.x
     property double anchor2Y: posRef.y - extRadHalf * Math.sin(shapeData.theta) + mView.y
-    property double anchor3X: posRef.x - direction * extRad * Math.cos(shapeData.theta) + mView.x
-    property double anchor3Y: posRef.y - extRad * Math.sin(shapeData.theta) + mView.y
+    property double anchor3X: posRef.x - direction * 1.5*extRad * Math.cos(shapeData.theta) + mView.x
+    property double anchor3Y: posRef.y - 1.5*extRad * Math.sin(shapeData.theta) + mView.y
 
     Item {
         id: middle
@@ -151,11 +151,11 @@ Item {
             x: isOut ? 10 : 0
             y:0; width: 0; height: 8
             text: jack.label
-            property color blend: 'black'
+            property color blend: Qt.darker(bgColor)
             color: Qt.rgba(blend.r, blend.g, blend.b, 0.98 * (jack.hasCable ? 1 : extension))
             horizontalAlignment: isOut ? Text.AlignLeft : Text.AlignRight
-            font.pixelSize: 8
-            font.weight: Font.Medium
+            font.pixelSize: 6
+            font.weight: Font.Bold
             rightPadding: (isOut ? 0 : 1.5)
             leftPadding: (isOut ? 1.5 : 0)
         }
@@ -164,8 +164,6 @@ Item {
             width: 10; height: 5;
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: isOut ? Text.AlignLeft : Text.AlignRight
-            //rotation: 0
-            //transformOrigin: Item.Center
             opacity: jack.hasCable ? 1 : extension
             text: "⤳"
             font.pixelSize: 10

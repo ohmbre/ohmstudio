@@ -3,11 +3,24 @@
 Function::Function() : QObject(QGuiApplication::instance()), IFunction(0) {}
 
 NullFunction::NullFunction() : Function() {}
-BufferFunction::BufferFunction() : Function(), buffer() {}
+BufferFunction::BufferFunction() : Function(), curVoltage(0), ticks(maestro.ticks - 1), buffer() {}
 MutableFunction::MutableFunction(V v) : Function(), val(v) {}
 
+void BufferFunction::put(V val) {
+    buffer.enqueue(val);
+}
+
+void BufferFunction::trim() {
+    while (buffer.size() > FRAMES_PER_PERIOD)
+        buffer.dequeue();
+}
+
 Q_INVOKABLE V BufferFunction::eval() {
-    return buffer.dequeue();
+    if (ticks >= maestro.ticks)
+        return curVoltage;
+    curVoltage = buffer.isEmpty() ? 0 : buffer.dequeue();
+    ticks = maestro.ticks;
+    return curVoltage;
 }
 
 Q_INVOKABLE SymbolicFunction::SymbolicFunction(const QString &label, const QString &expression)

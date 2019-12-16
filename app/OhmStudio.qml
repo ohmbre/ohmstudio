@@ -1,5 +1,6 @@
-import QtQuick 2.11
-import QtQuick.Controls 2.4
+import QtQuick 2.13
+import QtQuick.Controls 2.13
+import QtQuick.Shapes 1.11
 
 import "qrc:/app/util.mjs" as Util
 
@@ -17,119 +18,166 @@ ApplicationWindow {
     font.family: asapMedium.name
 
 
-    Drawer {
-        id: setup
-        property real extension: (saveFileChoose.open || loadFileChoose.open)
-        width: 0.3*(1 + extension) * overlay.width * overlay.scale
-        height: overlay.height * overlay.scale
-        dragMargin: 15*overlay.scale
+    property var globalWidth: 320
+    property var globalScale: window.width / 320
+    property var globalHeight: window.height/globalScale
 
-        Behavior on extension { SmoothedAnimation { duration: 1000; velocity: -1 } }
 
-        background: Rectangle {
-            height: setup.height + border.width * 2
-            width: setup.width + border.width * 2
-            x: -border.width
-            y: -border.width
+    Rectangle {
+        scale: globalScale
+        transformOrigin: Item.TopLeft
+        id: overlay
+        width: globalWidth
+        height: globalHeight
+        z: 2
+        color: 'transparent'
+        property var w: menu.subItem.width
+        Shape {
+            x: overlay.w; y: 0; z: 3; width: 50; height: globalHeight
+            Behavior on x { SmoothedAnimation { duration: 500 } }
+            ShapePath {
+                strokeWidth: 2
+                strokeColor: 'black'
+                fillColor: 'transparent'
+                startX: 0; startY: 0
+                pathElements: [
+                    PathLine {x: 0; y: 50},
+                    PathLine {x: -2; y: 50},
+                    PathLine {x: 16; y: 50},
+                    PathLine {x: 16; y: 90},
+                    PathLine {x: -2; y: 90},
+                    PathLine {x: 0; y: 90},
+                    PathLine {x: 0; y: globalHeight}
+                ]
+            }
+        }
 
-            color: 'white'
-            border.width: 4*overlay.scale
-            border.color: 'black'
+        MouseArea {
+            x: overlay.w
+            Behavior on x { SmoothedAnimation { duration: 500 } }
+            width: globalWidth - overlay.w
+            Behavior on width { SmoothedAnimation { duration: 500 } }
+            height: globalHeight
+            enabled: menu.submenu != menu.emptyMenu
+            onClicked: {
+                menu.close()
+            }
         }
 
         Rectangle {
-            id: header
-            width: parent.width + 1;
-            height: 18 * overlay.scale
-            color: 'black'
-            Image {
-                source: "qrc:/app/ui/icons/logo.svg"
-                x: centerInX(this,parent)
-                y: centerInY(this,parent)
-                mipmap: true
-                height: parent.height*.8
-                width: parent.height*.8
+            x: overlay.w; y: 50
+            Behavior on x { SmoothedAnimation { duration: 500 } }
+            width: 16; height: 40;
+            color: 'white'
+            MouseArea {
+                anchors.fill: parent
+                onClicked: menu.submenu = menu.patchMenu
             }
         }
 
-        onClosed: {
-            saveFileChoose.open = false
-            loadFileChoose.open = false
+        OhmText {
+            rotation: 90
+            transformOrigin: Item.TopLeft
+            x: overlay.w+12.5; y: 58
+            Behavior on x { SmoothedAnimation { duration: 500 } }
+            text: "Patch"
+            font.weight: Font.Bold
         }
 
-        OhmButton {
-            scale: overlay.scale
-            y: 50*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
-            text: "New Patch"
-            onClicked: {
-                overlay.loadPatch('import ohm 1.0; Patch { modules: []; cables: [] }')
-                setup.close();
+        Rectangle {
+            id: menu
+            width: overlay.w
+            Behavior on width { SmoothedAnimation { duration: 500 } }
+            height: globalHeight
+            Loader {
+                anchors.right: parent.right
+                id: activeChild
+                sourceComponent: menu.patchMenu
             }
-        }
-
-        OhmButton {
-            id: loadBtn
-            scale: overlay.scale
-            y: 100*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
-            text: "Load Patch"
-            onClicked: {
-                saveFileChoose.open = false
-                loadFileChoose.open = true
+            property alias submenu: activeChild.sourceComponent
+            property alias subItem: activeChild.item
+            function close() {
+                submenu = emptyMenu
             }
-        }
 
-        OhmButton {
-            id: saveBtn
-            scale: overlay.scale
-            y: 150*overlay.scale; x: parent.width - width + radius - 8*overlay.scale
-            visible: activePatch.status === Loader.Ready
-            text: "Save Patch"
-            onClicked: {
-                if (!saveFileChoose.open) {
-                    loadFileChoose.open = false;
-                    saveFileChoose.open = true;
-                } else {
-                    saveFileChoose.fileChosen(saveFileChoose.saveFile)
+
+            property Component emptyMenu: Rectangle {
+                height: globalHeight
+                width: 0
+            }
+
+            property Component loadPatchMenu: OhmFileChoose {
+                forLoading: true
+                directory: 'patches'
+                extension: 'qml'
+                onFileChosen: function(fileURL) {
+                    patchCanvas.loadPatch(FileIO.read(fileURL))
+                    menu.close()
                 }
             }
-        }
 
-        OhmFileChoose {
-            id: loadFileChoose
-            scale: overlay.scale
-            forLoading: true
-            directory: 'patches'
-            extension: 'qml'
-            onFileChosen: function(fileURL) {
-                if (overlay.loadPatch(FileIO.read(fileURL)))
-                    setup.close()
+            property Component savePatchMenu: OhmFileChoose {
+                forSaving: true
+                directory: 'patches'
+                extension: 'qml'
+                onFileChosen: function(fileURL) {
+                    activePatch.item.patch.saveTo(fileURL);
+                    menu.close()
+                }
             }
-        }
 
-        OhmFileChoose {
-            id: saveFileChoose
-            scale: overlay.scale
-            forSaving: true
-            directory: 'patches'
-            extension: 'qml'
-            onFileChosen: function(fileURL) {
-                activePatch.item.patch.saveTo(fileURL);
-                setup.close()
+            property Component convertModuleMenu: ModuleConversion {
+                width: 200
+            }
+
+
+            property Component patchMenu: Column {
+                spacing: 10; width: 85; y: 20
+                anchors.horizontalCenter: parent.horizontalCenter
+                OhmButton {
+                    text: "New"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    onClicked: {
+                        patchCanvas.loadPatch('import ohm 1.0; Patch { modules: []; cables: [] }')
+                        menu.close()
+                    }
+                }
+                OhmButton {
+                    text: "Load"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    onClicked: menu.submenu = menu.loadPatchMenu
+                }
+                OhmButton {
+                    visible: activePatch.status === Loader.Ready
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Save"
+                    onClicked: {
+                        if (menu.submenu != menu.savePatchMenu) {
+                            menu.submenu = menu.savePatchMenu
+                        } else {
+                            menu.subItem.fileChosen(menu.subItem.saveFile)
+                        }
+                    }
+                }
+                OhmButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Modularize"
+                    onClicked: {
+                        menu.submenu = menu.convertModuleMenu
+                    }
+                }
             }
         }
     }
 
 
-    property alias globalScale: overlay.scale
-    property var globalHeight: window.height/globalScale
-    property var globalWidth: window.width/globalScale
-
     Item {
-        id: overlay
-        width: 320
-        height: width * window.height / window.width
-        scale: window.width / width
+        id: patchCanvas
+        width: globalWidth
+        height: globalHeight
+        scale: globalScale
         transformOrigin: Item.TopLeft
+        z: 1
 
         function loadAutoSave() {
             var rawdata = readFile("file:autosave.qml");
@@ -139,13 +187,13 @@ ApplicationWindow {
 
         function loadPatch(raw,url) {
             if (!url) url="dynamic"
-            if (activePatch.item) {
+            if (activePatch.item && activePatch.item.patch) {
                 activePatch.item.patch.destroy()
             }
             try {
                 var obj = Qt.createQmlObject(raw, window, url);
             } catch(err) {
-                console.error("could not load ",url,":",err);
+                console.log("could not load ",url,":",err);
                 return false;
             }
             activePatch.setSource("PatchView.qml", {patch: obj});
@@ -160,7 +208,6 @@ ApplicationWindow {
 
         Component.onCompleted: {
             loadAutoSave()
-            setup.open()
         }
     }
 }

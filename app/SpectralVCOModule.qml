@@ -1,5 +1,4 @@
 import QtQuick 2.13
-import QtQuick.Controls.Material 2.12
 import QtQuick.Shapes 1.11
 
 
@@ -11,7 +10,7 @@ Module {
     CV {
         label: 'ctrlFreq'
         translate: v => 220 * 2**v
-        unit: 'ms'
+        unit: 'Hz'
     }
     CV { label: 'ctrlGain'; volts: 3 }
 
@@ -22,7 +21,7 @@ Module {
         label: 'waveForm'
         expression:
             'var freq := 220Hz * 2^(ctrlFreq+inFreq);
-             xphase[0] = phase[0] + freq / 3;
+             xphase[0] += freq / 3;
              xphase[1] += freq / 2;
              xphase += freq;
              xphase[2] += freq * 2;

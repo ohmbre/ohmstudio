@@ -2,13 +2,11 @@
 #include "function.hpp"
 #include "sink.hpp"
 
-Conductor::Conductor() : QObject(QGuiApplication::instance()), ticks(0), timer(nullptr) {}
+Conductor::Conductor() : QObject(), ticks(0), timer(nullptr) {}
 
 void Conductor::start() {
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Conductor::conduct);
-
-
     timer->start(MSEC_PER_PERIOD);
     clock.start();
 }
@@ -44,6 +42,7 @@ void Conductor::commit(Sink *sink) {
     while (true) {
         int towrite = qMin(RINGBUFLEN - sink->bi % RINGBUFLEN, sink->bf - sink->bi);
         if (!towrite) break;
+        if (!sinks.contains(sink)) return;
         int written = sink->writeData(sink->ringbuf + sink->bi % RINGBUFLEN, towrite);
         sink->bi += written;
         if (!written) break;

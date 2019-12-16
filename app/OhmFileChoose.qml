@@ -1,19 +1,12 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.4
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 
 Rectangle {
     id: fileChooseDialog
-    opacity: open ? 1 : 0
-    visible: opacity > 0
-    width: setup.width*0.65/scale;
-    Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutQuad }}
-    height: window.globalHeight*0.8
+    width: 200
+    height: globalHeight*0.8
     color: 'white'
-    x:15
-    y: header.height+13
-    transformOrigin: Item.TopLeft
     clip: true
-    property real contentScale: 1
     property string directory
     property string extension
     property bool forLoading: false
@@ -26,6 +19,7 @@ Rectangle {
     ListView {
         id: fileChoose
         anchors.fill: parent
+        anchors.margins: 15
         footerPositioning: ListView.OverlayFooter
         keyNavigationEnabled: fileChooseDialog.open
         property bool open: fileChooseDialog.open
@@ -63,7 +57,6 @@ Rectangle {
                 x: parent.width - width - 4
             }
             MouseArea {
-                enabled: open
                 anchors.fill: parent
                 onClicked: {
                     if (isDir) {
@@ -86,7 +79,7 @@ Rectangle {
             OhmText {
                 text: "Patch File"
                 color: 'black'
-                font.pixelSize: 11
+                font.pixelSize: 10
                 font.weight: Font.Bold
                 padding: 2
                 leftPadding: 4

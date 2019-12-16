@@ -7,6 +7,10 @@ Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(2), trigpos(-
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
 }
 
+Scope::~Scope() {
+    maestro.deregisterSink(this);
+}
+
 double Scope::timeWindow() { return m_timeWindow; }
 void Scope::setTimeWindow(double timeWindow) { m_timeWindow = timeWindow; }
 double Scope::trig() { return m_trig/3276.7; }
@@ -114,13 +118,35 @@ int Scope::writeData(Sample *buf, long long count) {
 }
 
 
-FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), writePos(0) {
-    maestro.registerSink(this);
+FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), data(), polyline(FFTSAMPLES/2-1), dataLock() {
+    for (long i = 0; i < FFTSAMPLES; i++)
+        for (long j = 0; j < FFTSAMPLES; j++) {
+            V arg = 2 * M_PI * i * j / FFTSAMPLES;
+            constants[i][j] = cos(arg) + sin(arg);
+        }
     setTextureSize(QSize(241*5,113*1.3*5));
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
+    maestro.registerSink(this);
 }
 
+
+FFTScope::~FFTScope() {
+    maestro.deregisterSink(this);
+}
+
+double FFTScope::binToFreq(double i) {
+    return i*FRAMES_PER_SEC/FFTSAMPLES;
+}
+double FFTScope::freqToBin(double f) {
+    return FFTSAMPLES * f / FRAMES_PER_SEC;
+}
+double FFTScope::freqToX(double f, double width){
+    return log2(f / 35) / log2(FRAMES_PER_SEC / 2 / 35) * width;
+}
+
+
 void FFTScope::paint(QPainter *painter) {
+
     qreal w = width();
     qreal h = height();
 
@@ -140,11 +166,30 @@ void FFTScope::paint(QPainter *painter) {
     pen.setColor(QColor(255,64,16,200));
     painter->setPen(pen);
 
+
     if (channels[0]) {
-        QVector<QPointF> polyline(FFTSAMPLES);
-        for (long i = 0; i < FFTSAMPLES; i++)
-            polyline[i] = QPointF(w*i/(FFTSAMPLES-1), h*(1-fftBuf[i]));
-        painter->drawPolyline(polyline);
+        bool haveData = false;
+        dataLock.lock();
+        if (dataBuf.size() >= FFTSAMPLES) {
+            for (long i = 0; i < FFTSAMPLES; i++)
+                data[i] = dataBuf.dequeue();
+            for (long i = 0; i < FFTSAMPLES; i++) {
+                V acc = 0;
+                for (long j = 0; j < FFTSAMPLES; j++) {
+                    //V arg = 2 * M_PI * i * j / FFTSAMPLES;
+                    //acc += data[j] * (cos(arg) + sin(arg));
+                    acc += data[j] * constants[i][j];
+                }
+                bins[i] = acc / FFTSAMPLES;
+            }
+            haveData = true;
+        }
+        dataLock.unlock();
+        if (haveData) {
+            for (long i = 1; i < FFTSAMPLES/2; i++)
+                polyline[i-1] = QPointF(freqToX(binToFreq(i),w), h*(1-sqrt(2*(bins[i]*bins[i] + bins[FFTSAMPLES-i]*bins[FFTSAMPLES-i]))));
+            painter->drawPolyline(polyline);
+        }
     }
 
     pen.setStyle(Qt::DotLine);
@@ -196,34 +241,19 @@ void FFTScope::paint(QPainter *painter) {
         painter->drawLine(x, 2, x, h-1);
     }
 
-
-
-
-
 }
 
 
 int FFTScope::writeData(Sample *buf, long long count) {
-    long i,j,k;
-    double f,coeff,prev,prev2,cur,mag;
-    for (i = 0; i < count; i++) {
-        dataBuf[writePos++] = buf[i]/ 32768.0 ;
-        if (writePos >= FFTSAMPLES) {
-            for (j = 0; j < FFTSAMPLES; j++) {
-                f = binToFreq(j);
-                coeff = 2*cos(2*M_PI*f/FRAMES_PER_SEC);
-                prev = 0;
-                prev2 = 0;
-                for (k = 0; k < FFTSAMPLES; k++) {
-                    cur = dataBuf[k] + coeff*prev - prev2;
-                    prev2 = prev;
-                    prev = cur;
-                }
-                mag = 2*sqrt(prev2*prev2 + prev*prev - coeff*prev*prev2)/FFTSAMPLES;
-                fftBuf[j] = mag;
-            }
-            writePos = 0;
-        }
-    }
+    dataLock.lock();
+    for (long i = 0; i < count; i++)
+        dataBuf.enqueue(buf[i]/32768.0);
+    while (dataBuf.size() > FFTSAMPLES) dataBuf.dequeue();
+    dataLock.unlock();
     return count;
 }
+
+
+
+
+

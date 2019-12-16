@@ -11,6 +11,7 @@ SOURCES += \
     scope.cpp \
     fileio.cpp \
     midi.cpp \
+    dsp.cpp \
     external/RtMidi.cpp
 
 
@@ -22,6 +23,7 @@ HEADERS += \
     scope.hpp \
     fileio.hpp \
     pch.hpp \
+    dsp.hpp \
     midi.hpp
 
 PRECOMPILED_HEADER = pch.hpp

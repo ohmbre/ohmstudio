@@ -19,9 +19,7 @@ public:
     Q_INVOKABLE qint64 channelCount();
     Q_INVOKABLE void setChannel(int i, QObject *function);
     Q_INVOKABLE void setDevice(const QString &name);
-    static QAudioFormat getFormat();
-    Q_INVOKABLE static QStringList availableDevs();
-    static QAudioDeviceInfo devInfo(const QString &name);
+    Q_INVOKABLE QStringList availableDevs();
     QAudioOutput *dev;
     QIODevice *iodev;
 };
@@ -29,7 +27,20 @@ public:
 
 
 
-
+class AudioIn : public QIODevice {
+    Q_OBJECT
+public:
+    Q_INVOKABLE AudioIn();
+    ~AudioIn();
+    qint64 writeData(const char *data, qint64 maxlen) override;
+    qint64 readData(char *, qint64 ) override { return 0; };
+    Q_INVOKABLE qint64 channelCount();
+    Q_INVOKABLE void setDevice(const QString &name);
+    Q_INVOKABLE Function* getChannel(int i);
+    Q_INVOKABLE QStringList availableDevs();
+    QAudioInput *dev;
+    QVector<BufferFunction*> channels;
+};
 
 
 #endif

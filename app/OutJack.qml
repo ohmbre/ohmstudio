@@ -28,7 +28,6 @@ Jack {
     }
 
     function setVar(key,val) {
-        console.log('setvar',key,val);
         if (outFunc) outFunc.setVar(key,val);
     }
 

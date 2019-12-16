@@ -1,6 +1,6 @@
 
-import QtQuick 2.12
-import QtQuick.Controls 2.5
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 import QtQuick.Layouts 1.13
 
 
@@ -18,11 +18,7 @@ Rectangle {
     OhmButton {
         text: "←"
         font.pixelSize: 39
-        padding: 0
-        width: 50
-        height:50
-        radius: 25
-        x:0; y: 0; z:2
+        x:0; y: 0; z:2; width: 50; height:50; radius: 25; padding: 0; border: 4
         verticalAlignment: Text.AlignTop
         onClicked: {
             mOver.module = null;
@@ -97,8 +93,4 @@ Rectangle {
 
 }
 
-/*##^##
-Designer {
-    D{i:0;autoSize:true;height:960;width:1280}
-}
-##^##*/
+

@@ -1,12 +1,14 @@
-import QtQuick.Controls 2.5
-import QtQuick 2.12
+import QtQuick.Controls 2.13
+import QtQuick 2.13
 
 RoundButton {
     id: control
     radius: implicitHeight/2
-    padding: 5
-    property double border: 4
-    font.pixelSize: 11
+    padding: 3
+    property double border: 2
+    font.pixelSize: 8
+    width: 60
+
     property int verticalAlignment: Text.AlignVCenter
     background: Rectangle {
         radius: control.radius
@@ -19,7 +21,7 @@ RoundButton {
         text: control.text
         font.family: asapSemiBold.name
         font.pixelSize: control.font.pixelSize
-        font.weight: Font.DemiBold
+        font.weight: Font.Bold
         color: control.down ? 'white' : 'black'
         padding: control.padding
         verticalAlignment: control.verticalAlignment

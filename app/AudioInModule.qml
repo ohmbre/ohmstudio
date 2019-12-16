@@ -2,8 +2,8 @@ import QtQuick 2.12
 import ohm 1.0
 
 Module {
-    id: audioOut
-    label: 'Audio Out'
+    id: audioIn
+    label: 'Audio In'
 
     property var hw: null
     property var devChoices: []
@@ -12,24 +12,24 @@ Module {
         instantiate();
         if (devChoices.indexOf(devChoice) == -1) return;
         hw.setDevice(devChoice);
-        audioOut.inJacks = []
+        audioIn.outJacks = []
         const nchan = hw.channelCount()
         for (let i = 0; i < nchan; i++) {
-            const pos = i
-            var ijComponent = Qt.createComponent("qrc:/app/InJack.qml");
-            if (ijComponent.status === Component.Ready) {
-                const ij = ijComponent.createObject(audioOut, {label: pos, parent: audioOut})
-                audioOut.inJacks.push(ij)
-                ij.inFuncUpdated.connect((lbl,func) => { audioOut.hw.setChannel(parseInt(lbl), func) })
+            var ojComponent = Qt.createComponent("qrc:/app/OutJack.qml");
+            if (ojComponent.status === Component.Ready) {
+                const oj = ojComponent.createObject(audioIn, {label: i, parent: audioIn})
+                audioIn.outJacks.push(oj)
+                oj.outFunc = audioIn.hw.getChannel(i)
+                oj.outFuncUpdated(oj.outFunc)
             } else
-                console.log("error creating injack:", ijComponent.errorString());
+                console.log("error creating outjack:", ojComponent.errorString());
         }
 
     }
 
     function instantiate() {
         if (!hw) {
-            hw = new AudioOut();
+            hw = new AudioIn();
             devChoices = hw.availableDevs();
         }
     }
@@ -41,10 +41,10 @@ Module {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             label.text: "Device"
-            choiceLabels: audioOut.devChoices
-            control.currentIndex: audioOut.devChoices.indexOf(audioOut.devChoice);
+            choiceLabels: audioIn.devChoices
+            control.currentIndex: audioIn.devChoices.indexOf(audioIn.devChoice);
             onChosen: {
-                audioOut.devChoice = audioOut.devChoices[index]
+                audioIn.devChoice = audioIn.devChoices[index]
             }
         }
     }

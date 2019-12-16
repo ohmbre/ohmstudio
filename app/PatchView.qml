@@ -1,5 +1,5 @@
 import QtQuick 2.13
-import QtQuick.Controls 2.5
+import QtQuick.Controls 2.13
 import QtQml 2.11
 
 Item {
@@ -114,7 +114,7 @@ Item {
             title: "Delete?"
             height: 50
             width: 46
-            scale: window.width / overlay.width * 0.7
+            scale: globalScale
             contents: OhmButton {
                 x: centerInX(this,delModuleMenu)
                 y: centerInY(this,delModuleMenu.body)
@@ -146,9 +146,9 @@ Item {
         width: 40; height: 40; radius: 20
         text: "+"
         font.pixelSize: 20
-        font.weight: Font.DemiBold
-        verticalAlignment: Text.AlignBottom
+        font.weight: Font.Bold
         onClicked: mMenu.visible = true
+        border: 4
     }
 
     Rectangle {
