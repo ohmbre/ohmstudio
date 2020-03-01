@@ -1,6 +1,6 @@
 
-import QtQuick 2.12
-import QtQuick.Controls 2.4
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 
 Item {
     id: mView
@@ -55,7 +55,7 @@ Item {
         fontSizeMode: Text.Fit
         color: 'black'
         font.family: asapSemiBold.name
-        font.weight: Font.DemiBold
+        font.weight: Font.Bold
         font.pixelSize: 10
         minimumPixelSize: 8
         maximumLineCount: 2

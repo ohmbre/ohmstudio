@@ -13,6 +13,7 @@ Shape {
         property var ok: cable && cable.out && cable.inp && cable.out.view && cable.inp.view
         startX: ok ? cable.out.view.anchor1X : 0
         startY: ok ? cable.out.view.anchor1Y : 0
+
         PathCubic {
             property alias ok: cPath.ok
             control1X: ok ? cable.out.view.anchor3X : 0
