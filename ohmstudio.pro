@@ -43,7 +43,7 @@ RESOURCES += \
 QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
 
 linux {
-    QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-style-cast -g
+    QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-style-cast -O2
     #QMAKE_LFLAGS += -lasound
 }
 
