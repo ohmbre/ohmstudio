@@ -67,11 +67,7 @@ bool AudioOut::setDevice(const QString &name) {
     setChannelCount(devList[name].second.channelCount());
     minPeriod = dev->periodSize() / nchan() / sizeof(Sample);
     maxPeriod = dev->bufferSize() / nchan() / sizeof(Sample);
-    //long samplesInBuf = dev->bufferSize() / sizeof(Sample);
-    //Sample *zerobuf = new Sample[samplesInBuf];
-    //for (long i = 0; i < samplesInBuf; i++)
-    //    zerobuf[i] = 0;
-    //iodev->write((char*)zerobuf, dev->bufferSize());
+
     maestro.registerSink(this);
     return true;
 }

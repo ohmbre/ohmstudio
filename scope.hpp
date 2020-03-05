@@ -7,6 +7,7 @@ class Scope : public QQuickPaintedItem, public Sink {
     Q_PROPERTY(double trig READ trig WRITE setTrig)
 public:
     Scope(QQuickItem *parent = nullptr);
+    ~Scope() {maestro.deregisterSink(this);}
     double timeWindow();
     void setTimeWindow(double timeWindow);
     double trig();
@@ -32,6 +33,7 @@ class FFTScope : public QQuickPaintedItem, public Sink {
     Q_OBJECT
 public:
     FFTScope(QQuickItem *parent = nullptr);
+    ~FFTScope() {maestro.deregisterSink(this);}
     void paint(QPainter *painter) override;
     void flush() override;
     Q_INVOKABLE qint64 channelCount() { return nchan(); }

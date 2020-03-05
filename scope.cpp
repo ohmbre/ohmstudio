@@ -85,6 +85,7 @@ void Scope::paint(QPainter *painter) {
         painter->setPen(pen);
         painter->drawPolyline(polyline);
     }
+    dataLock.unlock();
 
 }
 
