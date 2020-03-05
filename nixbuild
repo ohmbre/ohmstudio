@@ -1,12 +1,10 @@
 #!/bin/bash
-rm -rf build/nix
+
 mkdir -p build/nix
 cd build/nix
-/opt/qt/5.13.0/gcc_64/bin/qmake CONFIG+=release ../..
+qmake CONFIG+=debug ../..
 make -j32
 
-export QSG_RENDER_LOOP=basic
-export QT_QPA_PLATFORM=wayland
 export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false; qt.*.info=true; qt.qml.gc.allocatorStats=false; qt.qml.gc.statistics=false; qt.quick.focus=false; qt.quick.hover.trace=false; qt.qml.diskcache=false; qt.quick.dirty=false; qt.quick.itemview.lifecycle=false; qt.qml.binding.removal=false; qt.scenegraph.time.renderloop=false"
 #export QSG_INFO=1
 

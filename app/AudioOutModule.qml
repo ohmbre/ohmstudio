@@ -1,20 +1,39 @@
-import QtQuick 2.12
+import QtQuick 2.14
 import ohm 1.0
 
 Module {
     id: audioOut
     label: 'Audio Out'
 
-    property var hw: null
-    property var devChoices: []
-    property var devChoice
-    onDevChoiceChanged: {
-        instantiate();
-        if (devChoices.indexOf(devChoice) == -1) return;
-        hw.setDevice(devChoice);
+    property var hw: new AudioOut();
+
+    property string devId: ""
+
+    function deleteJacks() {
+        const ijs = mapList(inJacks, j => j)
         audioOut.inJacks = []
+        for (let ij of ijs) ij.destroy()
+    }
+
+    function switchDev(newId) {
+        if (devId === newId || newId === "") return;
+        if (devId != "") {
+            deleteJacks();
+        }
+        devId = newId;
+    }
+
+    onDevIdChanged: {
+        if (devId == "") return;
+        if (hw.setDevice(devId) === false) {
+            console.error("problem finding device:", devId);
+            deleteJacks();
+            devId = "";
+            return;
+        }
         const nchan = hw.channelCount()
         for (let i = 0; i < nchan; i++) {
+            audioOut.hw.setChannel(i, null);
             const pos = i
             var ijComponent = Qt.createComponent("qrc:/app/InJack.qml");
             if (ijComponent.status === Component.Ready) {
@@ -24,38 +43,25 @@ Module {
             } else
                 console.log("error creating injack:", ijComponent.errorString());
         }
-
-    }
-
-    function instantiate() {
-        if (!hw) {
-            hw = new AudioOut();
-            devChoices = hw.availableDevs();
-        }
     }
 
     display: Item {
         OhmChoiceBox {
-            width: 150
-            height: 16
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
-            label.text: "Device"
-            choiceLabels: audioOut.devChoices
-            control.currentIndex: audioOut.devChoices.indexOf(audioOut.devChoice);
-            onChosen: {
-                audioOut.devChoice = audioOut.devChoices[index]
+            label: "Device"
+            model: audioOut.hw.availableDevs();
+            choice: audioOut.devId
+            onChosen: function(newId) {
+                audioOut.switchDev(newId);
             }
         }
     }
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y', devChoice:'devChoice'})
+    qmlExports: ({objectName: 'objectName', x:'x', y:'y', devId:'devId'})
 
-    Component.onCompleted: {
-        instantiate();
-    }
     Component.onDestruction: {
         if (hw) hw.destroy();
-   }
+    }
 }
 
 

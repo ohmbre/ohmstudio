@@ -1,6 +1,6 @@
 import ohm 1.0
-import QtQuick 2.13
-import QtQuick.Controls 2.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
 import QtQuick.Dialogs 1.3
 
 

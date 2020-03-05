@@ -10,13 +10,21 @@ class Sink {
     Q_GADGET
 public:
     Sink(int nchannels);
+    Sink();
     ~Sink();
-    qint64 sinkChannelCount();
-    virtual int writeData(Sample *buf, long long count) = 0;
+    virtual void flush() = 0;
     QVector<Function*> channels;
-    Sample ringbuf[RINGBUFLEN];
-    long long bi, bf;
+    int nchan() { return channels.count(); }
+    bool registered;
+    int bufpos;
+    Sample *buf;
+    void setChannelCount(int nchan);
     void sinkSetChannel(int i, QObject *function);
+    long minPeriod, maxPeriod;
+
+private:
+    void operator=(Sink const&);
+    Sink(Sink const&);
 };
 
 

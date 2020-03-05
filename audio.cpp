@@ -1,70 +1,96 @@
 #include "audio.hpp"
 
-static QAudioFormat getFormat() {
-    QAudioFormat format;
-    format.setChannelCount(2);
-    format.setSampleRate(FRAMES_PER_SEC);
-    format.setSampleSize(8*BYTES_PER_SAMPLE);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setCodec("audio/pcm");
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    return format;
+void setupFormat(QAudioFormat *fmt) {
+    fmt->setSampleRate(FRAMES_PER_SEC);
+    fmt->setSampleSize(8*sizeof(Sample));
+    fmt->setSampleType(QAudioFormat::SignedInt);
+    fmt->setCodec("audio/pcm");
+    fmt->setByteOrder(QAudioFormat::LittleEndian);
 }
 
-QStringList availableDevsWithMode(QAudio::Mode mode) {
-    QStringList names;
-    freopen("/dev/null","w",stderr);
-    foreach(QAudioDeviceInfo dev, QAudioDeviceInfo::availableDevices(mode))
-        if (dev.deviceName() != "pulse" && dev.isFormatSupported(getFormat()))
-            names << dev.deviceName();
-    freopen("/dev/tty","w",stderr);
-    return names;
-}
-
-QAudioDeviceInfo devInfo(QAudio::Mode mode, const QString &name) {
-    QList<QAudioDeviceInfo> devs = QAudioDeviceInfo::availableDevices(mode);
-    QList<QAudioDeviceInfo>::iterator dev;
-    for (dev = devs.begin(); dev != devs.end(); ++dev)
-        if (dev->deviceName() == name && dev->isFormatSupported(getFormat()))
-            return *dev;
-    qWarning() << "device doesnt exist or support format:" << name;
-    return QAudioDeviceInfo();
+int preCheckFormat(QAudioDeviceInfo *devInfo) {
+    QAudioFormat fmt;
+    setupFormat(&fmt);
+    int prefChan = devInfo->preferredFormat().channelCount();
+    fmt.setChannelCount(prefChan);
+    if (devInfo->isFormatSupported(fmt))
+        return prefChan;
+    int maxChan = 0;
+    foreach (int ch, devInfo->supportedChannelCounts()) {
+        fmt.setChannelCount(ch);
+        if (devInfo->isFormatSupported(fmt))
+            maxChan = qMax(maxChan, ch);
+    }
+    return maxChan;
 }
 
 
 /* --------- Output --------- */
 
 Q_INVOKABLE AudioOut::AudioOut() :
-    QObject(QGuiApplication::instance()), Sink(getFormat().channelCount()), dev(nullptr), iodev(nullptr) {}
+    QObject(QGuiApplication::instance()), Sink(0), dev(nullptr), iodev(nullptr), devList()
+{
+    foreach(QAudioDeviceInfo devInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)) {
+        int verifiedChans = preCheckFormat(&devInfo);
+        if (verifiedChans > 0) {
+            QAudioFormat fmt;
+            setupFormat(&fmt);
+            fmt.setChannelCount(verifiedChans);
+            QString identifier = devInfo.realm() + "|" + QString::number(verifiedChans) + "ch|" + devInfo.deviceName();
+            devList[identifier] = { devInfo, fmt };
+        }
+    }
+}
 
 Q_INVOKABLE QStringList AudioOut::availableDevs() {
-    return availableDevsWithMode(QAudio::AudioOutput);
+    return devList.keys();
 }
 
-Q_INVOKABLE qint64 AudioOut::channelCount() {
-    return sinkChannelCount();
-}
 
 Q_INVOKABLE void AudioOut::setChannel(int i, QObject *function) {
     sinkSetChannel(i, function);
 }
 
-void AudioOut::setDevice(const QString &name) {
+bool AudioOut::setDevice(const QString &name) {
+    maestro.deregisterSink(this);
     if (dev != nullptr) {
         dev->stop();
         delete dev;
     }
-    dev = new QAudioOutput(devInfo(QAudio::AudioOutput, name), getFormat());
-    dev->setBufferSize(FRAMES_PER_PERIOD * channels.count() * BYTES_PER_SAMPLE);
+    if (!devList.contains(name)) return false;
+    dev = new QAudioOutput(devList[name].first, devList[name].second);
+    if (dev->error() != QAudio::NoError) {
+        qDebug() << "Audio output error" << dev->error();
+        return false;
+    }
     iodev = dev->start();
+    setChannelCount(devList[name].second.channelCount());
+    minPeriod = dev->periodSize() / nchan() / sizeof(Sample);
+    maxPeriod = dev->bufferSize() / nchan() / sizeof(Sample);
+    //long samplesInBuf = dev->bufferSize() / sizeof(Sample);
+    //Sample *zerobuf = new Sample[samplesInBuf];
+    //for (long i = 0; i < samplesInBuf; i++)
+    //    zerobuf[i] = 0;
+    //iodev->write((char*)zerobuf, dev->bufferSize());
     maestro.registerSink(this);
+    return true;
 }
 
-int AudioOut::writeData(Sample *buf, long long count) {
-    return iodev->write((char*)buf, count * BYTES_PER_SAMPLE) / BYTES_PER_SAMPLE;
+void AudioOut::flush() {
+    if (iodev && iodev->isWritable()) {
+        QAudio::State s = dev->state();
+        QAudio::Error e = dev->error();
+        if (e == QAudio::NoError && (s == QAudio::IdleState || s == QAudio::ActiveState)) {
+            iodev->write((char*)buf, maestro.period * nchan() * sizeof(Sample));
+        } else if (e == QAudio::UnderrunError) {
+
+
+        }
+    }
 }
 
 AudioOut::~AudioOut() {
+    maestro.deregisterSink(this);
     if (dev != nullptr) {
         dev->stop();
         delete dev;
@@ -75,39 +101,43 @@ AudioOut::~AudioOut() {
 /* --------- Input --------- */
 
 
-Q_INVOKABLE AudioIn::AudioIn() :
-    QIODevice(), dev(nullptr), channels() {
-    this->moveToThread(&maestro.thread);
+Q_INVOKABLE AudioIn::AudioIn() : QIODevice(), dev(nullptr), channels(), devList(){
+    foreach(QAudioDeviceInfo devInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioInput)) {
+        int verifiedChans = preCheckFormat(&devInfo);
+        if (verifiedChans > 0) {
+            QAudioFormat fmt;
+            setupFormat(&fmt);
+            fmt.setChannelCount(verifiedChans);
+            QString identifier = devInfo.realm() + "|" + QString::number(verifiedChans) + "ch|" + devInfo.deviceName();
+            devList[identifier] = { devInfo, fmt };
+        }
+    }
 }
 
 Q_INVOKABLE QStringList AudioIn::availableDevs() {
-    return availableDevsWithMode(QAudio::AudioInput);
+    return devList.keys();
 }
 
-Q_INVOKABLE qint64 AudioIn::channelCount() {
-    return channels.count();
-}
 
-void AudioIn::setDevice(const QString &name) {
+bool AudioIn::setDevice(const QString &name) {
     if (dev != nullptr) {
         dev->stop();
         delete dev;
     }
-    QAudioFormat fmt = getFormat();
-    channels.resize(fmt.channelCount());
+    if (!devList.contains(name)) return false;
+    channels.resize(devList[name].second.channelCount());
     for (int i = 0; i < channels.count(); i++) {
         channels[i] = new BufferFunction();
     }
-
-    dev = new QAudioInput(devInfo(QAudio::AudioInput, name), getFormat());
-    dev->setBufferSize(FRAMES_PER_PERIOD * channels.count() * BYTES_PER_SAMPLE);
+    dev = new QAudioInput(devList[name].first, devList[name].second);
     open(QIODevice::WriteOnly);
     dev->start(this);
+    return true;
 }
 
 qint64 AudioIn::writeData(const char *data, qint64 len) {
     Sample *samples = (Sample*)data;
-    qint64 nsamples = len / BYTES_PER_SAMPLE;
+    qint64 nsamples = len / sizeof(Sample);
     int idx = 0;
     int chan = 0;
     int nchannels = channels.count();

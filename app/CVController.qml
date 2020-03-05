@@ -1,7 +1,7 @@
-import QtQuick 2.13
-import QtQuick.Controls 2.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
 import QtQuick.Shapes 1.12
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material 2.14
 
 Item {
     width: 130

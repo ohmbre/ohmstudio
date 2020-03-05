@@ -2,65 +2,99 @@
 #include "function.hpp"
 #include "sink.hpp"
 
-Conductor::Conductor() : QObject(), ticks(0), timer(nullptr) {}
+Conductor::Conductor() :
+    QThread(), ticks(0), period(MIN_PERIOD), minPeriod(MIN_PERIOD), maxPeriod(MAX_PERIOD), stopped(true), clock(), started(false) {}
 
-void Conductor::start() {
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Conductor::conduct);
-    timer->start(MSEC_PER_PERIOD);
+
+void Conductor::run() {
+    started = true;
+
+    QElapsedTimer clock;
     clock.start();
-}
 
-void Conductor::conduct() {
-    qint64 nticks = floor(clock.nsecsElapsed() * FRAMES_PER_NSEC);
-    clock.restart();
+    setPriority(QThread::TimeCriticalPriority);
 
-    Function *func;
+    double nsecs_per_frame = 1000000000.0 / FRAMES_PER_SEC;
+    long long niter = 0;
     int nchan,c,t;
-    Sink *sink;
-    for (t = 0; t < nticks; t++) {
-        foreach(sink, sinks) {
-            nchan = sink->channels.count();
-            for (c = 0; c < nchan; c++) {
-                func = sink->channels[c];
-                sink->ringbuf[sink->bf++ % RINGBUFLEN] = func ? qRound(qBound(-10.0,(*func)(),10.0)*3276.7) : 0;
-            }
+    stopped = false;
+    while (!stopped) {
+        long long nsecs = period * nsecs_per_frame * niter - clock.nsecsElapsed();
+        if (nsecs > 0) {
+            QThread::usleep(nsecs/1000);
         }
-        this->ticks++;
+
+        Function *func;
+
+        Sink *sink;
+        foreach(sink, sinks)
+            sink->bufpos = 0;
+        for (t = 0; t < period; t++) {
+            foreach(sink, sinks) {
+                nchan = sink->nchan();
+                for (c = 0; c < nchan; c++) {
+                    func = sink->channels[c];
+                    sink->buf[sink->bufpos++] = func ? qRound(qBound(-10.0,(*func)(),10.0)*3276.7) : 0;
+                }
+            }
+            this->ticks++;
+        }
+        foreach(sink, sinks)
+            sink->flush();
+        niter++;
     }
-    foreach(sink, sinks)
-        commit(sink);
+
 
 }
 
-void Conductor::commit(Sink *sink) {
-    if ((sink->bf - sink->bi) >= RINGBUFLEN) {
-        qDebug() << "ran out of audio buffer space, discarding samples";
-        sink->bi = sink->bf - RINGBUFLEN;
-    }
+void Conductor::stop() {
+    if (stopped) return;
+    if (!started) return;
+    stopped = true;
+    wait();
+}
 
-    while (true) {
-        int towrite = qMin(RINGBUFLEN - sink->bi % RINGBUFLEN, sink->bf - sink->bi);
-        if (!towrite) break;
-        if (!sinks.contains(sink)) return;
-        int written = sink->writeData(sink->ringbuf + sink->bi % RINGBUFLEN, towrite);
-        sink->bi += written;
-        if (!written) break;
+void Conductor::resume() {
+    if (started && stopped) start();
+}
+
+Conductor::~Conductor() {}
+
+void Conductor::adjustPeriod() {
+    period = minPeriod;
+    foreach(Sink *sink, sinks) {
+        if (sink->buf != nullptr)
+            delete sink->buf;
+        sink->buf = new Sample[sink->nchan() * period];
     }
 }
 
-Conductor::~Conductor() {
-    timer->stop();
-    thread.quit();
-    delete timer;
-}
+bool Conductor::registerSink(Sink *sink) {
 
-
-void Conductor::registerSink(Sink *sink) {
+    if (sink->registered) return false;
+    if (sink->minPeriod > maxPeriod) return false;
+    if (sink->maxPeriod < minPeriod) return false;
+    stop();
+    sink->registered = true;
     sinks.append(sink);
+    if (sink->minPeriod > minPeriod) minPeriod = sink->minPeriod;
+    if (sink->maxPeriod < maxPeriod) maxPeriod = sink->maxPeriod;
+    adjustPeriod();
+    resume();
+    return true;
 }
-
 
 void Conductor::deregisterSink(Sink *sink) {
-    instance().sinks.removeAll(sink);
+    if (!sink->registered) return;
+    stop();
+    sink->registered = false;
+    sinks.removeAll(sink);
+    maxPeriod = MAX_PERIOD;
+    minPeriod = MIN_PERIOD;
+    foreach (Sink *s, sinks) {
+        if (s->minPeriod > minPeriod) minPeriod = s->minPeriod;
+        if (s->maxPeriod < maxPeriod) maxPeriod = s->maxPeriod;
+    }
+    adjustPeriod();
+    resume();
 }

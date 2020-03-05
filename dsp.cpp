@@ -5,16 +5,11 @@ Q_INVOKABLE Fourier::Fourier() : QObject(QGuiApplication::instance()), Sink(1), 
     maestro.registerSink(this);
 }
 
-Fourier::~Fourier() {
-    maestro.deregisterSink(this);
-}
 
-int Fourier::writeData(Sample *buf, long long count) {
-
-    for (long i = 0; i < count; i++)
+void Fourier::flush() {
+    for (long i = 0; i < maestro.period; i++)
         dataBuf.enqueue(buf[i] / 32768.0);
     while (dataBuf.size() > FTDIM) dataBuf.dequeue();
-    return count;
 }
 
 Q_INVOKABLE QList<double> Fourier::getBins() {

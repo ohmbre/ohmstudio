@@ -38,13 +38,10 @@ int main(int argc, char *argv[]) {
     qmlRegisterType<Scope>("ohm", 1, 0, "Scope");
     qmlRegisterType<FFTScope>("ohm", 1, 0, "FFTScope");
 
-
-    maestro.moveToThread(&maestro.thread);
-    QMetaObject::invokeMethod(&maestro,"start", Qt::ConnectionType::QueuedConnection);
-    maestro.thread.start();
+    maestro.start();
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
     int ret = app.exec();
-    maestro.thread.quit();
+    maestro.stop();
     return ret;
 }

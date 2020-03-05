@@ -1,5 +1,5 @@
-import QtQuick 2.12
-import QtQml.Models 2.13
+import QtQuick 2.14
+import QtQml.Models 2.14
 import QtQuick.Layouts 1.13
 
 

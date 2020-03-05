@@ -12,7 +12,7 @@ Q_INVOKABLE bool FileIO::write(const QString &fname, const QString &content) {
     if (!f.open(QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text))
         return false;
     QTextStream out(&f);
-    out << content << endl;
+    out << content << Qt::endl;
     f.close();
     QFile::setPermissions(fname, QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther);
     return true;

@@ -1,15 +1,11 @@
 #include "scope.hpp"
 
-Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(2), trigpos(-1), trackpos(-1), ntracked(0) {
+Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(2) {
     maestro.registerSink(this);
-    lastVal = 32768;
     setTextureSize(QSize(241*5,113*5));
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
 }
 
-Scope::~Scope() {
-    maestro.deregisterSink(this);
-}
 
 double Scope::timeWindow() { return m_timeWindow; }
 void Scope::setTimeWindow(double timeWindow) { m_timeWindow = timeWindow; }
@@ -46,45 +42,45 @@ void Scope::paint(QPainter *painter) {
     painter->drawText(QRect(0,0,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "10V" );
     painter->drawText(QRectF(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
 
-    long long nsamples = qRound(m_timeWindow*FRAMES_PER_SEC/1000);
+    long nsamples = qRound(m_timeWindow*FRAMES_PER_SEC/1000);
 
     double timeinc = w/nsamples;
 
     QVector<QPointF> polyline(static_cast<int>(nsamples));
 
-    long long start,end;
 
-    if (trigpos != -1) {
-        start = trigpos - nsamples/2*2;
-        end = trigpos + (nsamples+1)/2*2;
+    /*if (trigpos != -1) {
         pen.setColor(QColor(0,128,7));
         painter->setPen(pen);
         painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) lock");
     } else {
-        start = bf - nsamples*2;
-        end = bf;
-        pen.setColor(QColor(128,7,0));
-        painter->setPen(pen);
-        painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) no lock");
-    }
+    */
+    pen.setColor(QColor(128,7,0));
+    painter->setPen(pen);
+    painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) no lock");
+
 
     double xpos;
     int i;
-    long long idx;
     pen.setWidthF(1);
     pen.setStyle(Qt::SolidLine);
     painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
+    dataLock.lock();
+    while (dataBuf1.size() > nsamples) dataBuf1.removeFirst();
+    while (dataBuf2.size() > nsamples) dataBuf2.removeFirst();
 
     if (channels[0]) {
-        for (i = 0, idx = start, xpos = 0; idx < end; i++, idx += 2, xpos += timeinc)
-            polyline[i] = QPointF(xpos,h/2*(1-ringbuf[((idx < 0) ? (idx+RINGBUFLEN) : idx) % RINGBUFLEN]/32768.0));
+        long end = qMin(nsamples, (long)dataBuf1.size());
+        for (i = 0, xpos = 0; i < end; i++, xpos += timeinc)
+            polyline[i] = QPointF(xpos,h/2*(1-dataBuf1[i]));
         pen.setColor(QColor(211,81,42,200));
         painter->setPen(pen);
         painter->drawPolyline(polyline);
     }
     if (channels[1]) {
-        for (i = 0, idx = start+1, xpos = 0; idx < end; i++, idx += 2, xpos += timeinc)
-            polyline[i] = QPointF(xpos,h/2*(1-ringbuf[((idx < 0) ? (idx+RINGBUFLEN) : idx) % RINGBUFLEN]/32768.0));
+        long end = qMin(nsamples, (long)dataBuf1.size());
+        for (i = 0, xpos = 0; i < end; i++, xpos += timeinc)
+            polyline[i] = QPointF(xpos,h/2*(1-dataBuf2[i]));
         pen.setColor(QColor(0,176,186,200));
         painter->setPen(pen);
         painter->drawPolyline(polyline);
@@ -92,29 +88,17 @@ void Scope::paint(QPainter *painter) {
 
 }
 
-int Scope::writeData(Sample *buf, long long count) {
-    long long nsamples = round(m_timeWindow*FRAMES_PER_SEC/1000);
-    long long needed = (nsamples+1)/2;
+void Scope::flush() {
 
-    if (bf-trigpos > RINGBUFLEN) trigpos = -1;
-
-    for (int i = 0; i < count; i += 2) {
-        if (trackpos == -1) {
-            if (lastVal < m_trig && buf[i] >= m_trig) {
-                trackpos = bi + i;
-                ntracked = 0;
-            }
-        } else {
-            ntracked++;
-            if (ntracked >= needed) {
-                trigpos = trackpos;
-                trackpos = -1;
-                ntracked = 0;
-            }
-        }
-        lastVal = buf[i];
+    dataLock.lock();
+    for (int i = 0; i < maestro.period; i ++) {
+        V ch1v = buf[2*i]/32768.0;
+        V ch2v = buf[2*i]/32768.0;
+        dataBuf1.enqueue(ch1v);
+        dataBuf2.enqueue(ch2v);
     }
-    return count;
+    dataLock.unlock();
+
 }
 
 
@@ -130,9 +114,6 @@ FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), dat
 }
 
 
-FFTScope::~FFTScope() {
-    maestro.deregisterSink(this);
-}
 
 double FFTScope::binToFreq(double i) {
     return i*FRAMES_PER_SEC/FFTSAMPLES;
@@ -171,6 +152,7 @@ void FFTScope::paint(QPainter *painter) {
         bool haveData = false;
         dataLock.lock();
         if (dataBuf.size() >= FFTSAMPLES) {
+            while (dataBuf.size() > FFTSAMPLES) dataBuf.removeFirst();
             for (long i = 0; i < FFTSAMPLES; i++)
                 data[i] = dataBuf.dequeue();
             for (long i = 0; i < FFTSAMPLES; i++) {
@@ -244,13 +226,11 @@ void FFTScope::paint(QPainter *painter) {
 }
 
 
-int FFTScope::writeData(Sample *buf, long long count) {
+void FFTScope::flush() {
     dataLock.lock();
-    for (long i = 0; i < count; i++)
+    for (long i = 0; i < maestro.period; i++)
         dataBuf.enqueue(buf[i]/32768.0);
-    while (dataBuf.size() > FFTSAMPLES) dataBuf.dequeue();
     dataLock.unlock();
-    return count;
 }
 
 

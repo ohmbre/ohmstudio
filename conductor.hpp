@@ -2,44 +2,45 @@
 #define INCLUDE_CONDUCTOR_HPP
 
 constexpr auto FRAMES_PER_SEC = 48000;
-constexpr auto FRAMES_PER_NSEC = 0.000048;
-constexpr auto BYTES_PER_SAMPLE = 2;
-constexpr auto FRAMES_PER_PERIOD = 3840;
-constexpr auto MSEC_PER_PERIOD = FRAMES_PER_PERIOD / 48;
+constexpr auto MIN_PERIOD = 960;
+constexpr auto MAX_PERIOD = 7680;
 constexpr auto MAX_CHANNELS = 8;
 #define V double
 #define Sample short
-
 
 
 class Sink;
 
 #define maestro Conductor::instance()
 
-class Conductor : public QObject {
+class Conductor : public QThread {
     Q_OBJECT
 public:
     static Conductor& instance() {
         static Conductor instance;
         return instance;
     }
-    void registerSink(Sink *sink);
+    bool registerSink(Sink *sink);
     void deregisterSink(Sink *sink);
-
+    void run() override;
     long long ticks;
-    QThread thread;
+    long period,minPeriod,maxPeriod;
+    bool stopped;
     QElapsedTimer clock;
-    QTimer *timer;
     QList<Sink*> sinks;
-public slots:
-    void start();
-    void conduct();
+    void stop();
+    void resume();
+    void adjustPeriod();
+    bool started;
+
 private:
     Conductor();
     ~Conductor();
+    void computePeriod();
+
     Conductor(Conductor const&);
-    void commit(Sink *sink);
     void operator=(Conductor const&);
+
 };
 
 #endif

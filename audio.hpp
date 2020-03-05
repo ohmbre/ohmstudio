@@ -15,13 +15,14 @@ class AudioOut : public QObject, public Sink {
 public:
     Q_INVOKABLE AudioOut();
     ~AudioOut();
-    int writeData(Sample *buf, long long count) override;
-    Q_INVOKABLE qint64 channelCount();
+    void flush() override;
+    Q_INVOKABLE qint64 channelCount() { return nchan(); }
     Q_INVOKABLE void setChannel(int i, QObject *function);
-    Q_INVOKABLE void setDevice(const QString &name);
+    Q_INVOKABLE bool setDevice(const QString &name);
     Q_INVOKABLE QStringList availableDevs();
     QAudioOutput *dev;
     QIODevice *iodev;
+    QMap<QString, QPair<QAudioDeviceInfo,QAudioFormat>> devList;
 };
 
 
@@ -34,12 +35,13 @@ public:
     ~AudioIn();
     qint64 writeData(const char *data, qint64 maxlen) override;
     qint64 readData(char *, qint64 ) override { return 0; };
-    Q_INVOKABLE qint64 channelCount();
-    Q_INVOKABLE void setDevice(const QString &name);
+    Q_INVOKABLE qint64 channelCount() { return channels.count(); }
+    Q_INVOKABLE bool setDevice(const QString &name);
     Q_INVOKABLE Function* getChannel(int i);
     Q_INVOKABLE QStringList availableDevs();
     QAudioInput *dev;
     QVector<BufferFunction*> channels;
+    QMap<QString, QPair<QAudioDeviceInfo,QAudioFormat>> devList;
 };
 
 

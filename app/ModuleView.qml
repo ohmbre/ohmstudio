@@ -1,6 +1,6 @@
 
-import QtQuick 2.13
-import QtQuick.Controls 2.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
 
 Item {
     id: mView

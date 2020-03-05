@@ -1,4 +1,4 @@
-import QtQuick 2.12
+import QtQuick 2.14
 
 QtObject {
     objectName: this.toString().split('_')[0]

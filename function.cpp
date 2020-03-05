@@ -11,7 +11,7 @@ void BufferFunction::put(V val) {
 }
 
 void BufferFunction::trim() {
-    while (buffer.size() > FRAMES_PER_PERIOD)
+    while (buffer.size() > maestro.period)
         buffer.dequeue();
 }
 
@@ -46,7 +46,7 @@ Q_INVOKABLE void SymbolicFunction::compile() {
         qDebug() << "---------- Compile Error(s) ----------";
         for (unsigned long i = 0; i < par.error_count(); i++) {
             ParseError err = par.get_error(i);
-            qDebug().noquote() << i << ") " << err.diagnostic.c_str() << endl
+            qDebug().noquote() << i << ") " << err.diagnostic.c_str() << Qt::endl
                                << "   at position ...:" << expstr.mid((int)err.token.position, 50)
                                << "   full function dump: " << repr();
         }

@@ -7,22 +7,21 @@ class Scope : public QQuickPaintedItem, public Sink {
     Q_PROPERTY(double trig READ trig WRITE setTrig)
 public:
     Scope(QQuickItem *parent = nullptr);
-    ~Scope();
     double timeWindow();
     void setTimeWindow(double timeWindow);
     double trig();
     void setTrig(double trig);
     void paint(QPainter *painter) override;
-    int writeData(Sample *buf, long long count) override;
-    Q_INVOKABLE qint64 channelCount() { return sinkChannelCount(); }
+    void flush() override;
+    Q_INVOKABLE qint64 channelCount() { return nchan(); }
     Q_INVOKABLE void setChannel(int i, QObject *function) { sinkSetChannel(i, function); }
 private:
     double m_timeWindow;
-    double m_trig;
-    double lastVal;
-    long long trigpos;
-    long long trackpos;
-    long long ntracked;
+    V m_trig;
+
+    QMutex dataLock;
+    QQueue<V> dataBuf1;
+    QQueue<V> dataBuf2;
 };
 
 
@@ -33,10 +32,9 @@ class FFTScope : public QQuickPaintedItem, public Sink {
     Q_OBJECT
 public:
     FFTScope(QQuickItem *parent = nullptr);
-    ~FFTScope();
     void paint(QPainter *painter) override;
-    int writeData(Sample *buf, long long count) override;
-    Q_INVOKABLE qint64 channelCount() { return sinkChannelCount(); }
+    void flush() override;
+    Q_INVOKABLE qint64 channelCount() { return nchan(); }
     Q_INVOKABLE void setChannel(int i, QObject *function) { sinkSetChannel(i, function); }
     double binToFreq(double i);
     double freqToBin(double f);

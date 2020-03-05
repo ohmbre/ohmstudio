@@ -1,5 +1,5 @@
 import ohm 1.0
-import QtQuick 2.12
+import QtQuick 2.14
 
 Module {
     label: "Delay"
