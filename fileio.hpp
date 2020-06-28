@@ -2,6 +2,8 @@
 #ifndef INCLUDE_FILEIO_HPP
 #define INCLUDE_FILEIO_HPP
 
+#include <QStandardPaths>
+
 class FileIO : public QObject {
     Q_OBJECT
 

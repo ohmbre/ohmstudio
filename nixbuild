@@ -4,8 +4,6 @@ mkdir -p build/nix
 cd build/nix
 qmake CONFIG+=debug ../..
 make -j32
-
-export QT_LOGGING_RULES="*.debug=true; qt.*.debug=false; qt.*.info=true; qt.qml.gc.allocatorStats=false; qt.qml.gc.statistics=false; qt.quick.focus=false; qt.quick.hover.trace=false; qt.qml.diskcache=false; qt.quick.dirty=false; qt.quick.itemview.lifecycle=false; qt.qml.binding.removal=false; qt.scenegraph.time.renderloop=false"
-#export QSG_INFO=1
+./ohm
 
 

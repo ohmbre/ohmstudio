@@ -13,8 +13,6 @@ int main(int argc, char *argv[]) {
     QSurfaceFormat::setDefaultFormat(format);
 
     QGuiApplication app(argc, argv);
-    app.setOrganizationName("Ohm");
-    app.setOrganizationDomain("life");
     QQmlApplicationEngine engine;
     QJSValue g = engine.globalObject();
     FileIO fileIO;

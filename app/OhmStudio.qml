@@ -1,6 +1,6 @@
-import QtQuick 2.14
-import QtQuick.Controls 2.14
-import QtQuick.Shapes 1.11
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Shapes 1.15
 
 import "qrc:/app/util.mjs" as Util
 
@@ -22,6 +22,13 @@ ApplicationWindow {
     property var globalScale: window.width / 320
     property var globalHeight: window.height/globalScale
 
+    function xpct(pct) {
+	return pct * globalWidth / 100;
+    }
+
+    function ypct(pct) {
+	return pct * globalHeight / 100;
+    }
 
     Rectangle {
         scale: globalScale

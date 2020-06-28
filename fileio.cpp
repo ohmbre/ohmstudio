@@ -4,33 +4,38 @@
 
 Q_INVOKABLE FileIO::FileIO() : QObject(QGuiApplication::instance()) {}
 
-Q_INVOKABLE bool FileIO::write(const QString &fname, const QString &content) {
-    QString path = fname.section('/',0,-2);
-    if (path != "")
-        QDir("").mkpath(fname.section('/',0,-2));
-    QFile f(fname);
+Q_INVOKABLE bool FileIO::write(const QString &relPath, const QString &content) {
+    QString relDir = relPath.section('/',0,-2);
+    QString fileName = relPath.section('/',-1);
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString dirPath = QDir::cleanPath(dataDir + "/" + relDir);
+    QDir::root().mkpath(dirPath);
+    QString path = dirPath + "/" + fileName;
+    QFile f(path);
     if (!f.open(QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text))
         return false;
     QTextStream out(&f);
     out << content << Qt::endl;
     f.close();
-    QFile::setPermissions(fname, QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther);
+    QFile::setPermissions(path, QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther);
     return true;
 }
 
-Q_INVOKABLE  QString FileIO::read(const QString &fname) {
-        QFile f(fname);
-        if (!f.open(QIODevice::ReadOnly|QIODevice::Text))
-            return "";
-        return QTextStream(&f).readAll();
+Q_INVOKABLE  QString FileIO::read(const QString &relpath) {
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QFile f(dataDir + "/" + relpath);
+    if (!f.open(QIODevice::ReadOnly|QIODevice::Text))
+      return "";
+    return QTextStream(&f).readAll();
 }
 
 Q_INVOKABLE  QString FileIO::pwd() {
     return QDir::currentPath();
 }
 
-Q_INVOKABLE  QVariant FileIO::listDir(const QString &dname, const QString &match, const QString &base) {
-    QDirIterator modIt(dname,QStringList()<<match,QDir::Files|QDir::NoDot|QDir::NoDotDot|QDir::AllDirs,QDirIterator::FollowSymlinks);
+Q_INVOKABLE  QVariant FileIO::listDir(const QString &dname, const QString &match, const QString &base) {    
+    QString dpath = dname.startsWith(":/") ? dname : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + dname;
+    QDirIterator modIt(dpath,QStringList()<<match,QDir::Files|QDir::NoDot|QDir::NoDotDot|QDir::AllDirs,QDirIterator::FollowSymlinks);
     QStringList fnames,subnames;
     if (dname != base) subnames << dname + "/..";
     while (modIt.hasNext()) {
