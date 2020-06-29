@@ -3,7 +3,7 @@ import QtQuick 2.15
 Model {
     id: mod
     property string label
-
+    property var tags: []
     property list<InJack> inJacks
     property list<OutJack> outJacks
     property list<CV> cvs

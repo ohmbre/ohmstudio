@@ -1,10 +1,10 @@
 #ifndef INCLUDE_CONDUCTOR_HPP
 #define INCLUDE_CONDUCTOR_HPP
 
-constexpr auto FRAMES_PER_SEC = 48000;
-constexpr auto MIN_PERIOD = 960;
-constexpr auto MAX_PERIOD = 7680;
-constexpr auto MAX_CHANNELS = 8;
+#define FRAMES_PER_SEC 48000
+#define MIN_PERIOD 960
+#define MAX_PERIOD 7680
+#define MAX_CHANNELS 8
 #define V double
 #define Sample short
 
@@ -29,9 +29,11 @@ public:
     QElapsedTimer clock;
     QList<Sink*> sinks;
     void stop();
+    void terminate();
     void resume();
     void adjustPeriod();
     bool started;
+    bool terminated;
 
 private:
     Conductor();

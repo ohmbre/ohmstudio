@@ -4,8 +4,10 @@ OhmChoiceBox {
     id: pickController
     width: 110
     height: 16
-    label.text: displayLabel
-    control.currentIndex: volts
-    choiceLabels: choices
-    onChosen: volts = index
+    label: displayLabel
+    choice: volts
+    model: choices
+    onChosen: function(newChoice) {
+        volts = choices.indexOf(newChoice);
+    }
 }

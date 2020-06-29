@@ -39,17 +39,17 @@ RESOURCES += \
     $$files(app/*.html, true) \
     qtquickcontrols2.conf
 
-
-QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
-
-linux {
+linux,android,mac {
+    QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
     QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-style-cast -O2
-    #QMAKE_LFLAGS += -lasound
 }
 
-
-QMAKE_MAC_SDK = macosx10.14
-
+windows {
+    QMAKE_CXXFLAGS += /bigobj
+}
+mac {
+    QMAKE_MAC_SDK = macosx10.15
+}
 android {
   DISTFILES += $$files(droid/*.*, true)
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/droid
@@ -60,5 +60,6 @@ OBJECTS_DIR=obj
 RCC_DIR=rcc
 UI_DIR=ui
 MOC_DIR=moc
+
 
 

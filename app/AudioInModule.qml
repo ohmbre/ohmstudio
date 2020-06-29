@@ -4,6 +4,7 @@ import ohm 1.0
 Module {
     id: audioIn
     label: 'Audio In'
+    tags: ['interface']
 
     property var hw: null
     property var devChoices: []

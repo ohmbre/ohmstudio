@@ -3,7 +3,8 @@
 #include "sink.hpp"
 
 Conductor::Conductor() :
-    QThread(), ticks(0), period(MIN_PERIOD), minPeriod(MIN_PERIOD), maxPeriod(MAX_PERIOD), stopped(true), clock(), started(false) {}
+    QThread(), ticks(0), period(MIN_PERIOD), minPeriod(MIN_PERIOD), maxPeriod(MAX_PERIOD),
+    stopped(true), clock(), started(false), terminated(false) {}
 
 
 void Conductor::run() {
@@ -52,13 +53,20 @@ void Conductor::stop() {
     if (!started) return;
     stopped = true;
     wait();
+
+}
+
+void Conductor::terminate() {
+    stop();
+    terminated = true;
 }
 
 void Conductor::resume() {
-    if (started && stopped) start();
+    if (started && stopped && !terminated) start();
 }
 
-Conductor::~Conductor() {}
+Conductor::~Conductor() {
+}
 
 void Conductor::adjustPeriod() {
     period = minPeriod;

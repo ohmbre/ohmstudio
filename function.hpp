@@ -2,6 +2,9 @@
 #define INCLUDE_FUNCTION_HPP
 
 #include "conductor.hpp"
+#ifndef M_PI
+#define M_PI 0x1.921fb54442d18p+1
+#endif
 
 typedef exprtk::ifunction<V> IFunction;
 

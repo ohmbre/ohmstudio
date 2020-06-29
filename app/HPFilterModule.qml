@@ -2,6 +2,8 @@ import ohm 1.0
 
 Module {
     label: 'HP Filter'
+    tags: ['filter','fx']
+
     InJack {label: 'input'}
     InJack {label: 'inFreq'}
     InJack {label: 'inQ'}
@@ -47,7 +49,7 @@ Module {
         expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
                      var cs := cos(f);
                      var sn := sin(f);
-                     vqr q := 1.5^(ctrlQ + inQ);
+                     var q := 1.5^(ctrlQ + inQ);
                      var alpha := sn * sinh(log(2)/2 * f / (sn * q));
                      var cs1 := 1+cs;
                      var b02 := cs1/2;

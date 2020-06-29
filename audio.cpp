@@ -58,7 +58,7 @@ bool AudioOut::setDevice(const QString &name) {
         delete dev;
     }
     if (!devList.contains(name)) return false;
-    dev = new QAudioOutput(devList[name].first, devList[name].second);
+    dev = new QAudioOutput(devList[name].first, devList[name].second, this);
     if (dev->error() != QAudio::NoError) {
         qDebug() << "Audio output error" << dev->error();
         return false;

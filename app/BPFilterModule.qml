@@ -2,6 +2,7 @@ import ohm 1.0
 
 Module {
     label: 'BP Filter'
+    tags: ['filter','fx']
     InJack {label: 'input'}
     InJack {label: 'inFreq'}
     InJack {label: 'inQ'}

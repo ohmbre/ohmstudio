@@ -7,6 +7,7 @@ import QtQuick.Dialogs 1.3
 Module {
     id: audioSample
     label: 'Play Sample'
+    tags: ['sample']
 
     InJack { label: 'trig' }
     InJack { label: 'inFreq' }

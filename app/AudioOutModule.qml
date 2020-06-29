@@ -4,6 +4,7 @@ import ohm 1.0
 Module {
     id: audioOut
     label: 'Audio Out'
+    tags: ['interface']
 
     property var hw: new AudioOut();
 

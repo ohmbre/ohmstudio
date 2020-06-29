@@ -198,7 +198,7 @@ Item {
 
             }
             delegate: OhmText {
-                width: parent.width
+                width: parent? parent.width : 0
                 height: 14
                 text: modelData.label
                 color: "black"

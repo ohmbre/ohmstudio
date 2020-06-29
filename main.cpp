@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
 
-    qputenv("QSG_RENDER_LOOP", "threaded");
+    //qputenv("QSG_RENDER_LOOP", "threaded");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QSurfaceFormat format; format.setSamples(4);
     QSurfaceFormat::setDefaultFormat(format);
@@ -40,6 +40,6 @@ int main(int argc, char *argv[]) {
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
     int ret = app.exec();
-    maestro.stop();
+    maestro.terminate();
     return ret;
 }

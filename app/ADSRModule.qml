@@ -3,6 +3,8 @@ import ohm 1.0
 Module {
 
     label: 'ADSR Envelope'
+    tags: ['envelope','cv']
+
     InJack {label: 'trig'}
     InJack {label: 'inGain'}
     InJack {label: 'inAttack'}

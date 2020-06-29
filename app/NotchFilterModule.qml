@@ -3,6 +3,7 @@ import ohm 1.0
 Module {
 
     label: 'Notch Filter'
+    tags: ['filter','fx']
 
     InJack {label: 'input'}
     InJack {label: 'inFreq'}

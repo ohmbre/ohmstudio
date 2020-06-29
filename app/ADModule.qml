@@ -3,6 +3,7 @@ import ohm 1.0
 Module {
 
     label: 'A/D Envelope'
+    tags: ['envelope','cv']
     InJack {label: 'trig'}
     InJack {label: 'inGain'}
     InJack {label: 'inAttack'}

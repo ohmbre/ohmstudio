@@ -1,5 +1,7 @@
 Module {
     label: 'Distortion'
+    tags: ['fx']
+
     InJack { label: 'input' }
     InJack { label: 'inHarsh' }
     CV {

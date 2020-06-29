@@ -2,6 +2,7 @@ import ohm 1.0
 
 Module {
     label: 'Peak Filter'
+    tags: ['filter','fx']
 
     InJack {label: 'input'}
     InJack {label: 'inFreq'}
