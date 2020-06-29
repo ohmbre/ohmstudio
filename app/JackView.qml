@@ -127,7 +127,7 @@ Item {
     property alias shape: jackShape
     property alias path: shapePath
     property alias pad: jackPad
-    property double extRad: parent.height/2+27
+    property double extRad: parent.height/2+32
     property double extRadHalf: parent.height/2+5
 
 
@@ -136,8 +136,8 @@ Item {
     property double anchor1Y: cy + mView.y
     property double anchor2X: posRef.x - direction * extRadHalf * Math.cos(shapeData.theta) + mView.x
     property double anchor2Y: posRef.y - extRadHalf * Math.sin(shapeData.theta) + mView.y
-    property double anchor3X: posRef.x - direction * 1.5*extRad * Math.cos(shapeData.theta) + mView.x
-    property double anchor3Y: posRef.y - 1.5*extRad * Math.sin(shapeData.theta) + mView.y
+    property double anchor3X: posRef.x - direction * extRad * Math.cos(shapeData.theta) + mView.x
+    property double anchor3Y: posRef.y - extRad * Math.sin(shapeData.theta) + mView.y
 
     Item {
         id: middle
