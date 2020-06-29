@@ -25,9 +25,7 @@ Q_INVOKABLE  QString FileIO::read(const QString &relpath) {
     QString path = relpath.startsWith(":/") || relpath.startsWith("/") ? relpath
       : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + relpath;
     QFile f(path);
-    qDebug() << "read: " << path;
     QString ret = f.open(QIODevice::ReadOnly|QIODevice::Text) ? QTextStream(&f).readAll() : "";
-    qDebug() << " res: " << ret;
     return ret;
 }
 
