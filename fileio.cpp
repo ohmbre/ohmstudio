@@ -22,11 +22,13 @@ Q_INVOKABLE bool FileIO::write(const QString &relPath, const QString &content) {
 }
 
 Q_INVOKABLE  QString FileIO::read(const QString &relpath) {
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QFile f(dataDir + "/" + relpath);
-    if (!f.open(QIODevice::ReadOnly|QIODevice::Text))
-      return "";
-    return QTextStream(&f).readAll();
+    QString path = relpath.startsWith(":/") || relpath.startsWith("/") ? relpath
+      : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + relpath;
+    QFile f(path);
+    qDebug() << "read: " << path;
+    QString ret = f.open(QIODevice::ReadOnly|QIODevice::Text) ? QTextStream(&f).readAll() : "";
+    qDebug() << " res: " << ret;
+    return ret;
 }
 
 Q_INVOKABLE  QString FileIO::pwd() {
