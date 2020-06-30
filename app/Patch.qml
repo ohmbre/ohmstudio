@@ -30,7 +30,7 @@ Model {
 
     function saveTo(fileName) {
         var qml = 'import ohm 1.0\n' + this.toQML();
-        writeFile(fileName, qml)
+        FileIO.write(fileName, qml)
     }
 
 

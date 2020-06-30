@@ -252,7 +252,7 @@ Item {
             gc()
             const qml = 'import ohm 1.0\n' + patch.toQML();
             if (qml !== lastSave) {
-                writeFile('autosave.qml', qml)
+                FileIO.write('autosave.qml', qml)
                 lastSave = qml;
             }
         }

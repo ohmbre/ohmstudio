@@ -56,15 +56,6 @@ global.centerY = (rect) => rect.y + rect.height/2
 global.centerInX = (insideRect, outsideRect) => outsideRect.width/2 - insideRect.width/2;
 global.centerInY = (insideRect, outsideRect) => outsideRect.height/2 - insideRect.height/2;
 
-global.readFile = (fileUrl) => {
-    if (fileUrl.startsWith('file:'))
-        fileUrl = fileUrl.substr(5)
-    if (fileUrl.startsWith('./'))
-        fileUrl = fileUrl.substr(2)
-    return FileIO.read(fileUrl)
-}
-
-global.writeFile = (fileUrl, contents) => FileIO.write(fileUrl, contents)
 
 global.dbg = (obj) => {
     console.error(obj);

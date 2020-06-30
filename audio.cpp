@@ -63,7 +63,10 @@ bool AudioOut::setDevice(const QString &name) {
         qDebug() << "Audio output error" << dev->error();
         return false;
     }
+
+    for (int s = 0; s < maestro.period * nchan(); s++) buf[s] = 0;
     iodev = dev->start();
+    iodev->write((char*)buf, maestro.period * nchan() * sizeof(Sample));
     setChannelCount(devList[name].second.channelCount());
     minPeriod = dev->periodSize() / nchan() / sizeof(Sample);
     maxPeriod = dev->bufferSize() / nchan() / sizeof(Sample);
@@ -77,10 +80,9 @@ void AudioOut::flush() {
         QAudio::State s = dev->state();
         QAudio::Error e = dev->error();
         if (e == QAudio::NoError && (s == QAudio::IdleState || s == QAudio::ActiveState)) {
-            iodev->write((char*)buf, maestro.period * nchan() * sizeof(Sample));
+	  iodev->write((char*)buf, maestro.period * nchan() * sizeof(Sample));
         } else if (e == QAudio::UnderrunError) {
-
-
+	  iodev->write((char*)buf, maestro.period * nchan() * sizeof(Sample));
         }
     }
 }

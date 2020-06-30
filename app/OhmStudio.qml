@@ -187,9 +187,11 @@ ApplicationWindow {
         z: 1
 
         function loadAutoSave() {
-            var rawdata = readFile("file:autosave.qml");
+            var rawdata = FileIO.read('autosave.qml');
+	    if (!rawdata) rawdata = FileIO.read(':/app/default.qml')
             if (rawdata)
                 loadPatch(rawdata, 'qrc:/app/autosave.qml')
+	   
         }
 
         function loadPatch(raw,url) {
