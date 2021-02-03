@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 Jack {
     id: outJack
@@ -11,12 +11,13 @@ Jack {
     signal cableRemoved(Cable cable)
     onCableRemoved: {
         cables = filterList(cables, c => c !== cable)
-        if (parent && parent.parent) parent.parent.cablesUpdated()
+        if (module && module.patch) module.patch.cablesUpdated()
     }
     signal cableAdded(Cable cable)
     onCableAdded: {
         cables.push(cable)
-        if (parent && parent.parent) parent.parent.cablesUpdated()
+        if (module && module.patch)
+            module.patch.cablesUpdated()
     }
 
     signal outFuncUpdated(var outFunc)

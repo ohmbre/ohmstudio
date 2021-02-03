@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import ohm 1.0
 
 Model {
@@ -16,13 +16,12 @@ Model {
     }
 
     function addModule(fileUrl, x, y) {
-        fileUrl = fileUrl.replace(':/app/','');
+        fileUrl = fileUrl.replace(':/app/','')
         const name = fileUrl.split('/').pop().split('.')[0]
-        const c = Qt.createComponent(fileUrl);
+        const c = Qt.createComponent(fileUrl)
         if (c.status === Component.Ready) {
             const m = c.createObject(this, {x: x, y: y, objectName: name})
-            m.parent = this;
-            modules.push(m);
+            modules.push(m)
         } else
             console.error("Couldn't create module:", c.errorString())
 
@@ -33,17 +32,10 @@ Model {
         FileIO.write(fileName, qml)
     }
 
-
     qmlExports: ({name:'name', modules:'modules', cables: 'default'})
 
-
-
-
     Component.onCompleted: {
-        Qt.patch = this;
-        forEach(modules, function(module) {
-            module.parent = Qt.patch
-        })
+        global.patch = this
     }
 
     default property var looseCable

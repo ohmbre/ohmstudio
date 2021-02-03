@@ -9,10 +9,6 @@
 #include <QQueue>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QAudioOutput>
-#include <QAudioInput>
-#include <QAudioDeviceInfo>
-#include <QAudioDecoder>
 #include <QFile>
 #include <QDir>
 #include <QDirIterator>
@@ -29,9 +25,12 @@
 #include <QProcessEnvironment>
 #include <QSurfaceFormat>
 #include <QtEndian>
+#include <QStandardPaths>
+
 #include <cmath>
 #include <cstdlib>
 #include <functional>
 
 #include "external/exprtk.hpp"
 #include "external/RtMidi.h"
+#include "external/miniaudio.h"

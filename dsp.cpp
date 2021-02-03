@@ -7,7 +7,7 @@ Q_INVOKABLE Fourier::Fourier() : QObject(QGuiApplication::instance()), Sink(1), 
 
 
 void Fourier::flush() {
-    for (long i = 0; i < maestro.period; i++)
+    for (long i = 0; i < PERIOD; i++)
         dataBuf.enqueue(buf[i] / 32768.0);
     while (dataBuf.size() > FTDIM) dataBuf.dequeue();
 }

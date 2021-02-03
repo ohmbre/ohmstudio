@@ -1,7 +1,7 @@
 import ohm 1.0
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Dialogs 1.3
+import QtQuick
+import QtQuick.Controls
+import Qt.labs.platform
 
 
 Module {
@@ -58,9 +58,10 @@ Module {
 
         FileDialog {
             id: fileDialog
-            title: "Choose audio file..."
+            acceptLabel: "load"
+            title: "Choose file containing audio sample"
             onAccepted: {
-                fileName = fileDialog.fileUrl
+                audioSample.fileName = file
                 fileDialog.close();
             }
             onRejected: {

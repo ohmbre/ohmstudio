@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import ohm 1.0
 
 Module {
@@ -7,8 +7,7 @@ Module {
     tags: ['interface']
 
     property var hw: new AudioOut();
-
-    property string devId: ""
+    property var devId: ""
 
     function deleteJacks() {
         const ijs = mapList(inJacks, j => j)
@@ -18,9 +17,7 @@ Module {
 
     function switchDev(newId) {
         if (devId === newId || newId === "") return;
-        if (devId != "") {
-            deleteJacks();
-        }
+        if (devId != "") deleteJacks();
         devId = newId;
     }
 
@@ -38,7 +35,7 @@ Module {
             const pos = i
             var ijComponent = Qt.createComponent("qrc:/app/InJack.qml");
             if (ijComponent.status === Component.Ready) {
-                const ij = ijComponent.createObject(audioOut, {label: pos, parent: audioOut})
+                const ij = ijComponent.createObject(audioOut, {label: pos, module: audioOut})
                 audioOut.inJacks.push(ij)
                 ij.inFuncUpdated.connect((lbl,func) => { audioOut.hw.setChannel(parseInt(lbl), func) })
             } else

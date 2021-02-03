@@ -1,6 +1,7 @@
-import QtQuick 2.5
+import QtQuick
 
 Model {
+    property var module
     property string label
     property var value: 0
 }

@@ -2,8 +2,7 @@
 #define INCLUDE_CONDUCTOR_HPP
 
 #define FRAMES_PER_SEC 48000
-#define MIN_PERIOD 960
-#define MAX_PERIOD 7680
+#define PERIOD 480
 #define MAX_CHANNELS 8
 #define V double
 #define Sample short
@@ -24,21 +23,18 @@ public:
     void deregisterSink(Sink *sink);
     void run() override;
     long long ticks;
-    long period,minPeriod,maxPeriod;
     bool stopped;
     QElapsedTimer clock;
     QList<Sink*> sinks;
     void stop();
     void terminate();
     void resume();
-    void adjustPeriod();
     bool started;
     bool terminated;
 
 private:
     Conductor();
     ~Conductor();
-    void computePeriod();
 
     Conductor(Conductor const&);
     void operator=(Conductor const&);

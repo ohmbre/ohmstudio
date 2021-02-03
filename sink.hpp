@@ -4,7 +4,6 @@
 #include "conductor.hpp"
 #include "function.hpp"
 
-#define RINGBUFLEN 131072
 
 class Sink {
     Q_GADGET

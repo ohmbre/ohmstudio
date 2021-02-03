@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Shapes 1.15
+import QtQuick
+import QtQuick.Shapes
 
 Shape {
     id: cableDragView
@@ -99,8 +99,8 @@ Shape {
         dragPad.released.connect(cableDragView.cableDropped);
     }
 
-    signal cableMoved
-    onCableMoved: {
+    signal cableMoved(var position)
+    onCableMoved: function (toPosition) {
         forEach(pView.patch.modules, function(module) {
             var mv = module.view;
             if (mv === startJackView.parent) return;
@@ -142,8 +142,8 @@ Shape {
         });
     }
 
-    signal cableDropped
-    onCableDropped: {
+    signal cableDropped(var jv)
+    onCableDropped: function(jv) {
         dragPad.positionChanged.disconnect(cableDragView.cableMoved);
         dragPad.released.disconnect(cableDragView.cableDropped);
         state = "notdragging";

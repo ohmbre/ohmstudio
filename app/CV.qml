@@ -1,7 +1,8 @@
-import QtQuick 2.15
+import QtQuick
 
 Model {
     id: cv
+    property var module
     property string label
     property string displayLabel: label
     property double volts: 0

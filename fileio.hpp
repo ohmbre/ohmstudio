@@ -2,7 +2,7 @@
 #ifndef INCLUDE_FILEIO_HPP
 #define INCLUDE_FILEIO_HPP
 
-#include <QStandardPaths>
+#include "audio.hpp"
 
 class FileIO : public QObject {
     Q_OBJECT
@@ -13,7 +13,7 @@ public:
     Q_INVOKABLE QString read(const QString &fname);
     Q_INVOKABLE QString pwd();
     Q_INVOKABLE QVariant listDir(const QString &dname, const QString &match, const QString &base);
-    Q_INVOKABLE QJSValue samplesFromFile(QUrl url);
+    Q_INVOKABLE QJSValue samplesFromFile(QUrl path);
 
 };
 

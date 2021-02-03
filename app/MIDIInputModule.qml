@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import ohm 1.0
 
 
@@ -21,7 +21,7 @@ Module {
 
     property var hw: new MIDIInFunction();
     function eventCallback(ev) {
-        console.log(ev.type,ev.channel,ev.key,ev.val)
+        //console.log(ev.type,ev.channel,ev.key,ev.val)
     }
     property var devChoice: -1
     onDevChoiceChanged: {

@@ -6,8 +6,8 @@
 #include "function.hpp"
 #include "sink.hpp"
 
-
-
+void createAudioContext();
+void destroyAudioContext();
 
 
 class AudioOut : public QObject, public Sink {
@@ -16,13 +16,17 @@ public:
     Q_INVOKABLE AudioOut();
     ~AudioOut();
     void flush() override;
+
     Q_INVOKABLE qint64 channelCount() { return nchan(); }
     Q_INVOKABLE void setChannel(int i, QObject *function);
     Q_INVOKABLE bool setDevice(const QString &name);
     Q_INVOKABLE QStringList availableDevs();
-    QAudioOutput *dev;
-    QIODevice *iodev;
-    QMap<QString, QPair<QAudioDeviceInfo,QAudioFormat>> devList;
+
+
+    ma_device dev;
+    ma_rb ringOut;
+    bool initialized;
+
 };
 
 
@@ -39,10 +43,11 @@ public:
     Q_INVOKABLE bool setDevice(const QString &name);
     Q_INVOKABLE Function* getChannel(int i);
     Q_INVOKABLE QStringList availableDevs();
-    QAudioInput *dev;
+    //QAudioInput *dev;
     QVector<BufferFunction*> channels;
-    QMap<QString, QPair<QAudioDeviceInfo,QAudioFormat>> devList;
+
 };
 
+void decodeSamples(QString path, QList<double> *samples);
 
 #endif

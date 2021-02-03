@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Shapes 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Shapes
 
 import "qrc:/app/util.mjs" as Util
 
@@ -23,11 +23,11 @@ ApplicationWindow {
     property var globalHeight: window.height/globalScale
 
     function xpct(pct) {
-	return pct * globalWidth / 100;
+    return pct * globalWidth / 100;
     }
 
     function ypct(pct) {
-	return pct * globalHeight / 100;
+    return pct * globalHeight / 100;
     }
 
     Rectangle {
@@ -39,8 +39,9 @@ ApplicationWindow {
         z: 2
         color: 'transparent'
         property var w: menu.subItem.width
+
         Shape {
-            x: overlay.w; y: 0; z: 3; width: 50; height: globalHeight
+            x: parent.w; y: 0; z: 3; width: 50; height: globalHeight
             Behavior on x { SmoothedAnimation { duration: 500 } }
             ShapePath {
                 strokeWidth: 2
@@ -78,7 +79,7 @@ ApplicationWindow {
             color: 'white'
             MouseArea {
                 anchors.fill: parent
-                onClicked: menu.submenu = menu.patchMenu
+                onClicked: menu.submenu = menu.mainMenu
             }
         }
 
@@ -87,7 +88,7 @@ ApplicationWindow {
             transformOrigin: Item.TopLeft
             x: overlay.w+12.5; y: 58
             Behavior on x { SmoothedAnimation { duration: 500 } }
-            text: "Patch"
+            text: "Menu"
             font.weight: Font.Bold
         }
 
@@ -99,7 +100,7 @@ ApplicationWindow {
             Loader {
                 anchors.right: parent.right
                 id: activeChild
-                sourceComponent: menu.patchMenu
+                sourceComponent: menu.mainMenu
             }
             property alias submenu: activeChild.sourceComponent
             property alias subItem: activeChild.item
@@ -133,31 +134,42 @@ ApplicationWindow {
                 }
             }
 
-            property Component convertModuleMenu: ModuleConversion {
+            property Component audioOutMenu: Rectangle {
+                height: globalHeight
                 width: 200
+                OhmChoiceBox {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    label: "Device"
+                    model: audioOut.hw.availableDevs();
+                    choice: audioOut.devId
+                    onChosen: function(newId) {
+                        audioOut.switchDev(newId);
+                    }
+                }
             }
 
 
-            property Component patchMenu: Column {
+            property Component mainMenu: Column {
                 spacing: 10; width: 85; y: 20
                 anchors.horizontalCenter: parent.horizontalCenter
-                OhmButton {
-                    text: "New"
+                component MenuBtn : OhmButton {
                     anchors.horizontalCenter: parent.horizontalCenter
+                }
+                MenuBtn {
+                    text: "New"
                     onClicked: {
                         patchCanvas.loadPatch('import ohm 1.0; Patch { modules: []; cables: [] }')
                         menu.close()
                     }
                 }
-                OhmButton {
+                MenuBtn {
                     text: "Load"
-                    anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: menu.submenu = menu.loadPatchMenu
                 }
-                OhmButton {
-                    visible: activePatch.status === Loader.Ready
-                    anchors.horizontalCenter: parent.horizontalCenter
+                MenuBtn {
                     text: "Save"
+                    visible: activePatch.status === Loader.Ready
                     onClicked: {
                         if (menu.submenu != menu.savePatchMenu) {
                             menu.submenu = menu.savePatchMenu
@@ -166,12 +178,9 @@ ApplicationWindow {
                         }
                     }
                 }
-                OhmButton {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Modularize"
-                    onClicked: {
-                        menu.submenu = menu.convertModuleMenu
-                    }
+                MenuBtn {
+                    text: "Audio Output"
+                    onClicked: menu.submenu = menu.audioOutMenu
                 }
             }
         }
@@ -188,10 +197,10 @@ ApplicationWindow {
 
         function loadAutoSave() {
             var rawdata = FileIO.read('autosave.qml');
-	    if (!rawdata) rawdata = FileIO.read(':/app/default.qml')
+        if (!rawdata) rawdata = FileIO.read(':/app/default.qml')
             if (rawdata)
                 loadPatch(rawdata, 'qrc:/app/autosave.qml')
-	   
+
         }
 
         function loadPatch(raw,url) {

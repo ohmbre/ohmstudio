@@ -249,7 +249,6 @@ Item {
         interval: 2000; running: true; repeat: true
         property var lastSave: ''
         onTriggered: {
-            gc()
             const qml = 'import ohm 1.0\n' + patch.toQML();
             if (qml !== lastSave) {
                 FileIO.write('autosave.qml', qml)

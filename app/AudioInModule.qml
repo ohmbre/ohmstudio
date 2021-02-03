@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import ohm 1.0
 
 Module {
@@ -18,7 +18,7 @@ Module {
         for (let i = 0; i < nchan; i++) {
             var ojComponent = Qt.createComponent("qrc:/app/OutJack.qml");
             if (ojComponent.status === Component.Ready) {
-                const oj = ojComponent.createObject(audioIn, {label: i, parent: audioIn})
+                const oj = ojComponent.createObject(audioIn, {label: i, module: audioIn})
                 audioIn.outJacks.push(oj)
                 oj.outFunc = audioIn.hw.getChannel(i)
                 oj.outFuncUpdated(oj.outFunc)

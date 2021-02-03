@@ -1,12 +1,12 @@
-import QtQuick 2.15
-import QtQuick.Shapes 1.15
+import QtQuick
+import QtQuick.Shapes
 
 Shape {
     id: rect
     containsMode: Shape.FillContains
     layer.enabled: {
-    return Qt.platform.os == 'android' || Qt.platform.os == 'ios' ||
-            Qt.platform.os == 'linux' || Qt.platform.os == 'osx'
+    return Qt.platform.os === 'android' || Qt.platform.os === 'ios' ||
+            Qt.platform.os === 'linux' || Qt.platform.os === 'osx'
     }
     layer.samples: 16
     layer.smooth: true
@@ -72,9 +72,9 @@ Shape {
         hoverEnabled: true
         containmentMask: rect
         pressAndHoldInterval: 800
-        onPressAndHold: rect.pressAndHold(mouse)
-        onClicked: rect.clicked(mouse)
-        onDoubleClicked: rect.doubleClicked(mouse)
+        onPressAndHold: rect.pressAndHold()
+        onClicked: rect.clicked()
+        onDoubleClicked: rect.doubleClicked()
     }
 }
 

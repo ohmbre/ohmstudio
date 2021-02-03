@@ -1,4 +1,4 @@
-QT += quickcontrols2 svg multimedia qml
+QT += quickcontrols2 svg qml
 CONFIG += c++latest precompile_header
 LANGUAGE = C++
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -60,6 +60,8 @@ OBJECTS_DIR=obj
 RCC_DIR=rcc
 UI_DIR=ui
 MOC_DIR=moc
+
+DISTFILES +=
 
 
 

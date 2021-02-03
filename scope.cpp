@@ -92,7 +92,7 @@ void Scope::paint(QPainter *painter) {
 void Scope::flush() {
 
     dataLock.lock();
-    for (int i = 0; i < maestro.period; i ++) {
+    for (int i = 0; i < PERIOD; i ++) {
         V ch1v = buf[2*i]/32768.0;
         V ch2v = buf[2*i]/32768.0;
         dataBuf1.enqueue(ch1v);
@@ -229,7 +229,7 @@ void FFTScope::paint(QPainter *painter) {
 
 void FFTScope::flush() {
     dataLock.lock();
-    for (long i = 0; i < maestro.period; i++)
+    for (long i = 0; i < PERIOD; i++)
         dataBuf.enqueue(buf[i]/32768.0);
     dataLock.unlock();
 }

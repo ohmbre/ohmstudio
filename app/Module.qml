@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 Model {
     id: mod
@@ -34,11 +34,9 @@ Model {
 
     qmlExports: ({ objectName: 'objectName', x:'x', y:'y', cvs: 'default'})
 
-
-
     default property var contents
     onContentsChanged: {
-        contents.parent = this;
+        contents.module = this;
         const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs], ['Variable',variables]];
         typeMap.forEach(([type,container]) => {
             if (contents.objectName.endsWith(type)) {
@@ -47,6 +45,10 @@ Model {
                 else container.push(contents);
             }
         });
+    }
+
+    function getIndex() {
+        return listIndex(global.patch.modules, this);
     }
 
     Component.onCompleted: {
@@ -64,7 +66,7 @@ Model {
             })
             forEach(variables, v => {
                 outFunc.setVar(v.label, v.value)
-                v.valueChanged.connect(() => { console.log('setvvar',v.label); outFunc.setVar(v.label, v.value) })
+                v.valueChanged.connect(() => { outFunc.setVar(v.label, v.value) })
 
             })
 

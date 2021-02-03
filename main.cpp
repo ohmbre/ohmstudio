@@ -7,8 +7,6 @@
 
 int main(int argc, char *argv[]) {
 
-    //qputenv("QSG_RENDER_LOOP", "threaded");
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QSurfaceFormat format; format.setSamples(4);
     QSurfaceFormat::setDefaultFormat(format);
 
@@ -25,7 +23,6 @@ int main(int argc, char *argv[]) {
     g.setProperty("Fourier", engine.newQMetaObject(&Fourier::staticMetaObject));
     g.setProperty("FileIO", engine.newQObject(&fileIO));
     g.setProperty("FRAMES_PER_SEC", FRAMES_PER_SEC);
-    qmlRegisterInterface<Function>("Function");
     qRegisterMetaType<Function*>("Function*");
     qRegisterMetaType<SymbolicFunction*>("SymbolicFunction*");
     qRegisterMetaType<SymbolicFunction*>("BufferFunction*");
@@ -36,10 +33,12 @@ int main(int argc, char *argv[]) {
     qmlRegisterType<Scope>("ohm", 1, 0, "Scope");
     qmlRegisterType<FFTScope>("ohm", 1, 0, "FFTScope");
 
+    createAudioContext();
     maestro.start();
 
     engine.load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
     int ret = app.exec();
     maestro.terminate();
+    destroyAudioContext();
     return ret;
 }

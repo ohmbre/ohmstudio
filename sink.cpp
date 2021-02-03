@@ -1,7 +1,7 @@
 #include "sink.hpp"
 
 Sink::Sink(int nchannels) : channels(), registered(false),
-    bufpos(0), buf(nullptr), minPeriod(MIN_PERIOD), maxPeriod(MAX_PERIOD)
+    bufpos(0), buf(nullptr)
 {
     channels.resize(nchannels);
     for (int i = 0; i < nchannels; i++)
@@ -23,7 +23,6 @@ void Sink::setChannelCount(int n) {
     channels.resize(n);
     for (int i = 0; i < n; i++)
         channels[i] = nullptr;
-    buf = new Sample[n*maestro.period];
 }
 
 void Sink::sinkSetChannel(int i, QObject *function) {
