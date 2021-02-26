@@ -36,7 +36,7 @@ void MIDIInFunction::open(unsigned int portNum) {
 }
 
 void MIDIInFunction::callback(double, std::vector<unsigned char> *message) {
-    MIDIEvent ev(message->data(), message->size());
+    MIDIEvent ev(message->data(), (unsigned long) message->size());
     if (!chanFilter.contains(ev.channel)) return;
     if (!typeFilter.contains(ev.type)) return;
     if (!keyFilter.contains(ev.key)) return;

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Shapes
 
-import "qrc:/app/util.mjs" as Util
+import "qrc:/app/util.mjs"
 
 ApplicationWindow {
     id: window
@@ -119,7 +119,7 @@ ApplicationWindow {
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    patchCanvas.loadPatch(FileIO.read(fileURL))
+                    patchCanvas.loadPatch(maestro.read(fileURL))
                     menu.close()
                 }
             }
@@ -129,7 +129,7 @@ ApplicationWindow {
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    activePatch.item.patch.saveTo(fileURL);
+                    global.patch.saveTo(fileURL);
                     menu.close()
                 }
             }
@@ -138,13 +138,24 @@ ApplicationWindow {
                 height: globalHeight
                 width: 200
                 OhmChoiceBox {
-                    anchors.verticalCenter: parent.verticalCenter
+                    y: 50
                     anchors.horizontalCenter: parent.horizontalCenter
                     label: "Device"
-                    model: audioOut.hw.availableDevs();
-                    choice: audioOut.devId
+                    model: maestro.availableDevs()
+                    choice: maestro.outputName
                     onChosen: function(newId) {
-                        audioOut.switchDev(newId);
+                        maestro.outputName = newId;
+                    }
+                }
+
+                OhmChoiceBox {
+                    y: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    label: "Rate"
+                    model: [8000,11025,16000,22050,44100,48000,88200,96000,192000,352800,384000].map(i=>i.toString())
+                    choice: maestro.sampleRate.toString()
+                    onChosen: function(newRate) {
+                        maestro.sampleRate = parseInt(newRate)
                     }
                 }
             }
@@ -159,7 +170,7 @@ ApplicationWindow {
                 MenuBtn {
                     text: "New"
                     onClicked: {
-                        patchCanvas.loadPatch('import ohm 1.0; Patch { modules: []; cables: [] }')
+                        patchCanvas.loadPatch('Patch { modules: []; cables: [] }')
                         menu.close()
                     }
                 }
@@ -169,7 +180,6 @@ ApplicationWindow {
                 }
                 MenuBtn {
                     text: "Save"
-                    visible: activePatch.status === Loader.Ready
                     onClicked: {
                         if (menu.submenu != menu.savePatchMenu) {
                             menu.submenu = menu.savePatchMenu
@@ -196,32 +206,42 @@ ApplicationWindow {
         z: 1
 
         function loadAutoSave() {
-            var rawdata = FileIO.read('autosave.qml');
-        if (!rawdata) rawdata = FileIO.read(':/app/default.qml')
+            var rawdata = maestro.read('autosave.qml');
+            if (!rawdata) rawdata = maestro.read(':/app/default.qml')
             if (rawdata)
                 loadPatch(rawdata, 'qrc:/app/autosave.qml')
 
         }
 
         function loadPatch(raw,url) {
-            if (!url) url="dynamic"
-            if (activePatch.item && activePatch.item.patch) {
-                activePatch.item.patch.destroy()
-            }
+            let p = null;
             try {
-                var obj = Qt.createQmlObject(raw, window, url);
+                p = Qt.createQmlObject(raw, window, url || "dynamic");
             } catch(err) {
-                console.log("could not load ",url,":",err);
-                return false;
+                console.log("could not load ",url || "dynamic",":",err);
             }
-            activePatch.setSource("PatchView.qml", {patch: obj});
-            return true;
+            autoSaveTimer.stop();
+            if (global.patch) global.patch.destroy();
+            global.patch = p;
+            pView.newPatch()
+            autoSaveTimer.start()
         }
 
-        Loader {
-            id: activePatch
-            objectName: "patchLoader"
-            anchors.fill: parent
+        PatchView {
+            id: pView
+        }
+
+        Timer {
+            id: autoSaveTimer
+            interval: 2000; running: false; repeat: true
+            property var lastSave: ''
+            onTriggered: {
+                const qml = global.patch.toQML();
+                if (qml !== lastSave) {
+                    maestro.write('autosave.qml', qml)
+                    lastSave = qml;
+                }
+            }
         }
 
         Component.onCompleted: {

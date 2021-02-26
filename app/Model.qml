@@ -14,16 +14,18 @@ QtObject {
         }
         let entries = Object.entries(qmlExports).map(
                 ([propKey,lbl]) => {
-                    const propVal = this[propKey]
-                    if (propVal === undefined || propVal === null || propVal.length === 0) return [lbl,null]
+                    let propVal = this[propKey]
+
+                    if (propVal && propVal.call) propVal = propVal()
+                    if (propVal === undefined || propVal === null) return [lbl,null]
                     if (propVal.push) {
+                        if (propVal.length === 0) return [lbl,null]
                         const listVals = mapList(propVal,valToQML).filter(qml=>qml !== null)
                         if (listVals.length === 0) {
                             return [lbl,null];
                         }
                         if (lbl === 'default') {
                             const lvstr = listVals.join('\n')
-                            //console.log(lvstr)
                             return [lbl, lvstr]
                         }
                         return [lbl, '[\n' + listVals.join(', ') + '\n]'];

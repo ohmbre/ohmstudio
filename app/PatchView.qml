@@ -4,7 +4,6 @@ import QtQml 2.15
 
 Item {
     id: pView
-    property Patch patch
     width: 320
     height: 240
     property alias moduleOverlay: moduleOverlay
@@ -86,14 +85,16 @@ Item {
                 }
 
                 Repeater {
-                    model: patch.modules
+                    id: moduleList
+                    model: []
                     ModuleView {
                         module: modelData
                     }
                 }
 
                 Repeater {
-                    model: patch.cables
+                    id: cableList
+                    model: []
                     CableView {
                         cable: modelData
                     }
@@ -166,10 +167,11 @@ Item {
             id: mlv
             anchors.fill: parent
             function listModules() {
-                return FileIO.listDir(':/app','*Module.qml',":/app")
+                if (!maestro) return []
+                return maestro.listDir(':/app','*Module.qml',":/app")
                        .filter(m => m !== ':/app/Module.qml' && m.endsWith('.qml'))
                        .map(fname => {
-                                const contents = FileIO.read(fname)
+                                const contents = maestro.read(fname)
                                 let label = contents.match(/label:\s*[\'\"\`]([^\"\'\`]+)[\'\"\`]/)
                                 if (label) return {path: fname, label: label[1]}
                                 const parts = fname.split('/')
@@ -215,7 +217,6 @@ Item {
                 }
             }
             onFocusChanged: {
-                console.log('focus',focus)
                 if (!focus)
                     visible = false
             }
@@ -226,8 +227,8 @@ Item {
     function placeModule(path) {
         const outside = (p1,p2) => ((p1.x-26)>(p2.x+26))||((p2.x-26)>(p1.x+26))||((p1.y-18)>(p2.y+18))||((p2.y-18)>(p1.y+18))
         const fits = p => {
-            for (let i = 0; i < pView.patch.modules.length; i++)
-              if (!outside(p, Qt.point(pView.patch.modules[i].x, pView.patch.modules[i].y))) return false
+            for (let i = 0; i < global.patch.modules.length; i++)
+              if (!outside(p, Qt.point(global.patch.modules[i].x, global.patch.modules[i].y))) return false
             return true;
         }
         // whip it round in an archimedes spiral
@@ -237,28 +238,28 @@ Item {
             t += Math.PI/(t+1)
             p = Qt.point(13/9*t*Math.cos(t), t*Math.sin(t))
         }
-        pView.patch.addModule(path, p.x, p.y);
+        global.patch.addModule(path, p.x, p.y);
     }
 
     property alias contentItem: content
     property alias cableDragView: childCableDragView
 
-
-    Timer {
-        id: autoSaveTimer
-        interval: 2000; running: true; repeat: true
-        property var lastSave: ''
-        onTriggered: {
-            const qml = 'import ohm 1.0\n' + patch.toQML();
-            if (qml !== lastSave) {
-                FileIO.write('autosave.qml', qml)
-                lastSave = qml;
-            }
-        }
+    function newPatch() {
+        modulesUpdated()
+        cablesUpdated()
     }
 
+    function modulesUpdated() {
+        moduleList.model = global.patch.modules
+    }
+
+    function cablesUpdated() {
+        cableList.model = global.patch.cables;
+    }
+
+
     Component.onCompleted: {
-        patch.view = pView;
+        global.patch.view = pView;
     }
 
 }

@@ -26,6 +26,7 @@
 #include <QSurfaceFormat>
 #include <QtEndian>
 #include <QStandardPaths>
+#include <QSettings>
 
 #include <cmath>
 #include <cstdlib>

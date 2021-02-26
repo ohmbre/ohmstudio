@@ -4,32 +4,9 @@
 
 #include "conductor.hpp"
 #include "function.hpp"
-#include "sink.hpp"
 
 void createAudioContext();
 void destroyAudioContext();
-
-
-class AudioOut : public QObject, public Sink {
-    Q_OBJECT
-public:
-    Q_INVOKABLE AudioOut();
-    ~AudioOut();
-    void flush() override;
-
-    Q_INVOKABLE qint64 channelCount() { return nchan(); }
-    Q_INVOKABLE void setChannel(int i, QObject *function);
-    Q_INVOKABLE bool setDevice(const QString &name);
-    Q_INVOKABLE QStringList availableDevs();
-
-
-    ma_device dev;
-    ma_rb ringOut;
-    bool initialized;
-
-};
-
-
 
 
 class AudioIn : public QIODevice {

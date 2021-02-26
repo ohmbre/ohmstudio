@@ -66,6 +66,7 @@ typedef exprtk::parser_error::type ParseError;
 
 class SymbolicFunction : public Function {
     Q_OBJECT
+    QML_ELEMENT
     QString name;
     QString expstr;
     NullFunction nullfunc;

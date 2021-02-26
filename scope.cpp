@@ -1,7 +1,6 @@
 #include "scope.hpp"
 
-Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(2) {
-    maestro.registerSink(this);
+Scope::Scope(QQuickItem *parent) : QQuickPaintedItem(parent) {
     setTextureSize(QSize(241*5,113*5));
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
 }
@@ -42,9 +41,9 @@ void Scope::paint(QPainter *painter) {
     painter->drawText(QRect(0,0,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "10V" );
     painter->drawText(QRectF(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
 
-    long nsamples = qRound(m_timeWindow*FRAMES_PER_SEC/1000);
+    long nsamples = qRound(m_timeWindow*maestro.sampleRate()/1000);
 
-    double timeinc = w/nsamples;
+    //double timeinc = w/nsamples;
 
     QVector<QPointF> polyline(static_cast<int>(nsamples));
 
@@ -60,8 +59,8 @@ void Scope::paint(QPainter *painter) {
     painter->drawText(QRectF(w/2-20,h-10,40,10), Qt::AlignHCenter | Qt::AlignVCenter, "trig (ch1) no lock");
 
 
-    double xpos;
-    int i;
+    //double xpos;
+    //int i;
     pen.setWidthF(1);
     pen.setStyle(Qt::SolidLine);
     painter->setCompositionMode(QPainter::CompositionMode_DestinationOver);
@@ -69,7 +68,7 @@ void Scope::paint(QPainter *painter) {
     while (dataBuf1.size() > nsamples) dataBuf1.removeFirst();
     while (dataBuf2.size() > nsamples) dataBuf2.removeFirst();
 
-    if (channels[0]) {
+    /*if (channels[0]) {
         long end = qMin(nsamples, (long)dataBuf1.size());
         for (i = 0, xpos = 0; i < end; i++, xpos += timeinc)
             polyline[i] = QPointF(xpos,h/2*(1-dataBuf1[i]));
@@ -84,7 +83,7 @@ void Scope::paint(QPainter *painter) {
         pen.setColor(QColor(0,176,186,200));
         painter->setPen(pen);
         painter->drawPolyline(polyline);
-    }
+    }*/
     dataLock.unlock();
 
 }
@@ -92,18 +91,18 @@ void Scope::paint(QPainter *painter) {
 void Scope::flush() {
 
     dataLock.lock();
-    for (int i = 0; i < PERIOD; i ++) {
-        V ch1v = buf[2*i]/32768.0;
+    for (unsigned int i = 0; i < maestro.period(); i ++) {
+        /*V ch1v = buf[2*i]/32768.0;
         V ch2v = buf[2*i]/32768.0;
         dataBuf1.enqueue(ch1v);
-        dataBuf2.enqueue(ch2v);
+        dataBuf2.enqueue(ch2v);*/
     }
     dataLock.unlock();
 
 }
 
 
-FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), data(), polyline(FFTSAMPLES/2-1), dataLock() {
+FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), data(), polyline(FFTSAMPLES/2-1), dataLock() {
     for (long i = 0; i < FFTSAMPLES; i++)
         for (long j = 0; j < FFTSAMPLES; j++) {
             V arg = 2 * M_PI * i * j / FFTSAMPLES;
@@ -111,19 +110,18 @@ FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), Sink(1), dat
         }
     setTextureSize(QSize(241*5,113*1.3*5));
     setRenderTarget(QQuickPaintedItem::FramebufferObject);
-    maestro.registerSink(this);
 }
 
 
 
 double FFTScope::binToFreq(double i) {
-    return i*FRAMES_PER_SEC/FFTSAMPLES;
+    return i*maestro.sampleRate()/FFTSAMPLES;
 }
 double FFTScope::freqToBin(double f) {
-    return FFTSAMPLES * f / FRAMES_PER_SEC;
+    return FFTSAMPLES * f / maestro.sampleRate();
 }
 double FFTScope::freqToX(double f, double width){
-    return log2(f / 35) / log2(FRAMES_PER_SEC / 2 / 35) * width;
+    return log2(f / 35) / log2(maestro.sampleRate() / 2 / 35) * width;
 }
 
 
@@ -149,7 +147,7 @@ void FFTScope::paint(QPainter *painter) {
     painter->setPen(pen);
 
 
-    if (channels[0]) {
+    /*if (channels[0]) {
         bool haveData = false;
         dataLock.lock();
         if (dataBuf.size() >= FFTSAMPLES) {
@@ -173,7 +171,7 @@ void FFTScope::paint(QPainter *painter) {
                 polyline[i-1] = QPointF(freqToX(binToFreq(i),w), h*(1-sqrt(2*(bins[i]*bins[i] + bins[FFTSAMPLES-i]*bins[FFTSAMPLES-i]))));
             painter->drawPolyline(polyline);
         }
-    }
+    }*/
 
     pen.setStyle(Qt::DotLine);
     pen.setWidthF(0.4);
@@ -229,8 +227,8 @@ void FFTScope::paint(QPainter *painter) {
 
 void FFTScope::flush() {
     dataLock.lock();
-    for (long i = 0; i < PERIOD; i++)
-        dataBuf.enqueue(buf[i]/32768.0);
+    //for (unsigned int i = 0; i < maestro.period(); i++)
+    //    dataBuf.enqueue(buf[i]/32768.0);
     dataLock.unlock();
 }
 

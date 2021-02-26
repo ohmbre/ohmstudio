@@ -1,5 +1,4 @@
 import QtQuick
-import ohm 1.0
 
 Model {
     property string name
@@ -8,11 +7,13 @@ Model {
     signal cablesUpdated()
     onCablesUpdated: {
         cables = mapList(modules, m=>mapList(m.outJacks, oj=>oj.cables).reduce(concatList,[])).reduce(concatList,[])
+        if (view) view.cablesUpdated()
     }
 
     function deleteModule(dModule) {
         modules = filterList(modules, m => m !== dModule);
         dModule.destroy()
+        if (view) view.modulesUpdated()
     }
 
     function addModule(fileUrl, x, y) {
@@ -24,19 +25,14 @@ Model {
             modules.push(m)
         } else
             console.error("Couldn't create module:", c.errorString())
-
+        if (view) view.modulesUpdated()
     }
 
     function saveTo(fileName) {
-        var qml = 'import ohm 1.0\n' + this.toQML();
-        FileIO.write(fileName, qml)
+        maestro.write(fileName, this.toQML())
     }
 
     qmlExports: ({name:'name', modules:'modules', cables: 'default'})
-
-    Component.onCompleted: {
-        global.patch = this
-    }
 
     default property var looseCable
     onLooseCableChanged: {

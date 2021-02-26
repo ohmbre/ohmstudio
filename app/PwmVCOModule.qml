@@ -1,5 +1,3 @@
-import ohm 1.0
-
 Module {
     label: 'PWM VCO'
     InJack { label: 'inFreq' }

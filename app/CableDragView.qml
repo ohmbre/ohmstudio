@@ -3,8 +3,8 @@ import QtQuick.Shapes
 
 Shape {
     id: cableDragView
-    property JackView startJackView: null
-    property JackView endJackView: null
+    property var startJackView: null
+    property var endJackView: null
 
     width: pView.width
     height: pView.height
@@ -101,7 +101,7 @@ Shape {
 
     signal cableMoved(var position)
     onCableMoved: function (toPosition) {
-        forEach(pView.patch.modules, function(module) {
+        forEach(global.patch.modules, function(module) {
             var mv = module.view;
             if (mv === startJackView.parent) return;
             var mRelPos = dragPad.mapToItem(mv.perimeter, dragPad.mouseX, dragPad.mouseY);
@@ -154,10 +154,8 @@ Shape {
                 cableData[startJackView.jack.dir] = startJackView.jack;
                 cableData[endJackView.jack.dir] = endJackView.jack;
                 var cable = cableComponent.createObject(cableData['out'], cableData);
-
                 startJackView.parent.collapseAll();
                 endJackView.parent.collapseAll();
-                pView.patch.cables = pView.patch.cables
             } else
                 console.log("error creating cable:", cComponent.errorString());
             endJackView.dropTargeted = false;

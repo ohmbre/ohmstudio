@@ -1,6 +1,4 @@
 import QtQuick
-import ohm 1.0
-
 
 Module {
     id: midiin

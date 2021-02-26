@@ -7,6 +7,7 @@ Item {
     width: 130
     height: 18
     antialiasing: true
+
     OhmText {
         color: 'black'
         width: parent.width*.05; height: parent.height
@@ -23,6 +24,7 @@ Item {
         height: 18
         antialiasing: true
         transformOrigin: Item.Left
+
         OhmText {
             color: Material.color(Material.Grey, Material.Shade800)
             x:-3; width: 6; height: parent.height
@@ -52,9 +54,6 @@ Item {
             verticalAlignment: Text.AlignBottom
             bottomPadding: 2
         }
-
-
-
 
         OhmSlider {
             id: control

@@ -3,7 +3,7 @@ import QtQuick.Shapes
 
 Shape {
     id: cView
-    property Cable cable
+    property var cable
 
     ShapePath {
         id: cPath

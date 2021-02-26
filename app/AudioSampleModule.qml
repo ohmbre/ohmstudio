@@ -1,4 +1,3 @@
-import ohm 1.0
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.platform
@@ -29,7 +28,7 @@ Module {
     property var fileName: null
     onFileNameChanged: {
         if (fileName != null)
-            variable('sample').value = FileIO.samplesFromFile(fileName)
+            variable('sample').value = maestro.samplesFromFile(fileName)
         else
             variable('sample').value = [0]
     }

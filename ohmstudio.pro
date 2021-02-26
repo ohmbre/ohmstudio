@@ -1,30 +1,32 @@
 QT += quickcontrols2 svg qml
-CONFIG += c++latest precompile_header
+CONFIG += c++latest precompile_header qmltypes
 LANGUAGE = C++
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     conductor.cpp \
     function.cpp \
-    sink.cpp \
     audio.cpp \
     scope.cpp \
-    fileio.cpp \
     midi.cpp \
     dsp.cpp \
-    external/RtMidi.cpp
+    external/RtMidi.cpp \
+    external/tinycc/libtcc.c
 
 
 HEADERS += \
     conductor.hpp \
     function.hpp \
-    sink.hpp \
     audio.hpp \
     scope.hpp \
-    fileio.hpp \
     pch.hpp \
     dsp.hpp \
-    midi.hpp
+    midi.hpp \
+    external/exprtk.hpp \
+    external/miniaudio.h \
+    external/RtMidi.h \
+
+
 
 PRECOMPILED_HEADER = pch.hpp
 
@@ -37,7 +39,10 @@ RESOURCES += \
     $$files(app/*.svg, true) \
     $$files(app/*.ttf, true) \
     $$files(app/*.html, true) \
-    qtquickcontrols2.conf
+   qtquickcontrols2.conf
+
+QML_IMPORT_NAME = ohm
+QML_IMPORT_MAJOR_VERSION = 1
 
 linux,android,mac {
     QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
@@ -61,7 +66,6 @@ RCC_DIR=rcc
 UI_DIR=ui
 MOC_DIR=moc
 
-DISTFILES +=
 
 
 

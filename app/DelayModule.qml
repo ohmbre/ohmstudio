@@ -1,4 +1,3 @@
-import ohm 1.0
 import QtQuick
 
 Module {
@@ -13,7 +12,7 @@ Module {
         unit: 'ms'
     }
     Variable { label: 'pos'; }
-    Variable { label: 'history'; value: Array(FRAMES_PER_SEC*2).fill(0); }
+    Variable { label: 'history'; value: Array(maestro.sampleRate()*2).fill(0); }
     OutJack {
         label: 'delayed'
         expression:

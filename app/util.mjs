@@ -33,6 +33,8 @@ global.concatList = (l1,l2) => {
     return l3
 }
 
+global.concat = (a,b) => a + b
+
 global.mapList = (l,fn) => {
     const l2 = []
     if (!l) return l2

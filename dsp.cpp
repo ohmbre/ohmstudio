@@ -1,14 +1,12 @@
 #include "dsp.hpp"
 
 
-Q_INVOKABLE Fourier::Fourier() : QObject(QGuiApplication::instance()), Sink(1), data() {
-    maestro.registerSink(this);
-}
+Q_INVOKABLE Fourier::Fourier() : QObject(QGuiApplication::instance()), data() {}
 
 
 void Fourier::flush() {
-    for (long i = 0; i < PERIOD; i++)
-        dataBuf.enqueue(buf[i] / 32768.0);
+    /*for (unsigned int i = 0; i < maestro.period(); i++)
+        dataBuf.enqueue(buf[i] / 32768.0);*/
     while (dataBuf.size() > FTDIM) dataBuf.dequeue();
 }
 

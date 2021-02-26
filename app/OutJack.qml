@@ -11,13 +11,14 @@ Jack {
     signal cableRemoved(Cable cable)
     onCableRemoved: {
         cables = filterList(cables, c => c !== cable)
-        if (module && module.patch) module.patch.cablesUpdated()
+        if (global.patch)
+            global.patch.cablesUpdated()
     }
     signal cableAdded(Cable cable)
     onCableAdded: {
         cables.push(cable)
-        if (module && module.patch)
-            module.patch.cablesUpdated()
+        if (global.patch)
+            global.patch.cablesUpdated()
     }
 
     signal outFuncUpdated(var outFunc)

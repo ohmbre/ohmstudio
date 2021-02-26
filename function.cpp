@@ -11,7 +11,8 @@ void BufferFunction::put(V val) {
 }
 
 void BufferFunction::trim() {
-    while (buffer.size() > PERIOD)
+    int period = maestro.period();
+    while (buffer.size() > period)
         buffer.dequeue();
 }
 
@@ -29,10 +30,14 @@ Q_INVOKABLE SymbolicFunction::SymbolicFunction(const QString &label, const QStri
     st.add_constant("pi", M_PI);
     st.add_constant("tau", 2*M_PI);
     st.add_constant("V", 1);
-    st.add_constant("s", FRAMES_PER_SEC);
-    st.add_constant("ms", FRAMES_PER_SEC/1000);
-    st.add_constant("mins", 60*FRAMES_PER_SEC);
-    st.add_constant("Hz", 2*M_PI/FRAMES_PER_SEC);
+    st.add_variable("s", maestro.sym_s);
+    st.add_variable("ms", maestro.sym_ms);
+    st.add_variable("mins", maestro.sym_mins);
+    st.add_variable("Hz", maestro.sym_hz);
+    /*st.add_constant("s", maestro.sampleRate());
+    st.add_constant("ms", maestro.sampleRate()/1000);
+    st.add_constant("mins", 60*maestro.sampleRate());
+    st.add_constant("Hz", 2*M_PI/maestro.sampleRate());*/
 
     expr.register_symbol_table(st);
 
@@ -58,11 +63,11 @@ Q_INVOKABLE void SymbolicFunction::compile() {
 
 Q_INVOKABLE void SymbolicFunction::setVar(QString vname, QVariant value) {
     bool wasCompiled;
-    if (value.canConvert(QMetaType::QVariantList)) {
+    if (value.canConvert<QVariantList>()) {
         QVariantList vlist = value.toList();
         QVector<V> seq;
         foreach(QVariant listval, vlist) {
-            if (listval.canConvert(QMetaType::Double))
+            if (listval.canConvert<double>())
                 seq << listval.toDouble();
             else seq << 0;
         }
@@ -83,7 +88,7 @@ Q_INVOKABLE void SymbolicFunction::setVar(QString vname, QVariant value) {
                 if (wasCompiled) compile();
             }
         }
-    } else if (value.canConvert(QMetaType::Double)) {
+    } else if (value.canConvert<double>()) {
         V val = value.toDouble();
         if (!variables.contains(vname)) {
             variables[vname] = val;
