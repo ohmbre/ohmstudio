@@ -49,7 +49,7 @@ Item {
             x: parent.width *.05;
             y: -choiceBox.choiceIdx * (chooser.expanded ? 0 : choiceBox.height);
             Repeater {
-                id: choices
+                id: choiceRepeater
                 OhmText {
                     property bool selected: modelData == choiceBox.choice
                     property bool hovered: false
@@ -76,7 +76,7 @@ Item {
             }
         }
     }
-    property alias model: choices.model
+    property alias model: choiceRepeater.model
     property string choice
     property int choiceIdx: model.indexOf(choice)
     signal chosen(string newChoice)

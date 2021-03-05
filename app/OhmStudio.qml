@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Shapes
 
-import "qrc:/app/util.mjs"
+import "qrc:/app/util.mjs" as Util
 
 ApplicationWindow {
     id: window

@@ -1,10 +1,9 @@
 import QtQuick
 import QtQuick.Shapes
-
 Shape {
     id: cableDragView
-    property var startJackView: null
-    property var endJackView: null
+    property JackView startJackView: null
+    property JackView endJackView: null
 
     width: pView.width
     height: pView.height
@@ -80,8 +79,8 @@ Shape {
         }
     ]
 
-    signal cableStarted(JackView jv)
-    onCableStarted: function(jv) {
+    
+    function cableStarted(jv) {
         dragPad = jv.pad
         if (jv.jack.hasCable && jv.jack.dir === 'inp') {
             startJackView = jv.jack.cable.out.view
@@ -95,13 +94,13 @@ Shape {
         destination.x = dragPad.mouseX + dragPad.parentModuleView.x - 10
         destination.y = dragPad.mouseX + dragPad.parentModuleView.x - 10
         state = "dragging";
-        dragPad.positionChanged.connect(cableDragView.cableMoved);
+        dragPad.positionChanged.connect(cableMoved);
         dragPad.released.connect(cableDragView.cableDropped);
     }
 
-    signal cableMoved(var position)
-    onCableMoved: function (toPosition) {
+    function cableMoved(toPosition) {
         forEach(global.patch.modules, function(module) {
+           
             var mv = module.view;
             if (mv === startJackView.parent) return;
             var mRelPos = dragPad.mapToItem(mv.perimeter, dragPad.mouseX, dragPad.mouseY);
@@ -142,8 +141,7 @@ Shape {
         });
     }
 
-    signal cableDropped(var jv)
-    onCableDropped: function(jv) {
+    function cableDropped(jv) {
         dragPad.positionChanged.disconnect(cableDragView.cableMoved);
         dragPad.released.disconnect(cableDragView.cableDropped);
         state = "notdragging";

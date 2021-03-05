@@ -32,7 +32,6 @@ public:
     Q_INVOKABLE unsigned int outputChCount() {
         return outDev.playback.channels;
     }
-
     Q_INVOKABLE unsigned int period() {
         return outDev.playback.internalPeriodSizeInFrames;
     }
@@ -47,12 +46,10 @@ public:
         resetOutput();
     }
 
-
     Q_INVOKABLE QStringList availableDevs();
     Q_INVOKABLE void setChannel(int i, QObject *function);
     quint64 ticks;
     V sym_s, sym_ms, sym_mins, sym_hz;
-
 
     Q_INVOKABLE bool write(const QString &fname, const QString &content);
     Q_INVOKABLE QString read(const QString &fname);
@@ -76,7 +73,14 @@ private:
 
 };
 
-
 inline Conductor maestro;
+
+
+class Sink : public QObject {
+    Q_OBJECT
+public:
+    Sink();
+    Function *func;
+};
 
 #endif

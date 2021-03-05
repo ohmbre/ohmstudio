@@ -20,7 +20,7 @@ int Conductor::run(int argc, char **argv) {
         channelMap[c] = nullptr;
     resetOutput();
 
-    engine = new QQmlApplicationEngine();
+    engine = new QQmlApplicationEngine;
     gui = engine->globalObject();
     gui.setProperty("global", gui);
     gui.setProperty("SymbolicFunction", engine->newQMetaObject(&SymbolicFunction::staticMetaObject));
@@ -30,6 +30,7 @@ int Conductor::run(int argc, char **argv) {
     engine->rootContext()->setContextProperty("maestro", this);
     engine->load(QUrl(QStringLiteral("qrc:/app/OhmStudio.qml")));
 
+    qDebug() << "main thread:" <<  QThread::currentThreadId();
     qapp->exec();
 
     ma_device_stop(&outDev);
@@ -38,6 +39,7 @@ int Conductor::run(int argc, char **argv) {
     ma_context_uninit(&audioContext);
     mutex.unlock();
 
+    delete engine;
     delete settings;
     delete qapp;
 
@@ -89,6 +91,8 @@ void Conductor::resetOutput() {
 
     cfg.dataCallback = [](ma_device *dev, void* pOutput, const void*, ma_uint32 nframes) {
         Conductor *me = (Conductor*) dev->pUserData;
+        if (me->ticks == 0)
+            qDebug() << "audio thread:" <<  QThread::currentThreadId();
         me->mutex.lock();
         unsigned int nchan = me->outputChCount();
         Function **channelMap = (Function**) me->channelMap;

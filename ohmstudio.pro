@@ -1,5 +1,5 @@
 QT += quickcontrols2 svg qml
-CONFIG += c++latest precompile_header qmltypes
+CONFIG += c++latest precompile_header 
 LANGUAGE = C++
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \

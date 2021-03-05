@@ -70,7 +70,7 @@ Rectangle {
             width: parent.width-parent.border.width*2
             height:  (module && module.display) ? (parent.height*0.3) : (parent.height-parent.border.width*2-40)
             x: parent.border.width
-            y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+35)
+            y: (module && module.display) ? (parent.height*0.7) : (parent.border.width+20)
             columns: 8
             rows: 8
             flow: GridLayout.TopToBottom
