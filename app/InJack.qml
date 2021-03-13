@@ -11,7 +11,7 @@ Jack {
         this.inFuncUpdated(this.label, null);
     }
     signal cableAdded(Cable newCable)
-    onCableAdded: {
+    onCableAdded: (newCable) => {
         this.cable = newCable;
         updateInFunc();
     }

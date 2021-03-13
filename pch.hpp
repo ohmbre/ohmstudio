@@ -27,6 +27,10 @@
 #include <QtEndian>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QSGMaterialShader>
+#include <QSGGeometryNode>
+#include <QSGMaterial>
+#include <QQuickView>
 
 #include <cmath>
 #include <cstdlib>

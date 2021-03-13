@@ -1,4 +1,5 @@
 #include "conductor.hpp"
+#include "audio.hpp"
 
 class Scope : public QQuickPaintedItem {
     Q_OBJECT

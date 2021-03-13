@@ -36,7 +36,7 @@ class BufferFunction : public Function {
     Q_OBJECT
 public:
     V curVoltage;
-    long long ticks;
+    quint64 ticks;
 
     QQueue<V> buffer;
     BufferFunction();
@@ -78,7 +78,7 @@ class SymbolicFunction : public Function {
     Expression expr;
     bool compiled;
     V curVoltage;
-    long long ticks;
+    quint64 ticks;
 
 public:
     Q_INVOKABLE SymbolicFunction(const QString &label, const QString &expression);

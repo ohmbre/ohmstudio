@@ -41,7 +41,7 @@ void Scope::paint(QPainter *painter) {
     painter->drawText(QRect(0,0,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "10V" );
     painter->drawText(QRectF(0,h-8,13,8), Qt::AlignHCenter | Qt::AlignVCenter, "-10V" );
 
-    long nsamples = qRound(m_timeWindow*maestro.sampleRate()/1000);
+    long nsamples = qRound(m_timeWindow*maestro.audioOut->sampleRate()/1000);
 
     //double timeinc = w/nsamples;
 
@@ -91,7 +91,7 @@ void Scope::paint(QPainter *painter) {
 void Scope::flush() {
 
     dataLock.lock();
-    for (unsigned int i = 0; i < maestro.period(); i ++) {
+    for (unsigned int i = 0; i < PERIOD; i ++) {
         /*V ch1v = buf[2*i]/32768.0;
         V ch2v = buf[2*i]/32768.0;
         dataBuf1.enqueue(ch1v);
@@ -115,13 +115,13 @@ FFTScope::FFTScope(QQuickItem *parent) : QQuickPaintedItem(parent), data(), poly
 
 
 double FFTScope::binToFreq(double i) {
-    return i*maestro.sampleRate()/FFTSAMPLES;
+    return i*maestro.sym_s/FFTSAMPLES;
 }
 double FFTScope::freqToBin(double f) {
-    return FFTSAMPLES * f / maestro.sampleRate();
+    return FFTSAMPLES * f / maestro.sym_s;
 }
 double FFTScope::freqToX(double f, double width){
-    return log2(f / 35) / log2(maestro.sampleRate() / 2 / 35) * width;
+    return log2(f / 35) / log2(maestro.sym_s / 2 / 35) * width;
 }
 
 

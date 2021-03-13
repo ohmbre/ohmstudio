@@ -7,10 +7,9 @@ import "qrc:/app/util.mjs" as Util
 ApplicationWindow {
     id: window
     visible: true
-    flags: Qt.Window
     width: 1280
     height: 960
-
+    flags: Qt.Window
     title: "Ohm Studio"
     color: 'white'
     FontLoader { id: asapMedium; source: "qrc:/app/ui/fonts/Asap-Medium.ttf" }
@@ -18,16 +17,16 @@ ApplicationWindow {
     font.family: asapMedium.name
 
 
-    property var globalWidth: 320
-    property var globalScale: window.width / 320
+    property var globalWidth: 480
+    property var globalScale: window.width / globalWidth
     property var globalHeight: window.height/globalScale
 
     function xpct(pct) {
-    return pct * globalWidth / 100;
+        return pct * globalWidth / 100;
     }
 
     function ypct(pct) {
-    return pct * globalHeight / 100;
+        return pct * globalHeight / 100;
     }
 
     Rectangle {
@@ -47,15 +46,15 @@ ApplicationWindow {
                 strokeWidth: 2
                 strokeColor: 'black'
                 fillColor: 'transparent'
-                startX: 0; startY: 0
+                startX: -1; startY: 0
                 pathElements: [
-                    PathLine {x: 0; y: 50},
-                    PathLine {x: -2; y: 50},
+                    PathLine {x: -1; y: 50},
+                    PathLine {x: -3; y: 50},
                     PathLine {x: 16; y: 50},
                     PathLine {x: 16; y: 90},
-                    PathLine {x: -2; y: 90},
-                    PathLine {x: 0; y: 90},
-                    PathLine {x: 0; y: globalHeight}
+                    PathLine {x: -3; y: 90},
+                    PathLine {x: -1; y: 90},
+                    PathLine {x: -1; y: globalHeight}
                 ]
             }
         }
@@ -119,7 +118,7 @@ ApplicationWindow {
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    patchCanvas.loadPatch(maestro.read(fileURL))
+                    patchCanvas.loadPatch(MAESTRO.read(fileURL))
                     menu.close()
                 }
             }
@@ -129,7 +128,7 @@ ApplicationWindow {
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    global.patch.saveTo(fileURL);
+                    pView.patch.saveTo(fileURL);
                     menu.close()
                 }
             }
@@ -141,10 +140,10 @@ ApplicationWindow {
                     y: 50
                     anchors.horizontalCenter: parent.horizontalCenter
                     label: "Device"
-                    model: maestro.availableDevs()
-                    choice: maestro.outputName
+                    model: AUDIO_OUT.availableDevs()
+                    choice: AUDIO_OUT.name
                     onChosen: function(newId) {
-                        maestro.outputName = newId;
+                        AUDIO_OUT.name = newId;
                     }
                 }
 
@@ -153,9 +152,9 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     label: "Rate"
                     model: [8000,11025,16000,22050,44100,48000,88200,96000,192000,352800,384000].map(i=>i.toString())
-                    choice: maestro.sampleRate.toString()
+                    choice: AUDIO_OUT.sampleRate.toString()
                     onChosen: function(newRate) {
-                        maestro.sampleRate = parseInt(newRate)
+                        AUDIO_OUT.sampleRate = parseInt(newRate)
                     }
                 }
             }
@@ -206,25 +205,21 @@ ApplicationWindow {
         z: 1
 
         function loadAutoSave() {
-            var rawdata = maestro.read('autosave.qml');
-            if (!rawdata) rawdata = maestro.read(':/app/default.qml')
+            var rawdata = MAESTRO.read('autosave.qml');
+            if (!rawdata) rawdata = MAESTRO.read(':/app/default.qml')
             if (rawdata)
                 loadPatch(rawdata, 'qrc:/app/autosave.qml')
 
         }
 
         function loadPatch(raw,url) {
-            let p = null;
-            try {
-                p = Qt.createQmlObject(raw, window, url || "dynamic");
-            } catch(err) {
+            try { 
+                pView.patch = Qt.createQmlObject(raw, pView, url || "dynamic");
+                autoSaveTimer.start()
+            } 
+            catch(err) {
                 console.log("could not load ",url || "dynamic",":",err);
-            }
-            autoSaveTimer.stop();
-            if (global.patch) global.patch.destroy();
-            global.patch = p;
-            pView.newPatch()
-            autoSaveTimer.start()
+            }            
         }
 
         PatchView {
@@ -236,9 +231,9 @@ ApplicationWindow {
             interval: 2000; running: false; repeat: true
             property var lastSave: ''
             onTriggered: {
-                const qml = global.patch.toQML();
+                const qml = pView.patch.toQML();
                 if (qml !== lastSave) {
-                    maestro.write('autosave.qml', qml)
+                    MAESTRO.write('autosave.qml', qml)
                     lastSave = qml;
                 }
             }
@@ -248,5 +243,7 @@ ApplicationWindow {
             loadAutoSave()
         }
     }
+    
+
 }
 

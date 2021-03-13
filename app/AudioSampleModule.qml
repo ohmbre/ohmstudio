@@ -28,7 +28,7 @@ Module {
     property var fileName: null
     onFileNameChanged: {
         if (fileName != null)
-            variable('sample').value = maestro.samplesFromFile(fileName)
+            variable('sample').value = MAESTRO.samplesFromFile(fileName)
         else
             variable('sample').value = [0]
     }

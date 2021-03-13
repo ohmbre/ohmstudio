@@ -6,7 +6,6 @@ import QtQuick.Layouts
 
 Rectangle {
 
-
     id: mOver
     anchors.fill: parent
     visible: module != null
@@ -28,10 +27,10 @@ Rectangle {
 
     Rectangle {
         color: 'white'
-        width: parent.width * .94
-        height: parent.height * .94
-        x: parent.width * .03
-        y: parent.height * .03
+        width: xpct(100) * .94
+        height: ypct(100) * .94
+        x: xpct(100) * .03
+        y: ypct(100) * .03
         radius: 15
         border.color: 'black'
         border.width: 5

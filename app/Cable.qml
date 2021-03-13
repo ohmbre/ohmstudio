@@ -35,6 +35,17 @@ Model {
         if (inp) inp.cableAdded(this);
 
         if (out && inp && inp.updateInFunc) out.outFuncUpdated.connect(inp.updateInFunc);
+        
+        if (out && out.module && out.module.patch) {
+            console.log('updating cable.out.module.patch.cables')
+            cable.out.module.patch.cablesChanged();
+        } else {
+            console.log('not one of: out =',out,'out.module =',out.module,'out.module.patch =',out.module.patch);
+            dbg(out.module);
+            
+        }
+        
+        
     }
 
 }

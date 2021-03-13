@@ -93,7 +93,7 @@ Module {
                         strokeStyle: ShapePath.SolidLine
                         property var ps: [{x:graph.pMin.x,y:0}].concat(graph.points.slice(0,1)).concat({x:0,y:1}).concat(graph.points.slice(1)).concat({x:graph.pMax.x, y:0}).map(graph.toView)
                         startX: ps[0].x; startY: ps[0].y
-                        pathElements: Array.from(Array(ps.length-1).keys()).map(i => Qt.createQmlObject(`import QtQuick 2.15; PathCubic { x: ${ ps[i+1].x }; y: ${ ps[i+1].y }; control1X: ${ ps[i].x }; control2X: ${ ps[i+1].x }; control1Y: ${ graph.toView({y:0}).y }; control2Y: control1Y}`,spath,""))
+                        pathElements: Array.from(Array(ps.length-1).keys()).map(i => Qt.createQmlObject(`import QtQuick; PathCubic { x: ${ ps[i+1].x }; y: ${ ps[i+1].y }; control1X: ${ ps[i].x }; control2X: ${ ps[i+1].x }; control1Y: ${ graph.toView({y:0}).y }; control2Y: control1Y}`,spath,""))
                     }
                 }
                 Repeater {

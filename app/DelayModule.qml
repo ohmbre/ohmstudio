@@ -12,7 +12,7 @@ Module {
         unit: 'ms'
     }
     Variable { label: 'pos'; }
-    Variable { label: 'history'; value: Array(maestro.sampleRate()*2).fill(0); }
+    Variable { label: 'history'; value: Array(AUDIO_OUT.sampleRate()*2).fill(0); }
     OutJack {
         label: 'delayed'
         expression:

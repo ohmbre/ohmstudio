@@ -9,16 +9,14 @@ Jack {
     property list<Cable> cables
     property bool hasCable: cables.length > 0
     signal cableRemoved(Cable cable)
-    onCableRemoved: {
+    onCableRemoved: (cable) => {
         cables = filterList(cables, c => c !== cable)
-        if (global.patch)
-            global.patch.cablesUpdated()
+        pView.patch.cablesChanged()
     }
     signal cableAdded(Cable cable)
-    onCableAdded: {
+    onCableAdded: (cable) => {
         cables.push(cable)
-        if (global.patch)
-            global.patch.cablesUpdated()
+        pView.patch.cablesChanged()
     }
 
     signal outFuncUpdated(var outFunc)

@@ -4,9 +4,10 @@ import QtQml 2.15
 
 Item {
     id: pView
-    width: 320
-    height: 240
+    width: xpct(100)
+    height: ypct(100)
     property alias moduleOverlay: moduleOverlay
+    property Patch patch: Patch {}
     ModuleOverlay {
         id: moduleOverlay
     }
@@ -70,7 +71,7 @@ Item {
         PinchArea {
             id: mousePinch
             anchors.fill: parent
-            onPinchUpdated: {
+            onPinchUpdated: (pinch) => {
                 pinch.accepted = scaler.zoomContent(
                             pinch.scale-pinch.previousScale,
                             Qt.point(pinch.startCenter.x, pinch.startCenter.y))
@@ -80,13 +81,13 @@ Item {
                 anchors.fill: parent
                 drag.target: content
                 propagateComposedEvents: false
-                onWheel: {
+                onWheel: (wheel) => {
                     wheel.accepted = scaler.zoomContent(wheel.angleDelta.y / 3200, Qt.point(wheel.x, wheel.y))
                 }
 
                 Repeater {
                     id: moduleList
-                    model: []
+                    model: patch.modules
                     ModuleView {
                         module: modelData
                     }
@@ -94,7 +95,7 @@ Item {
 
                 Repeater {
                     id: cableList
-                    model: []
+                    model: patch.cables
                     CableView {
                         cable: modelData
                     }
@@ -143,10 +144,10 @@ Item {
 
     OhmButton {
         id: addModuleBtn
-        x: parent.width - 30; y: parent.height - 30
-        width: 40; height: 40; radius: 20
+        x: xpct(100) - 26; y: ypct(100) - 26
+        width: 40; height: 40; radius: 20; padding: 1
         text: "+"
-        font.pixelSize: 20
+        font.pixelSize: 15
         font.weight: Font.Bold
         onClicked: mMenu.visible = true
         border: 4
@@ -156,8 +157,8 @@ Item {
         id: mMenu
         visible: false
         width: 100
-        height: window.globalHeight
-        x: window.globalWidth-width
+        height: ypct(100)
+        x: xpct(100)-width
         clip: true
         color: 'white'
         border.width: 2
@@ -167,11 +168,11 @@ Item {
             id: mlv
             anchors.fill: parent
             function listModules() {
-                if (!maestro) return []
-                return maestro.listDir(':/app','*Module.qml',":/app")
+                if (!MAESTRO) return []
+                return MAESTRO.listDir(':/app','*Module.qml',":/app")
                        .filter(m => m !== ':/app/Module.qml' && m.endsWith('.qml'))
                        .map(fname => {
-                                const contents = maestro.read(fname)
+                                const contents = MAESTRO.read(fname)
                                 let label = contents.match(/label:\s*[\'\"\`]([^\"\'\`]+)[\'\"\`]/)
                                 if (label) return {path: fname, label: label[1]}
                                 const parts = fname.split('/')
@@ -227,8 +228,8 @@ Item {
     function placeModule(path) {
         const outside = (p1,p2) => ((p1.x-26)>(p2.x+26))||((p2.x-26)>(p1.x+26))||((p1.y-18)>(p2.y+18))||((p2.y-18)>(p1.y+18))
         const fits = p => {
-            for (let i = 0; i < global.patch.modules.length; i++)
-              if (!outside(p, Qt.point(global.patch.modules[i].x, global.patch.modules[i].y))) return false
+            for (let i = 0; i < pView.patch.modules.length; i++)
+              if (!outside(p, Qt.point(pView.patch.modules[i].x, pView.patch.modules[i].y))) return false
             return true;
         }
         // whip it round in an archimedes spiral
@@ -238,28 +239,15 @@ Item {
             t += Math.PI/(t+1)
             p = Qt.point(13/9*t*Math.cos(t), t*Math.sin(t))
         }
-        global.patch.addModule(path, p.x, p.y);
+        pView.patch.addModule(path, p.x, p.y);
     }
 
     property alias contentItem: content
     property alias cableDragView: childCableDragView
 
-    function newPatch() {
-        modulesUpdated()
-        cablesUpdated()
-    }
-
-    function modulesUpdated() {
-        moduleList.model = global.patch.modules
-    }
-
-    function cablesUpdated() {
-        cableList.model = global.patch.cables;
-    }
-
 
     Component.onCompleted: {
-        global.patch.view = pView;
+        pView.patch.view = pView;
     }
 
 }

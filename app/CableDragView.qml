@@ -99,7 +99,7 @@ Shape {
     }
 
     function cableMoved(toPosition) {
-        forEach(global.patch.modules, function(module) {
+        forEach(pView.patch.modules, function(module) {
            
             var mv = module.view;
             if (mv === startJackView.parent) return;
@@ -145,17 +145,13 @@ Shape {
         dragPad.positionChanged.disconnect(cableDragView.cableMoved);
         dragPad.released.disconnect(cableDragView.cableDropped);
         state = "notdragging";
-        if (endJackView != null) {
-            var cableComponent = Qt.createComponent("qrc:/app/Cable.qml");
-            if (cableComponent.status === Component.Ready) {
-                var cableData = {};
-                cableData[startJackView.jack.dir] = startJackView.jack;
-                cableData[endJackView.jack.dir] = endJackView.jack;
-                var cable = cableComponent.createObject(cableData['out'], cableData);
-                startJackView.parent.collapseAll();
-                endJackView.parent.collapseAll();
-            } else
-                console.log("error creating cable:", cComponent.errorString());
+        if (endJackView != null)  {
+            const jacks = {}
+            jacks[startJackView.jack.dir] = startJackView.jack
+            jacks[endJackView.jack.dir] = endJackView.jack
+            pView.patch.addCable(jacks.inp, jacks.out)
+            startJackView.parent.collapseAll();
+            endJackView.parent.collapseAll();
             endJackView.dropTargeted = false;
             endJackView = null;
         }

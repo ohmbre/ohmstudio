@@ -11,7 +11,7 @@ void BufferFunction::put(V val) {
 }
 
 void BufferFunction::trim() {
-    int period = maestro.period();
+    int period = PERIOD;
     while (buffer.size() > period)
         buffer.dequeue();
 }

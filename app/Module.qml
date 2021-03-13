@@ -48,7 +48,7 @@ Model {
     }
 
     function getIndex() {
-        return listIndex(global.patch.modules, this);
+        return listIndex(pView.patch.modules, this);
     }
 
     Component.onCompleted: {

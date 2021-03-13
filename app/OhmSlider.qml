@@ -26,7 +26,7 @@ Item {
 
         property var dragbegin: null
         anchors.fill: parent
-        onPressed: {
+        onPressed: (mouse) => {
             let p = mapToItem(handleItem, mouse.x, mouse.y)
             if (!handleItem.contains(p)) {
                 value = mouse.x / slider.width * (to-from) + from
@@ -35,7 +35,7 @@ Item {
             dragbegin = p.x
             slider.pressed = true
         }
-        onPositionChanged: {
+        onPositionChanged: (mouse) => {
             if (dragbegin === null) return
             let p = mapToItem(handleItem, mouse.x, mouse.y)
             const dy = 1-global.clip(0,Math.abs(mouse.y-height/2)/50,0.99)

@@ -7,13 +7,13 @@ Module {
 
     CV {
         label: 'ctrlSteps'
-        translate: v => Math.floor(1 + (v+10)/20 * 31.999999)
+        translate: v => Math.floor(v*1.55+16.5)
         decimals: 0
     }
 
     CV {
         label: 'ctrlPulses'
-        translate: v => Math.floor(1 + (v+10)/20 * 31.999999)
+        translate: v => Math.floor(v*1.55+16.5)
         decimals: 0
     }
 
@@ -28,8 +28,8 @@ Module {
     OutJack {
         label: 'out'
         expression:
-            'var pulses := floor(1+(ctrlPulses + inPulses + 10)/20 * 31.999999);
-             var steps := floor(1+(ctrlSteps + inSteps + 10)/20 * 31.999999);
+            'var pulses := floor((ctrlPulses+inPulses)*1.55+16.5);
+             var steps := floor((ctrlSteps+inSteps)*1.55+16.5);
              if ((gate == 0) and (clock > 3))
              {
                 if (step == 0) {

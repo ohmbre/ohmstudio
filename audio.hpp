@@ -4,12 +4,47 @@
 
 #include "conductor.hpp"
 #include "function.hpp"
+#include "sink.hpp"
 
-void createAudioContext();
-void destroyAudioContext();
+class Sink;
 
+class AudioOut : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY changed)
+    Q_PROPERTY(unsigned int sampleRate READ sampleRate WRITE setSampleRate NOTIFY changed)
+public:
+    AudioOut();
+    ~AudioOut();
+    
+    Q_INVOKABLE QStringList availableDevs();
+    Q_INVOKABLE void setChannel(int i, QObject *function);
+    Q_INVOKABLE QString name();
+    Q_INVOKABLE void setName(QString name);
+    Q_INVOKABLE unsigned int sampleRate();
+    Q_INVOKABLE void setSampleRate(unsigned int sampleRate);
+    Q_INVOKABLE unsigned int period();
+    Q_INVOKABLE unsigned int chCount();
+    Q_INVOKABLE void addSink(Sink *sink);
+    Q_INVOKABLE void removeSink(Sink *sink);    
+    Q_INVOKABLE void pause();
+    Q_INVOKABLE void resume();
+    
+    void reset();
+    
+signals:
+    void changed();
+    
+private:    
+    bool initialized;
+    QList<Function*> channels;
+    ma_context ctx;
+    ma_device dev;
+    V sinkBuf[4*PERIOD*sizeof(V)];
+    QList<Sink*> sinks;
 
-class AudioIn : public QIODevice {
+};
+
+/*class AudioIn : public QIODevice {
     Q_OBJECT
 public:
     Q_INVOKABLE AudioIn();
@@ -24,7 +59,8 @@ public:
     QVector<BufferFunction*> channels;
 
 };
+*/
 
-void decodeSamples(QString path, QList<double> *samples);
+
 
 #endif

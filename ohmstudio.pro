@@ -1,32 +1,32 @@
-QT += quickcontrols2 svg qml
-CONFIG += c++latest precompile_header 
-LANGUAGE = C++
+QT += quickcontrols2 svg qml shadertools-private 
+CONFIG +=  c++latest precompile_header
 DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     conductor.cpp \
     function.cpp \
     audio.cpp \
+    model.cpp \
+    sink.cpp \
     scope.cpp \
     midi.cpp \
     dsp.cpp \
-    external/RtMidi.cpp \
-    external/tinycc/libtcc.c
+    external/RtMidi.cpp
 
 
 HEADERS += \
     conductor.hpp \
     function.hpp \
     audio.hpp \
+    model.hpp \
+    sink.hpp \
     scope.hpp \
     pch.hpp \
     dsp.hpp \
     midi.hpp \
     external/exprtk.hpp \
     external/miniaudio.h \
-    external/RtMidi.h \
-
-
+    external/RtMidi.h
 
 PRECOMPILED_HEADER = pch.hpp
 
@@ -41,15 +41,13 @@ RESOURCES += \
     $$files(app/*.html, true) \
    qtquickcontrols2.conf
 
-QML_IMPORT_NAME = ohm
-QML_IMPORT_MAJOR_VERSION = 1
-
 linux,android,mac {
     QMAKE_CLEAN *= -r ohm moc obj rcc ui Makefile .qmake.stash
     QMAKE_CXXFLAGS=-Wno-format-security -Wno-implicit-fallthrough -ftemplate-depth=4096 -Wno-old-style-cast -O2
 }
 
 windows {
+    QMAKE_CLEAN += debug\* moc\* obj\* rcc\* release\* .qmake.stash Makefile Makefile.Debug Makefile.Release
     QMAKE_CXXFLAGS += /bigobj
 }
 mac {
@@ -65,6 +63,12 @@ OBJECTS_DIR=obj
 RCC_DIR=rcc
 UI_DIR=ui
 MOC_DIR=moc
+
+DISTFILES += \
+    app/OhmEditor.qml \
+    app/RandomWalkModule.qml \
+    app/ShaderModule.qml \
+    app/TestModule.qml
 
 
 

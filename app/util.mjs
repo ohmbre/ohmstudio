@@ -61,8 +61,9 @@ global.centerInY = (insideRect, outsideRect) => outsideRect.height/2 - insideRec
 
 global.dbg = (obj) => {
     console.error(obj);
-    for (var prop in obj)
-    console.error("      "+prop+": "+obj[prop]);
+    for(let link = obj; link !== null; link = Object.getPrototypeOf(link)) {
+        Object.getOwnPropertyNames(link).forEach( prop => { console.error('    ',prop,':',obj[prop]) } )
+    }
 }
 
 
@@ -88,4 +89,5 @@ global.arrayToObject = (a) => {
     return o;
 }
 
+global.multiline = (...args) => args.map(line=>line+'\n').join('\n')
 

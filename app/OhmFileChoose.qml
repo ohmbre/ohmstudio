@@ -43,13 +43,13 @@ Item {
             property bool open: fileChooseDialog.open
             onOpenChanged: {
         folder = fileChooseDialog.directory
-        model = maestro.listDir(folder,match,directory)
+        model = MAESTRO.listDir(folder,match,directory)
             }
             focus: fileChooseDialog.open
             property string folder: fileChooseDialog.directory
             property string ext: '*.'+fileChooseDialog.extension
             property string match: '*'+ext
-            model: maestro.listDir(folder,match,directory)
+            model: MAESTRO.listDir(folder,match,directory)
             delegate: OhmText {
         property string path: modelData
         property var parts: path.split('/')
@@ -78,7 +78,7 @@ Item {
                             if (leaf == '..')
                 fileChoose.folder = parts.slice(0,-2).join('/')
                             else fileChoose.folder = path
-                            fileChoose.model = maestro.listDir(fileChoose.folder,fileChoose.match,fileChoose.directory)
+                            fileChoose.model = MAESTRO.listDir(fileChoose.folder,fileChoose.match,fileChoose.directory)
             } else {
                             if (fileChooseDialog.forLoading)
                 fileChooseDialog.fileChosen(path)
