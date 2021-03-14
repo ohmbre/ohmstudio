@@ -1,4 +1,5 @@
 #include "function.hpp"
+#include "external/tinycc/libtcc.h"
 
 Function::Function() : QObject(QGuiApplication::instance()), IFunction(0) {}
 
@@ -24,9 +25,11 @@ Q_INVOKABLE V BufferFunction::eval() {
     return curVoltage;
 }
 
+
+
 Q_INVOKABLE SymbolicFunction::SymbolicFunction(const QString &label, const QString &expression)
     : Function(), name(label), expstr(expression), variables(), inFuncs(), sequences(), compiled(false), curVoltage(0), ticks(maestro.ticks - 1) {
-
+    
     st.add_constant("pi", M_PI);
     st.add_constant("tau", 2*M_PI);
     st.add_constant("V", 1);
@@ -38,9 +41,7 @@ Q_INVOKABLE SymbolicFunction::SymbolicFunction(const QString &label, const QStri
     st.add_constant("ms", maestro.sampleRate()/1000);
     st.add_constant("mins", 60*maestro.sampleRate());
     st.add_constant("Hz", 2*M_PI/maestro.sampleRate());*/
-
     expr.register_symbol_table(st);
-
 }
 
 Q_INVOKABLE void SymbolicFunction::compile() {

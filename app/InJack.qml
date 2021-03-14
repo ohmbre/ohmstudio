@@ -23,7 +23,7 @@ Jack {
         inFuncUpdated(label, inFunc)
     }
 
-    qmlExports: ({label:'label'})
+    exports: ({label:'label'})
     Component.onDestruction: {
         if (cable) cable.destroy()
     }

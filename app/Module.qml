@@ -1,3 +1,4 @@
+import ohm 1.0
 import QtQuick
 
 Model {
@@ -8,7 +9,7 @@ Model {
     property list<OutJack> outJacks
     property list<CV> cvs
     property list<Variable> variables
-
+    
     property var jacks: concatList(inJacks,outJacks)
     property var jackMap: arrayToObject(jacks.map(j => [j.label, j]))
 
@@ -32,23 +33,22 @@ Model {
     property real y
     property var view: null
 
-    qmlExports: ({ objectName: 'objectName', x:'x', y:'y', cvs: 'default'})
+    exports: ({ x:'x', y:'y', cvs: 'default'})
 
     default property var contents
     onContentsChanged: {
-        contents.module = this;
         const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs], ['Variable',variables]];
         typeMap.forEach(([type,container]) => {
-            if (contents.objectName.endsWith(type)) {
+            if (contents.modelName.endsWith(type)) {
                 const cur = filterList(container, i => i.label === contents.label)
-                if (cur.length) Object.keys(cur[0].qmlExports).forEach(key => { cur[0][key] = contents[key] })
+                if (cur.length) Object.keys(cur[0].exports).forEach(key => { cur[0][key] = contents[key] })
                 else container.push(contents);
             }
         });
     }
 
     function getIndex() {
-        return listIndex(pView.patch.modules, this);
+        return listIndex(parent.modules, this);
     }
 
     Component.onCompleted: {

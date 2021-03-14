@@ -62,7 +62,7 @@ typedef exprtk::parser<V> Parser;
 typedef exprtk::expression<V> Expression;
 typedef exprtk::vector_view<V> VectorView;
 typedef exprtk::parser_error::type ParseError;
-
+typedef exprtk::rtl::io::package<V> ExprIOPack;
 
 class SymbolicFunction : public Function {
     Q_OBJECT
@@ -76,6 +76,7 @@ class SymbolicFunction : public Function {
     SymbolTable st;
     Parser par;
     Expression expr;
+    ExprIOPack ioPack;
     bool compiled;
     V curVoltage;
     quint64 ticks;

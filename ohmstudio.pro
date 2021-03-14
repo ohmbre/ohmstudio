@@ -11,7 +11,8 @@ SOURCES += \
     scope.cpp \
     midi.cpp \
     dsp.cpp \
-    external/RtMidi.cpp
+    external/RtMidi.cpp \
+    external/tinycc/libtcc.c
 
 
 HEADERS += \
@@ -26,7 +27,8 @@ HEADERS += \
     midi.hpp \
     external/exprtk.hpp \
     external/miniaudio.h \
-    external/RtMidi.h
+    external/RtMidi.h \
+    external/tinycc/libtcc.h
 
 PRECOMPILED_HEADER = pch.hpp
 

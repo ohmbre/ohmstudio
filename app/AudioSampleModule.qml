@@ -33,7 +33,7 @@ Module {
             variable('sample').value = [0]
     }
 
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y', cvs:'default', fileName: 'fileName'})
+    exports: ({ x:'x', y:'y', cvs:'default', fileName: 'fileName'})
 
     display: Item {
         anchors.fill: parent

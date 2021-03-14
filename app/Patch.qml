@@ -1,13 +1,13 @@
+import ohm 1.0
 import QtQuick
 
 Model {
+    id: patch
     property string name
     property list<Module> modules
     property var cables: mapList(modules, m=>mapList(m.outJacks, oj=>oj.cables).reduce(concatList,[])).reduce(concatList,[])
-    onCablesChanged: {
-        console.log('cables changed', cables);
-    }
-
+    property var view: parent
+    
     function deleteModule(dModule) {
         modules = filterList(modules, m => m !== dModule);
         dModule.destroy()
@@ -19,7 +19,7 @@ Model {
         const name = fileUrl.split('/').pop().split('.')[0]
         const c = Qt.createComponent(fileUrl)
         if (c.status === Component.Ready) {
-            const m = c.createObject(this, {x: x, y: y, objectName: name, patch: this})
+            const m = c.createObject(this, {x: x, y: y})
             modules.push(m)
         } else
             console.error("Couldn't create module:", c.errorString())
@@ -30,17 +30,17 @@ Model {
         var cableComponent = Qt.createComponent("qrc:/app/Cable.qml");
         if (cableComponent.status === Component.Ready) {
             var cableData = {inp: ij, out: oj};
-            var cable = cableComponent.createObject(oj, cableData);
+            var cable = cableComponent.createObject(this, cableData);
         } else
             console.log("error creating cable:", cComponent.errorString());
         cablesChanged();
     }
 
     function saveTo(fileName) {
-        MAESTRO.write(fileName, this.toQML())
+        MAESTRO.write(fileName, toQML(this))
     }
 
-    qmlExports: ({name:'name', modules:'modules', cables: 'default'})
+    exports: ({name:'name', modules:'modules', cables: 'default'})
 
     default property var looseCable
     onLooseCableChanged: {

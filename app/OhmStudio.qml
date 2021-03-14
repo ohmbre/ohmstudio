@@ -169,7 +169,7 @@ ApplicationWindow {
                 MenuBtn {
                     text: "New"
                     onClicked: {
-                        patchCanvas.loadPatch('Patch { modules: []; cables: [] }')
+                        patchCanvas.loadPatch('Patch {}')
                         menu.close()
                     }
                 }
@@ -213,7 +213,8 @@ ApplicationWindow {
         }
 
         function loadPatch(raw,url) {
-            try { 
+            try {
+                pView.patch.destroy();
                 pView.patch = Qt.createQmlObject(raw, pView, url || "dynamic");
                 autoSaveTimer.start()
             } 
@@ -231,7 +232,7 @@ ApplicationWindow {
             interval: 2000; running: false; repeat: true
             property var lastSave: ''
             onTriggered: {
-                const qml = pView.patch.toQML();
+                const qml = toQML(pView.patch);
                 if (qml !== lastSave) {
                     MAESTRO.write('autosave.qml', qml)
                     lastSave = qml;

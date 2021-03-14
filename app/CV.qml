@@ -1,8 +1,8 @@
+import ohm 1.0
 import QtQuick
 
 Model {
     id: cv
-    property var module
     property string label
     property string displayLabel: label
     property double volts: 0
@@ -22,7 +22,7 @@ Model {
         return (translate ? translate(volts) : volts) + (units ? (' '+units) : '')
     }
 
-    qmlExports: ({label: 'label', volts: 'volts'})
+    exports: ({label: 'label', volts: 'volts'})
 
 
 }

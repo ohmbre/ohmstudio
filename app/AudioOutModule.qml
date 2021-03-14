@@ -35,9 +35,6 @@ Module {
         text: "To change audio output, see Menu -> Audio Out"
     }
 
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y'})
-
-
 }
 
 

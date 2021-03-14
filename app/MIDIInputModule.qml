@@ -41,7 +41,7 @@ Module {
         hw.setKeyFilter(keyChoices)
     }
 
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y', cvs: 'default', devChoice: 'devChoice', chanChoices: 'chanChoices', msgChoices: 'msgChoices', keyChoices: 'keyChoices'})
+    exports: ({ x:'x', y:'y', cvs: 'default', devChoice: 'devChoice', chanChoices: 'chanChoices', msgChoices: 'msgChoices', keyChoices: 'keyChoices'})
 
     display: Rectangle {
         anchors.fill: parent

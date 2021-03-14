@@ -1,6 +1,7 @@
 #include "conductor.hpp"
 #include "midi.hpp"
 #include "sink.hpp"
+#include "model.hpp"
 #include "audio.hpp"
 #include "dsp.hpp"
 
@@ -24,6 +25,7 @@ int Conductor::run(int argc, char **argv) {
     jsGlobal.setProperty("SymbolicFunction", engine.newQMetaObject(&SymbolicFunction::staticMetaObject));
     jsGlobal.setProperty("MIDIInFunction", engine.newQMetaObject(&MIDIInFunction::staticMetaObject));
     jsGlobal.setProperty("Fourier", engine.newQMetaObject(&Fourier::staticMetaObject));
+    qmlRegisterType<Model>("ohm", 1, 0, "Model");
     qmlRegisterType<ShaderSink>("ohm", 1, 0, "ShaderSink");
     context->setContextProperty("AUDIO_OUT", audioOut);
     context->setContextProperty("MAESTRO", this);

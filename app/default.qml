@@ -1,14 +1,11 @@
 Patch {
     modules: [
     AudioOutModule {
-        objectName: "AudioOutModule"
         x: 40
         y: 30
-        devId: "alsa|2ch|default"
     },
 
     SineVCOModule {
-        objectName: "SineVCOModule"
         x: -15
         y: -35
         CV {

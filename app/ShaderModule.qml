@@ -68,7 +68,7 @@ Module {
         property alias shaderSink: shaderSink
     }
 
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y', vertex: 'vertex', fragment: 'fragment'})
+    exports: ({ x:'x', y:'y', vertex: 'vertex', fragment: 'fragment'})
 
 
 }

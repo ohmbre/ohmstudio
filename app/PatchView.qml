@@ -246,8 +246,4 @@ Item {
     property alias cableDragView: childCableDragView
 
 
-    Component.onCompleted: {
-        pView.patch.view = pView;
-    }
-
 }

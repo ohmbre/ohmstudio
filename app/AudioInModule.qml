@@ -48,7 +48,7 @@ Module {
             }
         }
     }
-    qmlExports: ({objectName: 'objectName', x:'x', y:'y', devChoice:'devChoice'})
+    exports: ({x:'x', y:'y', devChoice:'devChoice'})
 
     Component.onCompleted: {
         instantiate();

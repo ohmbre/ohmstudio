@@ -62,7 +62,10 @@ global.centerInY = (insideRect, outsideRect) => outsideRect.height/2 - insideRec
 global.dbg = (obj) => {
     console.error(obj);
     for(let link = obj; link !== null; link = Object.getPrototypeOf(link)) {
-        Object.getOwnPropertyNames(link).forEach( prop => { console.error('    ',prop,':',obj[prop]) } )
+        Object.getOwnPropertyNames(link).forEach( prop => { 
+                                                     console.error('    ',prop,':')
+                                                     console.error(obj[prop]) 
+                                                 })
     }
 }
 
@@ -89,5 +92,36 @@ global.arrayToObject = (a) => {
     return o;
 }
 
-global.multiline = (...args) => args.map(line=>line+'\n').join('\n')
+global.toQML = (model) => {
+    const valToQML = (o) => {
+        if (typeof(o) == 'string' && o.startsWith('#'))
+        return o.slice(1)
+        if (o.isModel) return toQML(o)
+        return JSON.stringify(o)
+    }
+    let entries = Object.entries(model.exports).map(
+            ([propKey,lbl]) => {
+                let propVal = model[propKey]
+                if (propVal && propVal.call) propVal = propVal()
+                if (propVal === undefined || propVal === null) return [lbl,null]
+                if (propVal.push) {
+                    if (propVal.length === 0) return [lbl,null]
+                    const listVals = mapList(propVal,valToQML).filter(qml=>qml !== null)
+                    if (listVals.length === 0) {
+                        return [lbl,null];
+                    }
+                    if (lbl === 'default') {
+                        const lvstr = listVals.join('\n')
+                        return [lbl, lvstr]
+                    }
+                    return [lbl, '[\n' + listVals.join(', ') + '\n]'];
+                }
+                return [lbl, valToQML(propVal)]
+            })
+    .filter(([lbl,qml]) => qml !== null)
+    .map(([lbl,qml]) => lbl == 'default' ? qml : `${ lbl }: ${ qml }`)
+    .join('\n')
 
+    return `${model.modelName} {\n${entries}\n}`
+}
+    

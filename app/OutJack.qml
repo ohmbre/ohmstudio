@@ -11,12 +11,12 @@ Jack {
     signal cableRemoved(Cable cable)
     onCableRemoved: (cable) => {
         cables = filterList(cables, c => c !== cable)
-        pView.patch.cablesChanged()
+        parent.parent.cablesChanged()
     }
     signal cableAdded(Cable cable)
     onCableAdded: (cable) => {
         cables.push(cable)
-        pView.patch.cablesChanged()
+        parent.parent.cablesChanged()
     }
 
     signal outFuncUpdated(var outFunc)
@@ -31,7 +31,7 @@ Jack {
         if (outFunc) outFunc.setVar(key,val);
     }
 
-    qmlExports: ({label: 'label'})
+    exports: ({label: 'label'})
 
 
     Component.onDestruction: {
