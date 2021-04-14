@@ -5,46 +5,50 @@ Module {
     InJack {label: 'input'}
     InJack {label: 'inFreq'}
     InJack {label: 'inQ'}
+    
     CV {
         label: 'ctrlFreq'
         translate: v => 220 * 2**v
         unit: 'Hz'
     }
+
     CV {
         label: 'ctrlQ'
-        translate: v => 1.2**v
+        translate: v => 3**v
     }
-    Variable { label: 'lp' }
-    Variable { label: 'bp' }
-    Variable { label: 'hp' }
-    Variable { label: 'np' }
-
-    property string setup:
-        'var f := 220hz * 2^(ctrlFreq + inFreq);
-         var q := 1.2^(ctrlQ + inQ);
-         hp := clamp(-10,input - lp - q*bp,10);
-         bp += clamp(-10,f*hp,10);
-         lp += clamp(-10,f*bp,10);
-         np := clamp(-10,lp + hp,10);
-        '
 
     OutJack {
         label: 'LowPass'
-        expression: setup + 'lp'
+        calc: expression('lp')
     }
+        
     OutJack {
         label: 'BandPass'
-        expression: setup + 'bp'
+        calc: expression('bp')
     }
+        
     OutJack {
         label: 'HiPass'
-        expression: setup + 'hp'
+        calc: expression('hp')
     }
+        
     OutJack {
         label: 'Notch'
-        expression: setup + 'np'
+        calc: expression('np')
+    }   
+
+    function expression(retvar) {
+        return `double lp=0, bp=0, hp=0, np=0;
+                double calc() {
+                    double f = 220*Hz * pow(2.0, ctrlFreq + inFreq);
+                    double q = 1.0/pow(3., ctrlQ + inQ);
+                    hp = clamp(input - lp - q*bp, -10., 10.);
+                    bp = clamp(bp + f*hp, -10., 10.);
+                    lp = clamp(lp + f*bp, -10., 10.);
+                    np = clamp(lp + hp, -10., 10.);
+                    return ${ retvar };
+                }`
     }
-
-
+    
 
 }

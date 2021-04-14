@@ -16,12 +16,6 @@ Model {
     property int decimals: 2
     property string translation: transVal.toFixed(decimals) + (unit ? ' '+unit : '')
 
-    function repr() {
-        if (translate === null && units === null)
-            return null;
-        return (translate ? translate(volts) : volts) + (units ? (' '+units) : '')
-    }
-
     exports: ({label: 'label', volts: 'volts'})
 
 

@@ -12,11 +12,16 @@ Module {
         label: 'intervals'
         value: scaledict.entries().map(entry=>entry.intervals.map(i=>tonal.interval(i).semitones))[Math.round(cv('scale').volts)]
     }
+    
     OutJack {
         label: 'quantized'
-        expression: 'var whole := (input < 0) ? (ceil(input)-1) : floor(input);
-                     var part := (input < 0) ? (frac(input)+1) : frac(input);
-                     whole + intervals[floor(intervals[] * part)] / 12'
+        calc: `double calc() {
+                   int sign = input < 0 ? -1 : 1;
+                   int whole = fabs(input);
+                   double frac = fabs(input) - whole;
+                   int idx = round((intervals.size()-1) * frac);
+                   return sign*((double)whole + intervals[idx] / 12.); 
+               }`
     }
 
 }

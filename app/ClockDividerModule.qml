@@ -2,32 +2,41 @@ Module {
 
     label: 'Clock Divider'
 
-    InJack {label: 'inClk'}
+    InJack {label: 'clock'}
+    InJack {label: 'reset'}
+    
 
     CV {
-        label: 'div'
-        translate: v => Math.floor(1 + (v+10)/20 * 31.999999)
+        label: 'ctrlDiv'
+        translate: v => Math.floor(1.55*v+16.5)
         decimals: 0
-        volts: -7
+        volts: 0
     }
     CV {
-        label: 'shift'
-        translate: v => Math.floor((v+10)/20 * 31.999999)
+        label: 'ctrlShift'
+        translate: v => Math.floor(1.55*v+.5)
         decimals: 0
-        volts: -10
+        volts: 0
     }
-    Variable { label: 'inGate' }
-    Variable { label: 'outGate' }
-    Variable { label: 'count' }
     OutJack {
-        label: 'outClk'
-        expression:
-            'var iDiv := floor(1 + (div+10)/20 * 31.999999);
-             var iShift := floor((shift+10)/20 * 31.999999);
-             count := (inGate == 0) and (inClk > 3) ? (count + 1) % 32 : count;
-             outGate := (inGate == 0) and (inClk > 3) and ((count + iShift) % iDiv == 0) ? 1 : (inClk == 0 ? 0 : outGate);
-             inGate := (inClk > 3) ? 1 : 0;
-             outGate == 1 ? 10 : 0'
+        label: 'clockDiv'
+        calc: `int cnt = 0;
+               bool clock_was_hi = false, out_hi = false;
+               double calc() {
+                   int div = 1.55*ctrlDiv + 16.5;
+                   int shift = 1.55*ctrlShift + .5;
+                   bool clock_hi = clock > 3;
+                   if (reset > 3) cnt = 0;
+                   if (div <= 1) div = 1;
+                   shift = (shift+1) % div;
+                   if (clock_hi && !clock_was_hi) {
+                       cnt = (cnt + 1) % div;
+                       out_hi = (cnt == shift);
+                   }
+                   out_hi &= clock_hi;
+                   clock_was_hi = clock_hi;
+                   return out_hi ? 10 : 0;
+               }`
     }
 
 }

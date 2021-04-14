@@ -35,7 +35,7 @@ Menu {
             bottomPadding: 0;
             background: Rectangle {
                 color: "#000000";
-                border.color: "black";  border.width: 0
+                border.color: "black";  border.width: 3
                 anchors.fill: parent
                 radius: 3;
             }

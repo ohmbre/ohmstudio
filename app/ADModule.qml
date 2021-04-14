@@ -13,7 +13,7 @@ Module {
     }
     CV {
         label: 'atkShape'
-        translate: v => 2**v
+        translate: v => 1.2**v
     }
     CV {
         label: 'ctrlDecay'
@@ -22,24 +22,32 @@ Module {
     }
     CV {
         label: 'decShape'
-        translate: v => 2**v
+        translate: v => 1.2**v
     }
     CV {
         label: 'ctrlGain';
         volts: 3
     }
 
-    Variable { label: 't' }
-    Variable { label: 'gate' }
-
     OutJack {
         label: 'envelope'
-        expression: "
-           t := (gate == 0) and (trig > 3) ? 0 : t+1;
-           gate := (trig > 3) ? 1 : 0;
-           var attack := 100ms * 1.5^(ctrlAttack+inAttack);
-           var decay := 100ms * 1.5^(ctrlDecay + inDecay);
-           (inGain+ctrlGain) * (t < attack ? (t/attack)^(2^atkShape) : max(0,1-(t-attack)/decay)^(2^decShape))"
-    }
+        calc: `bool was_hi = false;
+               double v = 0, t = DBL_MAX;
+               double calc() {
+                   bool hi = trig > 3;
+                   double a = 100*ms * pow(1.5, ctrlAttack + inAttack);
+                   double d = 100*ms * pow(1.5, ctrlDecay + inDecay);
+                   double as = pow(1.2, atkShape);
+                   double ds = pow(1.2, decShape);
 
+                   if (hi && !was_hi) t = 0;
+                   if (t < a) v += (1-v)*as / (a-t);
+                   else if (t < (a+d)) v -= v*ds / (a+d-t);
+                   else v = 0;
+                   v = clamp(v, 0., 1.);
+                   t++;
+                   was_hi = hi;
+                   return (inGain + ctrlGain) * v;
+               }`
+    }
 }

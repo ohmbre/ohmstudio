@@ -8,4 +8,5 @@ qrc_qml.cpp
 build
 *.qmlc
 *.jsc
-Makefile
+MakefileCMakeLists.txt.user 
+CMakeLists.txt.user 

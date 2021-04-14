@@ -6,32 +6,32 @@ Module {
     InJack {label: 'clock'}
     InJack {label: 'reset'}
 
-    CV { label: '1' }
-    CV { label: '2' }
-    CV { label: '3' }
-    CV { label: '4' }
-    CV { label: '5' }
-    CV { label: '6' }
-    CV { label: '7' }
-    CV { label: '8' }
+    CV { label: 'v1' }
+    CV { label: 'v2' }
+    CV { label: 'v3' }
+    CV { label: 'v4' }
+    CV { label: 'v5' }
+    CV { label: 'v6' }
+    CV { label: 'v7' }
+    CV { label: 'v8' }
 
     Variable {
         label: 'seq'
         value: mapList(cvs, cv => cv.volts)
     }
-    Variable { label: 'gate' }
-    Variable { label: 'count' }
 
     OutJack {
         label: 'cv'
-        expression:
-            'count := reset > 3 ? 0 : ((gate == 0) and (clock > 3) ? (count + 1) % 8 : count);
-             gate := clock > 3 ? 1 : 0;
-             seq[count]'
+        calc: `bool was_hi = false;
+               long cnt = 0;
+               double calc() {
+                   if (reset > 3) cnt = 0;
+                   bool hi = clock > 3;
+                   double ret = seq[cnt];
+                   if (hi && !was_hi)
+                       cnt = (cnt + 1) % 8;
+                   was_hi = hi;
+                   return ret;
+               }`
     }
-
-
-
-
-
 }

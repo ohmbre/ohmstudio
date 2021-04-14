@@ -3,13 +3,19 @@ Module {
     label: 'Sample Hold'
     InJack {label: 'signal'}
     InJack {label: 'trig'}
-    Variable { label: 'sample' }
-    Variable { label: 'gate' }
+    
+        
     OutJack {
         label: 'out'
-        expression: 'sample := (gate == 0) and (trig > 3) ? signal : sample;
-                     gate := (trig > 3) ? 1 : 0;
-                     sample'
+        calc: `double state = 0;
+               bool was_hi = false;
+               double calc() {
+                   bool hi = trig >= 3;
+                   if (hi && !was_hi) 
+                       state = signal;
+                   was_hi = hi;
+                   return state;
+               }`
     }
 
 }

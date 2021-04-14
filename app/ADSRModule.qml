@@ -3,7 +3,7 @@ Module {
     label: 'ADSR Envelope'
     tags: ['envelope','cv']
 
-    InJack {label: 'trig'}
+    InJack {label: 'gate'}
     InJack {label: 'inGain'}
     InJack {label: 'inAttack'}
     InJack {label: 'inDecay'}
@@ -35,48 +35,34 @@ Module {
         label: 'ctrlGain';
         volts: 3
     }
-
-    Variable { label: 'attack' }
-    Variable { label: 'decay' }
-    Variable { label: 'sustaining' }
-    Variable { label: 'release' }
-    Variable { label: 'state' }
-    Variable { label: 'gate' }
-
+    
     OutJack {
         label: 'envelope'
-        expression:
-            'var sustain := (ctrlSustain + inSustain + 10) / 20;
-             if ((gate == 0) and (trig > 3))
-             {
-                 attack := 100ms * 1.5^(ctrlAttack+inAttack);
-                 decay := 100ms * 1.5^(ctrlDecay+inDecay);
-                 sustaining := 1
-                 release := 100ms * 1.5^(ctrlRelease+inRelease);
-             };
-             if ((gate == 1) and (trig < 3))
-             {
-                 attack := 0;
-                 decay := 0;
-                 sustaining := 0;
-             };
-             gate := (trig > 3) ? 1 : 0;
-             if (attack > 0)
-             {
-                state := state + (1 - state)/attack;
-                attack := attack - 1;
-             }
-             else if (decay > 0)
-             {
-                state := state + (sustain - state) / decay;
-                decay := decay - 1;
-             }
-             else if (sustaining == 0 and release > 0)
-             {
-                state := state - state / release;
-                release := release - 1;
-             };
-             (inGain+ctrlGain) * state'
+        calc:`bool was_hi = false, sustaining = false;
+              double state = 0, t = DBL_MAX;
+              double calc() {
+                  bool hi = gate > 3;
+                  double attack = 100*ms * pow(1.5, ctrlAttack+inAttack);
+                  double decay = 100*ms * pow(1.5, ctrlDecay+inDecay);
+                  double sustain = (ctrlSustain + inSustain + 10.) / 20.;
+                  double release = 100*ms * pow(1.5, ctrlRelease+inRelease);
+                  if (hi && !was_hi) {
+                      t = 0;
+                      sustaining = true;
+                  } else if (!hi && was_hi) {
+                      t = attack + decay;
+                      sustaining = false;
+                  }
+                  if (t < attack)
+                      state += (1-state)/(attack - t++);
+                  else if (t < (attack+decay))
+                      state += (sustain - state) / (attack+decay - t++);                      
+                  else if (!sustaining && (t < (attack+decay+release)))
+                      state -= state / (attack+decay+release - t++);
+                  state = clamp(state,0.,1.);
+                  was_hi = hi;
+                  return (inGain+ctrlGain) * state;
+             }`
     }
 
 }

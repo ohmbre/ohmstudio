@@ -4,7 +4,7 @@ import QtQuick
 Model {
     id: mod
     property string label
-    property var tags: []
+    property var tags: ['untagged']
     property list<InJack> inJacks
     property list<OutJack> outJacks
     property list<CV> cvs
@@ -29,14 +29,17 @@ Model {
     }
 
     property Component display: null
+    property Component preview: null
     property real x
     property real y
+    property bool testCreate: false    
     property var view: null
 
     exports: ({ x:'x', y:'y', cvs: 'default'})
 
     default property var contents
     onContentsChanged: {
+        if (testCreate) return;
         const typeMap = [['InJack', inJacks], ['OutJack', outJacks], ['CV', cvs], ['Variable',variables]];
         typeMap.forEach(([type,container]) => {
             if (contents.modelName.endsWith(type)) {
@@ -52,25 +55,25 @@ Model {
     }
 
     Component.onCompleted: {
+        if (testCreate) return;        
         forEach(outJacks, oj => {
-            const outFunc = oj.createOutFunc();
-            if (!outFunc) return;
-
+            if (!oj.calc) return
+            oj.func = new SymbolicFunc();
             forEach(cvs, cv => {
-                outFunc.setVar(cv.label, cv.volts)
-                cv.voltsChanged.connect(() => { outFunc.setVar(cv.label, cv.volts) })
+                oj.func.setVar(cv.label, cv.volts)
+                cv.voltsChanged.connect(() => { oj.func.setVar(cv.label, cv.volts) })
             })
             forEach(inJacks, ij => {
-                outFunc.setVar(ij.label, ij.inFunc)
-                ij.inFuncUpdated.connect((lbl,func) => { outFunc.setVar(lbl, func) })
+                oj.func.setVar(ij.label, ij.inFunc)
+                ij.inFuncUpdated.connect((lbl,func) => { oj.func.setVar(lbl, func) })
             })
             forEach(variables, v => {
-                outFunc.setVar(v.label, v.value)
-                v.valueChanged.connect(() => { outFunc.setVar(v.label, v.value) })
-
+                oj.func.setVar(v.label, v.value)
+                v.valueChanged.connect(() => { oj.func.setVar(v.label, v.value) })
             })
-
-            if (outFunc.compile) outFunc.compile();
+            
+            oj.func.compile(oj.calc);
+            oj.outFuncUpdated(oj.func);
         })
     }
 

@@ -1,6 +1,7 @@
 Module {
 
     label: 'Random Walk'
+
     InJack { label: 'inStep' }
     CV {
         label: 'ctrlStep'
@@ -13,21 +14,28 @@ Module {
         label: 'ctrlLowBound' 
         volts: -10
     }
+    
     InJack { label: 'inHiBound' }
     CV { 
         label: 'ctrlHiBound' 
         volts: 10
     }
     
-    Variable { label: 'randstate'; value: 666 }
-    Variable { label: 'position'; value: 0 }
+
     OutJack {
         label: 'out'
-        expression:
-            'randstate := (48271 * randstate) % 2147483647;
-             position += (randstate > 1073741823 ? 1 : -1)*(.01*1.7^(ctrlStep+inStep));
-             position := position < (inLowBound+ctrlLowBound) ? (inLowBound+ctrlLowBound) : position;
-             position := position > (inHiBound+ctrlHiBound) ? (inHiBound+ctrlHiBound) : position;
-             position'
+        calc: `bool init = false;
+               double position = 0;
+               double calc() {
+                   if (!init) {
+                       srand(666);
+                       init = true;
+                   }
+                   position += ((rand() % 2) ? -1 : 1) * (.01 * pow(1.7, ctrlStep + inStep));
+                   double lowBound = inLowBound+ctrlLowBound;
+                   double hiBound = inHiBound+ctrlHiBound;
+                   position = clamp(position, lowBound, hiBound);
+                   return position;
+               }`
     }
 }

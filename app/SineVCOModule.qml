@@ -1,3 +1,5 @@
+import ohm 1.0
+
 Module {
     label: 'Sine VCO'
 
@@ -9,10 +11,12 @@ Module {
         unit: 'Hz'
     }
     CV { label: 'ctrlGain'; volts: 3 }
-    Variable { label: 'phase' }
     OutJack {
         label: 'sinusoid'
-        expression: 'phase += 220Hz * 2^(ctrlFreq+inFreq);
-                     (inGain + ctrlGain)*sin(phase)'
+        calc: `double phase = 0;
+               double calc() {
+                   phase += 220. * Hz * pow(2., ctrlFreq + inFreq);
+                   return (ctrlGain + inGain) * sin(phase);
+               }`
     }
 }

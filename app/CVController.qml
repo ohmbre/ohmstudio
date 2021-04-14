@@ -4,6 +4,7 @@ import QtQuick.Shapes
 import QtQuick.Controls.Material
 
 Item {
+    scale: 1.4
     width: 130
     height: 18
     antialiasing: true

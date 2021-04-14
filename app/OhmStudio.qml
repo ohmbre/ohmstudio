@@ -133,28 +133,52 @@ ApplicationWindow {
                 }
             }
 
-            property Component audioOutMenu: Rectangle {
+            property Component audioMenu: Rectangle {
+                
                 height: globalHeight
                 width: 200
+                
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        inChoice.focus = false
+                        outChoice.focus = false
+                    }
+                }   
+                
                 OhmChoiceBox {
+                    id: outChoice
                     y: 50
                     anchors.horizontalCenter: parent.horizontalCenter
-                    label: "Device"
-                    model: AUDIO_OUT.availableDevs()
-                    choice: AUDIO_OUT.name
+                    label: "Output"
+                    model: AUDIO.availableDevs(true)
+                    choice: AUDIO.outName
                     onChosen: function(newId) {
-                        AUDIO_OUT.name = newId;
+                        AUDIO.outName = newId;
                     }
                 }
 
                 OhmChoiceBox {
+                    id: inChoice
                     y: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    label: "Input"
+                    model: AUDIO.availableDevs(false)
+                    choice: AUDIO.inName
+                    onChosen: function(newId) {
+                        AUDIO.inName = newId;
+                    }
+                }
+                
+                
+                OhmChoiceBox {
+                    y: 110
                     anchors.horizontalCenter: parent.horizontalCenter
                     label: "Rate"
                     model: [8000,11025,16000,22050,44100,48000,88200,96000,192000,352800,384000].map(i=>i.toString())
-                    choice: AUDIO_OUT.sampleRate.toString()
+                    choice: AUDIO.sampleRate.toString()
                     onChosen: function(newRate) {
-                        AUDIO_OUT.sampleRate = parseInt(newRate)
+                        AUDIO.sampleRate = parseInt(newRate)
                     }
                 }
             }
@@ -188,8 +212,8 @@ ApplicationWindow {
                     }
                 }
                 MenuBtn {
-                    text: "Audio Output"
-                    onClicked: menu.submenu = menu.audioOutMenu
+                    text: "Audio Devices"
+                    onClicked: menu.submenu = menu.audioMenu
                 }
             }
         }
@@ -214,7 +238,7 @@ ApplicationWindow {
 
         function loadPatch(raw,url) {
             try {
-                pView.patch.destroy();
+                if (pView.patch) pView.patch.destroy();
                 pView.patch = Qt.createQmlObject(raw, pView, url || "dynamic");
                 autoSaveTimer.start()
             } 
@@ -239,8 +263,36 @@ ApplicationWindow {
                 }
             }
         }
+        
+        function loadModuleDefs() {
+            if (global.moduleDefs) return
+            MAESTRO.listDir(':/app','*Module.qml',":/app")
+            .filter(path => path !== ':/app/Module.qml' && path.endsWith('.qml'))
+            .map(path => {
+                     const c = Qt.createComponent(path.replace(':/app/',''))
+                     if (c.status !== Component.Ready) {
+                         console.error('Warning: QML error in',path);
+                         console.error(c.errorString())
+                         return
+                     }
+                     const m = c.createObject(window, {testCreate: true});
+                     const defs = {
+                         label: m.label,
+                         tags: m.tags || [],
+                         path: path,
+                         name: path.split('/').pop().split('.')[0],
+                         component: c
+                     }
+                         
+                     if (!global.moduleDefs) 
+                        global.moduleDefs = {}
+                     global.moduleDefs[defs.name] = defs;
+                        
+            })
+        }
 
         Component.onCompleted: {
+            loadModuleDefs()
             loadAutoSave()
         }
     }

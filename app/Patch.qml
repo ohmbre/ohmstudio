@@ -14,15 +14,8 @@ Model {
         modulesChanged()
     }
 
-    function addModule(fileUrl, x, y) {
-        fileUrl = fileUrl.replace(':/app/','')
-        const name = fileUrl.split('/').pop().split('.')[0]
-        const c = Qt.createComponent(fileUrl)
-        if (c.status === Component.Ready) {
-            const m = c.createObject(this, {x: x, y: y})
-            modules.push(m)
-        } else
-            console.error("Couldn't create module:", c.errorString())
+    function addModule(m, x, y) {
+        modules.push(m.component.createObject(patch, {x: x, y: y}))
         modulesChanged()
     }
     
@@ -30,14 +23,14 @@ Model {
         var cableComponent = Qt.createComponent("qrc:/app/Cable.qml");
         if (cableComponent.status === Component.Ready) {
             var cableData = {inp: ij, out: oj};
-            var cable = cableComponent.createObject(this, cableData);
+            var cable = cableComponent.createObject(patch, cableData);
         } else
             console.log("error creating cable:", cComponent.errorString());
         cablesChanged();
     }
 
     function saveTo(fileName) {
-        MAESTRO.write(fileName, toQML(this))
+        MAESTRO.write(fileName, toQML(patch))
     }
 
     exports: ({name:'name', modules:'modules', cables: 'default'})

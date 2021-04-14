@@ -3,6 +3,7 @@ import QtQuick
 
 Model {
 
+    id: cable
     property var inp
     property var out
 
@@ -24,15 +25,15 @@ Model {
 
     Component.onDestruction: {
         if (inp) inp.cableRemoved();
-        if (out) out.cableRemoved(this);
+        if (out) out.cableRemoved(cable);
     }
 
     Component.onCompleted: {
         if (out) out = out
         if (inp) inp = inp
 
-        if (out) out.cableAdded(this);
-        if (inp) inp.cableAdded(this);
+        if (out) out.cableAdded(cable);
+        if (inp) inp.cableAdded(cable);
 
         if (out && inp && inp.updateInFunc) out.outFuncUpdated.connect(inp.updateInFunc);
         

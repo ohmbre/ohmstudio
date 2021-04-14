@@ -10,10 +10,13 @@ Module {
     }
     CV { label: 'ctrlDuty' }
     CV { label: 'ctrlGain'; volts: 3 }
-    Variable { label: 'phase' }
+    
     OutJack {
         label: 'pwm'
-        expression: 'phase += 220Hz * 2^(ctrlFreq+inFreq);
-                     (phase % tau)/tau < ((ctrlDuty+inDuty)/20+0.5) ? (inGain+ctrlGain) : 0'
+        calc: `double phase = 0;
+               double calc() {
+                   phase += 220 * Hz * pow(2., ctrlFreq + inFreq);
+                   return fmod(phase,tau) < ((ctrlDuty+inDuty)/20 + .5) ? (inGain + ctrlGain) : 0;
+               }`
     }
 }

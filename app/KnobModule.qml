@@ -1,10 +1,12 @@
 Module {
-    label: 'CV Slider'
+    label: 'Knob'
 
-    CV { label: 'slider' }
+    CV { label: 'volts' }
     OutJack {
         label: 'cv'
-        expression: 'slider'
+        calc: `double calc() {
+                   return volts;
+               }`
     }
 
 }

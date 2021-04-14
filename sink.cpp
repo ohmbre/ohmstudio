@@ -1,26 +1,34 @@
-#include "sink.hpp"
-#include "audio.hpp"
+#include <QQuickItem>
+#include <QSGMaterial>
+#include <QSGMaterialShader>
+#include <QSGGeometry>
+#include <QSGNode>
+#include <QSGGeometryNode>
 #include <private/qshaderbaker_p.h>
 
+#include "sink.h"
+
 Sink::Sink() {
-    ma_rb_init(4*PERIOD*sizeof(V), NULL, NULL, &ringbuf);
-    func = new NullFunction;
+    ma_rb_init(4*PERIOD*sizeof(double), NULL, NULL, &ringbuf);
+    func = new Func;
 }
 
-#ifdef __GNUC__
-#define PACKED(clasdef) classdef __attribute__((__packed__));
-#else
-#define PACKED(classdef) __pragma( pack(push, 1) ) classdef; __pragma( pack(pop) )
-#endif
 
-PACKED(struct UniformBlock {
+struct UniformBlock {
     float matrix[16];
     float opacity;
     float time;
     int32_t vmax;
     int32_t vidx;
     float volts[PERIOD];
-})
+}
+#ifdef __GNUC__
+classdef __attribute__((__packed__));
+#else
+__pragma( pack(push, 1) )
+classdef;
+__pragma( pack(pop) )
+#endif
 
 QString uniformHeader = QString(R"(
 layout(std140, binding = 0) uniform buf {
@@ -30,7 +38,7 @@ layout(std140, binding = 0) uniform buf {
   int vmax;
   int vidx;
   vec4 volts[%1];
-} ubuf;
+} u;
 )").arg(PERIOD/4);
 
 QString vertHeader(R"(#version 440
@@ -98,16 +106,16 @@ class Shader : public QSGMaterialShader {
             const QMatrix4x4 m = state.combinedMatrix();
             memcpy(u->matrix, m.constData(), 64);
             u->opacity = state.opacity();
-            u->time = ((double)maestro.ticks) / maestro.audioOut->sampleRate();
+            u->time = ((double)maestro.ticks) / maestro.sym_s;
             u->vmax = PERIOD;
             u->vidx = u->vidx % PERIOD;
             int frames_to_read = PERIOD;
             while (frames_to_read > 0) {
                 void *chunk;
-                size_t nbytes = frames_to_read * sizeof(V);
+                size_t nbytes = frames_to_read * sizeof(double);
                 ma_rb_acquire_read(&sink->ringbuf, &nbytes, &chunk);
-                int nv = nbytes / sizeof(V);
-                V* vchunk = (V*) chunk;
+                int nv = nbytes / sizeof(double);
+                double* vchunk = (double*) chunk;
                 for (int f = 0; f < nv; f++) {
                     u->volts[u->vidx] = vchunk[f];
                     u->vidx = (u->vidx + 1) % PERIOD;
@@ -144,11 +152,11 @@ QSGMaterialType* Material::clean = nullptr;
 
 ShaderSink::ShaderSink(QQuickItem *parent) : QQuickItem(parent), Sink(), vertCode(vertDefault), fragCode(fragDefault), recompile(true), status("") {
     setFlag(ItemHasContents, true);
-    maestro.audioOut->addSink(this);
+    maestro.audio->addSink(this);
 }
 
 ShaderSink::~ShaderSink() {
-    maestro.audioOut->removeSink(this);
+    maestro.audio->removeSink(this);
 }
 
 QString ShaderSink::getStatus() {
@@ -161,17 +169,16 @@ void ShaderSink::setStatus(QString s) {
 }
 
 Q_INVOKABLE void ShaderSink::setFunc(QObject *function) {
-    maestro.audioOut->pause();
-    if (function == nullptr) func = new NullFunction;
-    else func = qobject_cast<Function*>(function);
-    maestro.audioOut->resume();
+    maestro.audio->pause();
+    if (function == nullptr) func = new Func;
+    else func = qobject_cast<QFunc*>(function);
+    maestro.audio->resume();
 }
 
 QSGNode* ShaderSink::updatePaintNode(QSGNode *old, UpdatePaintNodeData *) {
     auto *node = static_cast<QSGGeometryNode *>(old);
     if (!node || recompile) {
         node = new QSGGeometryNode();
-        qDebug() << "recompile";
         Material::clean = nullptr;
         auto *m = new Material(this);
         node->setMaterial(m);

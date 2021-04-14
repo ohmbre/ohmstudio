@@ -1,16 +1,14 @@
-#ifndef INCLUDE_CONDUCTOR_HPP
-#define INCLUDE_CONDUCTOR_HPP
+#pragma once
 
 #define MAX_CHANNELS 32
 #define PERIOD 2048
-#define V double
 #define Sample short
 #define MAX_SINKS 64
 
-class Function;
-class RingBuf;
-class Sink;
-class AudioOut;
+#include <QObject>
+#include <QtQml>
+
+class Audio; 
 
 class Conductor : public QObject {
     Q_OBJECT
@@ -24,16 +22,17 @@ public:
     void background();
 
     quint64 ticks;
-    V sym_s, sym_ms, sym_mins, sym_hz;
+    double sym_s, sym_ms, sym_mins, sym_hz;
 
-    AudioOut *audioOut;
+    Audio *audio;
     
     Q_INVOKABLE bool write(const QString &fname, const QString &content);
     Q_INVOKABLE QString read(const QString &fname);
     Q_INVOKABLE QString pwd();
     Q_INVOKABLE QVariant listDir(const QString &dname, const QString &match, const QString &base);
     Q_INVOKABLE QJSValue samplesFromFile(QUrl path);
-
+    
+    QQmlApplicationEngine *engineP;
 
 
 
@@ -41,5 +40,3 @@ public:
 
 inline Conductor maestro;
 
-
-#endif

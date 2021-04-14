@@ -1,85 +1,97 @@
-#include "audio.hpp"
+#include "audio.h"
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "external/miniaudio.h"
 
-AudioOut::AudioOut() : initialized(false) {
+Audio::Audio() : initialized(false) {
+
     ma_context_init(NULL, 0, NULL, &ctx);
     reset();
 }
 
-AudioOut::~AudioOut() {
+Audio::~Audio() {
     if (initialized) ma_device_uninit(&dev);
     ma_context_uninit(&ctx);
 }
 
    
-Q_INVOKABLE QString AudioOut::name() {
+Q_INVOKABLE QString Audio::outName() {
     return QString(dev.playback.name);
 }
 
-Q_INVOKABLE void AudioOut::setName(QString name) {
+Q_INVOKABLE void Audio::setOutName(QString name) {
     QSettings settings("ohm");
-    settings.setValue("name", name);
+    settings.setValue("outname", name);
     reset();
 }
 
-Q_INVOKABLE unsigned int AudioOut::sampleRate() {
+Q_INVOKABLE QString Audio::inName() {
+    return QString(dev.capture.name);
+}
+
+Q_INVOKABLE void Audio::setInName(QString name) {
+    QSettings settings("ohm");
+    settings.setValue("inname", name);
+    reset();
+}
+
+
+Q_INVOKABLE unsigned int Audio::sampleRate() {
     return dev.sampleRate;
 }
 
-Q_INVOKABLE void AudioOut::setSampleRate(unsigned int sampleRate) {
+Q_INVOKABLE void Audio::setSampleRate(unsigned int sampleRate) {
     QSettings settings("ohm");
     settings.setValue("sampleRate", sampleRate);
     reset();
 }
 
-Q_INVOKABLE unsigned int AudioOut::chCount() {
+Q_INVOKABLE unsigned int Audio::outChanCount() {
     return dev.playback.channels;
 }
-Q_INVOKABLE unsigned int AudioOut::period() {
+
+Q_INVOKABLE unsigned int Audio::inChanCount() {
+    return dev.capture.channels;
+}
+
+Q_INVOKABLE unsigned int Audio::period() {
     return dev.playback.internalPeriodSizeInFrames;
 }
 
-void AudioOut::reset() {
+
+
+void Audio::reset() {
 
     if (initialized) ma_device_uninit(&dev);
 
     QSettings settings("ohm");
-    ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
-    cfg.playback.format = ma_format_s16;
-    cfg.playback.channels = 0;
+    ma_device_config cfg = ma_device_config_init(ma_device_type_duplex);
+    cfg.playback.format = cfg.capture.format = ma_format_s16;
+    cfg.playback.channels = cfg.playback.channels = 0;
     cfg.sampleRate = settings.value("sampleRate", 48000).toInt();
     cfg.periodSizeInFrames = PERIOD;
     cfg.pUserData = this;
 
-    if (settings.contains("name")) {
-        QString name = settings.value("name").toString();
-        ma_device_info* infos;
-        ma_uint32 count;
-        ma_context_get_devices(&ctx, &infos, &count, NULL, NULL);
-        ma_device_id *devId = nullptr;
-        for (ma_uint32 i = 0; i < count; i++)
-            if (QString(infos[i].name) == name) {
-                devId = &infos[i].id;
-                break;
-            }
-        if (devId != nullptr)
-            cfg.playback.pDeviceID = devId;
-    }
+    if (settings.contains("outname"))
+        cfg.playback.pDeviceID = getDevId(settings.value("outname").toString(), true);
+    if (settings.contains("inname"))
+        cfg.capture.pDeviceID = getDevId(settings.value("inname").toString(), false);
 
-    cfg.dataCallback = [ ](ma_device *dev, void* pOutput, const void*, ma_uint32 nframes) {
-        AudioOut *me = (AudioOut*) dev->pUserData;
+
+    cfg.dataCallback = [ ](ma_device *dev, void* pOutput, const void* pInput, ma_uint32 nframes) {
+        Audio *me = (Audio*) dev->pUserData;
         
-        unsigned int nchan = me->chCount();
+        unsigned int nOutChan = me->outChanCount();
+        unsigned int nInChan = me->inChanCount();
         unsigned int nsinks = me->sinks.size();
         Sample *output = (Sample*) pOutput;
-        V *sinkptr = me->sinkBuf;
+        Sample *input = (Sample*) pInput;
+        double *sinkptr = me->sinkBuf;
         for (unsigned int f = 0; f < nframes; f++) {
-            for (unsigned int c = 0; c < nchan; c++)
-                *output++ = qRound(qBound(-10.0,(*me->channels[c])(),10.0)*3276.7);
+            for (unsigned int c = 0; c < nInChan; c++)
+                me->inChannels[c]->val = qBound(-10.,(double)(*input++)/3276.7, 10.);            
+            for (unsigned int c = 0; c < nOutChan; c++)
+                *output++ = qRound(qBound(-10.,(*me->outChannels[c])(),10.0)*3276.7);
             for (unsigned int s = 0; s < nsinks; s++)
-                *sinkptr++ = qBound(-10.0, (*me->sinks[s]->func)(), 10.0);
+                *sinkptr++ = qBound(-10., (*me->sinks[s]->func)(), 10.);
             maestro.ticks++;
         }
         for (unsigned int s = 0; s < nsinks; s++) {
@@ -88,10 +100,10 @@ void AudioOut::reset() {
             sinkptr = me->sinkBuf + s;
             while (frames_to_write > 0) {
                 void *chunk;
-                size_t nbytes = frames_to_write * sizeof(V);
+                size_t nbytes = frames_to_write * sizeof(double);
                 ma_rb_acquire_write(rb, &nbytes, &chunk);
-                int nv = nbytes / sizeof(V);
-                V* vchunk = (V*) chunk;
+                int nv = nbytes / sizeof(double);
+                double* vchunk = (double*) chunk;
                 for (int f = 0; f < nv; f++) {
                     vchunk[f] = *sinkptr;
                     sinkptr += nsinks;
@@ -110,9 +122,14 @@ void AudioOut::reset() {
     
     initialized = true;
 
-    while (chCount() > channels.size()) {
-        Function *func = new NullFunction;
-        channels.append(func);
+    while (outChanCount() > outChannels.size()) {
+        Func *func = new Func;
+        outChannels.append(func);
+    }
+    
+    while (inChanCount() > inChannels.size()) {
+        MutableFunc *func = new MutableFunc();
+        inChannels.append(func);
     }
    
     maestro.sym_s = sampleRate();
@@ -121,9 +138,11 @@ void AudioOut::reset() {
     maestro.sym_hz = 2*M_PI/sampleRate();
 
     qDebug() << "audio output initialized";
-    qDebug() << "   device: " << name();
+    qDebug() << "   output device: " << outName();
+    qDebug() << "   input device: " << inName();
     qDebug() << "   sample rate: " << sampleRate();
-    qDebug() << "   num channels: " << chCount();
+    qDebug() << "   num output channels: " << outChanCount();
+    qDebug() << "   num input channels: " << inChanCount();
     qDebug() << "   period: " << period();
 
 
@@ -132,35 +151,41 @@ void AudioOut::reset() {
     emit changed();
 }
 
-Q_INVOKABLE void AudioOut::pause() {
+Q_INVOKABLE void Audio::pause() {
     if (initialized) ma_device_stop(&dev);
 }
 
-Q_INVOKABLE void AudioOut::resume() {
+Q_INVOKABLE void Audio::resume() {
     if (initialized) ma_device_start(&dev);
 }
 
 
-Q_INVOKABLE void AudioOut::setChannel(int i, QObject *function) {
-    if (i < 0 || i >= channels.size()) {
+Q_INVOKABLE void Audio::setOutChannel(int i, QObject *function) {
+    if (i < 0 || i >= outChannels.size()) {
         qDebug() << "tried to set function for invalid channel" << i;
         return;
     }
     pause();
-    if (function == nullptr) channels[i] = new NullFunction;
-    else channels[i] = qobject_cast<Function*>(function);
-    resume();    
-    
+    if (function == nullptr) outChannels[i] = new Func;
+    else outChannels[i] = qobject_cast<QFunc*>(function);
+    resume();
 }
 
-Q_INVOKABLE void AudioOut::addSink(Sink *sink) {
+Q_INVOKABLE QFunc* Audio::getInChannel(int i) {
+    if (i < 0 || i >= inChannels.size()) {
+        return new QFunc;
+    }
+    return inChannels[i];
+}
+
+Q_INVOKABLE void Audio::addSink(Sink *sink) {
     pause();
     if (!sinks.contains(sink))
         sinks.append(sink);
     resume();
 }
 
-Q_INVOKABLE void AudioOut::removeSink(Sink *sink) {
+Q_INVOKABLE void Audio::removeSink(Sink *sink) {
     pause();
     sinks.removeAll(sink);
     resume();
@@ -168,85 +193,28 @@ Q_INVOKABLE void AudioOut::removeSink(Sink *sink) {
 
 
 
-Q_INVOKABLE QStringList AudioOut::availableDevs() {
+Q_INVOKABLE QStringList Audio::availableDevs(bool output) {
     QStringList devs;
     ma_device_info* infos;
-    ma_uint32 count;
-    if (ma_context_get_devices(&ctx, &infos, &count, NULL, NULL) != MA_SUCCESS) {
-        qDebug() << "could not get audio output devices list";
-        return devs;
-    }
-
+    ma_uint32 count = 0;
+    ma_result ret;
+    if (output) ma_context_get_devices(&ctx, &infos, &count, NULL, NULL);
+    else ma_context_get_devices(&ctx,  NULL, NULL, &infos, &count);
     for (ma_uint32 i = 0; i < count; i++)
         devs << infos[i].name;
-
     return devs;
 }
 
-/*
-Q_INVOKABLE AudioIn::AudioIn() : QIODevice(), channels() {
-    foreach(QAudioDeviceInfo devInfo, QAudioDeviceInfo::availableDevices(QAudio::AudioInput)) {
-        int verifiedChans = preCheckFormat(&devInfo);
-        if (verifiedChans > 0) {
-            QAudioFormat fmt;
-            setupFormat(&fmt);
-            fmt.setChannelCount(verifiedChans);
-            QString identifier = devInfo.realm() + "|" + QString::number(verifiedChans) + "ch|" + devInfo.deviceName();
-            devList[identifier] = { devInfo, fmt };
-        }
-    }
-}
-
-Q_INVOKABLE QStringList AudioIn::availableDevs() {
-    //return devList.keys();
-    return QStringList();
+ma_device_id * Audio::getDevId(QString name, bool output) {
+    ma_device_info *infos;
+    ma_uint32 count;
+    if (output) ma_context_get_devices(&ctx, &infos, &count, NULL, NULL);
+    else ma_context_get_devices(&ctx, NULL, NULL, &infos, &count);
+    for (ma_uint32 i = 0; i < count; i++)
+        if (QString(infos[i].name) == name)
+            return &infos[i].id;
+    return nullptr;    
 }
 
 
-bool AudioIn::setDevice(const QString &) {
-    if (dev != nullptr) {
-        dev->stop();
-        delete dev;
-    }
-    if (!devList.contains(name)) return false;
-    channels.resize(devList[name].second.channelCount());
-    for (int i = 0; i < channels.count(); i++) {
-        channels[i] = new BufferFunction();
-    }
-    dev = new QAudioInput(devList[name].first, devList[name].second);
-    open(QIODevice::WriteOnly);
-    dev->start(this);
-    return true;
-}
 
-qint64 AudioIn::writeData(const char *, qint64 ) {
-
-    Sample *samples = (Sample*)data;
-    qint64 nsamples = len / sizeof(Sample);
-    int idx = 0;
-    int chan = 0;
-    int nchannels = channels.count();
-
-    for (int i = 0; i < nchannels; i++)
-        channels[i]->trim();
-
-    while (idx < nsamples)
-        channels[chan++ % nchannels]->put(samples[idx++] / 3276.7);
-
-    return len;
-    return 0;
-}
-
-Q_INVOKABLE Function* AudioIn::getChannel(int i) {
-    return channels[i];
-}
-
-AudioIn::~AudioIn() {
-    if (dev != nullptr) {
-        dev->stop();
-        dev->deleteLater();
-    }
-    for (int i = 0; i < channels.count(); i++)
-        if (channels[i] != nullptr)
-            channels[i]->deleteLater();
-}*/

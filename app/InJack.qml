@@ -2,25 +2,24 @@ import QtQuick
 
 Jack {
     dir: "inp"
-    property var cable: null
+    property Cable cable
     property bool hasCable: cable !== null
     signal cableRemoved()
     onCableRemoved: {
-        this.cable = null;
-        this.inFunc = null;
-        this.inFuncUpdated(this.label, null);
+        cable = null;
+        updateInFunc()
     }
     signal cableAdded(Cable newCable)
     onCableAdded: (newCable) => {
-        this.cable = newCable;
+        cable = newCable;
         updateInFunc();
     }
 
     property var inFunc: null
     signal inFuncUpdated(string lbl, var func)
     function updateInFunc() {
-        inFunc = cable && cable.out ? cable.out.outFunc : null;
-        inFuncUpdated(label, inFunc)
+        inFunc = cable && cable.out ? cable.out.func : null;
+        inFuncUpdated(label, inFunc);
     }
 
     exports: ({label:'label'})

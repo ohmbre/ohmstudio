@@ -1,9 +1,13 @@
+#pragma once
+
+#include <QObject>
+
 #include "external/RtMidi.h"
-#include "function.hpp"
+#include "func.h"
 
 #define MIDIPOLY 3
 
-class MIDIInFunction : public QObject {
+class MIDIInFunc : public QObject {
     Q_OBJECT
 private:
     RtMidiIn midiin;
@@ -11,10 +15,17 @@ private:
     QSet<int> chanFilter;
     QSet<int> typeFilter;
     QSet<int> keyFilter;
-
+    MutableFunc cv, wheel;
+    QVector<MutableFunc*> gates, vocts, vels;
+    QVector<int> keyed;
+    QVector<int> keys;
+    int keyPos;
+    QVariant lastEv;
+    
 public:
 
-    Q_INVOKABLE MIDIInFunction();
+    Q_INVOKABLE MIDIInFunc(QObject *parent = nullptr);
+    Q_INVOKABLE ~MIDIInFunc();
 
     Q_INVOKABLE QStringList listDevices();
 
@@ -27,16 +38,15 @@ public:
 
     void callback(double deltatime, std::vector<unsigned char> *message);
 
-    MutableFunction gate1,gate2,gate3,voct1,voct2,voct3,vel1,vel2,vel3, cv, wheel;
-    QVector<MutableFunction *> gates, vocts, vels;
-    QVector<int> keyed;
-    QVector<int> keys;
-    int keyPos;
-    Q_INVOKABLE Function* getGate(int n) { return gates[n%MIDIPOLY]; }
-    Q_INVOKABLE Function* getVoct(int n) { return vocts[n%MIDIPOLY]; }
-    Q_INVOKABLE Function* getVel(int n) { return vels[n%MIDIPOLY]; }
-    Q_INVOKABLE Function* getCv() { return &cv; }
-    Q_INVOKABLE Function* getWheel() { return &wheel; }
+
+    Q_INVOKABLE QFunc* getGate(int n) { return gates[n%MIDIPOLY]; }
+    Q_INVOKABLE QFunc* getVoct(int n) { return vocts[n%MIDIPOLY]; }
+    Q_INVOKABLE QFunc* getVel(int n) { return vels[n%MIDIPOLY]; }
+    Q_INVOKABLE QFunc* getCv() { return &cv; }
+    Q_INVOKABLE QFunc* getWheel() { return &wheel; }
+    
+    Q_INVOKABLE QVariant lastEvent();
+    
 
 };
 
@@ -72,3 +82,4 @@ public:
 
     }
 };
+

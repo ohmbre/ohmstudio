@@ -1,13 +1,16 @@
 Module {
     label: 'Flip Flop'
     InJack {label: 'trig'}
-    Variable { label: 'state' }
-    Variable { label: 'gate' }
+
     OutJack {
         label: 'out'
-        expression:
-           "state := ((gate == 0) and (trig > 3)) ? (10 - state) : state;
-            gate := (trig > 3) ? 1 : 0;
-            state"
+        calc: `bool was_hi = false;
+               double state = 0;
+               double calc() {
+                   bool hi = (trig > 3) ? 1 : 0;
+                   state = (hi && !was_hi) ? (10 - state) : state;
+                   was_hi = hi;
+                   return state;
+               }`
     }
 }

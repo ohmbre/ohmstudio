@@ -9,10 +9,12 @@ Module {
         unit: 'Hz'
     }
     CV { label: 'ctrlGain'; volts: 3 }
-    Variable { label: 'phase' }
     OutJack {
         label: 'saw'
-        expression: 'phase += 220Hz * 2^(ctrlFreq+inFreq);
-                     (inGain+ctrlGain) * ((phase % tau)/pi - 1)'
+        calc: `double phase = 0;
+               double calc() {
+                 phase += 220. * Hz * pow(2., ctrlFreq + inFreq);
+                 return (inGain + ctrlGain) * (fmod(phase, tau)/pi - 1);
+               }`
     }
 }

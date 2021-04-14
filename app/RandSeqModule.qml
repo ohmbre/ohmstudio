@@ -14,19 +14,19 @@ Module {
         decimals: 0
     }
     CV { label: 'octaves'; volts: 1 }
-
-    Variable { label: 'gate' }
-    Variable { label: 'count' }
-    Variable { label: 'state' } 
     
-
     OutJack {
         label: 'voct'
-        expression: 
-            'state := (gate == 0) and (clock > 3) ? (count == 0 ? round(seed*6.25 + 63.5) : (91 * state) % 127) : state;
-             count := (gate == 0) and (clock > 3) ? (count + 1) % floor(notes*1.55+16.5) : count;
-             gate := clock > 3 ? 1 : 0;
-             state / 126 * octaves'
+        calc: `bool was_hi = false;
+               long state = 0, cnt = 0;
+               double calc() {
+                  bool hi = clock >= 3;
+                  if (hi && !was_hi) {
+                      state = (cnt == 0) ? round(seed * 6.25 + 63.5) : (91 * state) % 127;
+                      cnt = (cnt + 1) % (long)(notes*1.55 + 16.5);
+                  }
+                  was_hi = hi;
+                  return state / 126. * octaves;
+               }`
     }
-
 }

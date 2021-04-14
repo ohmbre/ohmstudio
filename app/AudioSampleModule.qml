@@ -10,27 +10,53 @@ Module {
 
     InJack { label: 'trig' }
     InJack { label: 'inFreq' }
+    InJack { label: 'inGain' }
     CV {
         label: 'ctrlFreq'
-        translate: v => 2**v
+        translate: v => 1.**v
     }
-    Variable { label: 't'; value: 99999999 }
-    Variable { label: 'gate' }
-    Variable { label: 'sample'; value: [0] }
+    CV {
+        label: 'ctrlGain'
+        volts: 3
+    }
+
+    Variable { label: 'samples'; value: [0] }
     OutJack {
         label: 'out'
-        expression:
-            't := (gate == 0) and (trig > 3) ? 0 : t + 2^(inFreq + ctrlFreq);
-             gate := (trig > 3) ? 1 : 0;
-             round(t) < sample[] ? sample[round(t)] : 0;'
+        calc: `double t = DBL_MAX;
+               bool was_hi = false;
+               double calc() {
+                   bool hi = trig > 3;
+                   if (hi && !was_hi) t = 0;
+                   was_hi = hi;
+                   double step = pow(2.,inFreq+ctrlFreq);
+                   double sample = 0;
+                   if (t < samples.size()) {
+                       long maxidx = samples.size()-1;
+                       if (step <= 1) {
+                           sample = samples[clamp((long)round(t), 0l, maxidx)];
+                       } else {
+                           long idx0 = clamp((long)round(t-step/2), 0l, maxidx);
+                           long idx1 = clamp((long)round(t+step/2), 0l, maxidx);
+                           long i = idx0;
+                           while (i <= idx1)
+                               sample += samples[i++];
+                           sample = sample / (i-idx0);
+                       }
+                   }
+                   t += step; 
+                   return (inGain + ctrlGain) * sample;
+               }`//'
     }
 
     property var fileName: null
     onFileNameChanged: {
-        if (fileName != null)
-            variable('sample').value = MAESTRO.samplesFromFile(fileName)
-        else
-            variable('sample').value = [0]
+        if (fileName != null) {
+            const samples = MAESTRO.samplesFromFile(fileName);
+            variable('samples').value = samples
+        } else {
+            variable('samples').value = [0]
+        }
     }
 
     exports: ({ x:'x', y:'y', cvs:'default', fileName: 'fileName'})

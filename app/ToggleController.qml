@@ -14,7 +14,9 @@ Switch {
     indicator: Item {
         x: 0; y: 0; width: control.width; height: control.height
         OhmText {
-            width: control.width*.3; height: control.height
+            id: textDisplay
+            width: control.text ? control.width*.3 : 0;
+            height: control.height
             text: control.text
             color: 'black'
             font.pixelSize: 6
@@ -24,7 +26,9 @@ Switch {
         Image {
             clip: true
             source: control.checked ? 'qrc:/app/ui/icons/down.svg' : 'qrc:/app/ui/icons/up.svg'
-            x:control.width*.3; width: control.width*.7; height: control.height
+            x: textDisplay.width
+            width: control.width -x;
+            height: control.height
         }
 
     }

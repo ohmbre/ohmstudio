@@ -4,28 +4,24 @@ Module {
     id: midiin
     label: "MIDI In"
 
+    property var hw: new MIDIInFunc();
+ 
+    OutJack { label: "voct1"; func: midiin.hw.getVoct(0) }
+    OutJack { label: "gate1"; func: midiin.hw.getGate(0) }
+    OutJack { label: "vel1"; func: midiin.hw.getVel(0) }
+    OutJack { label: "voct2"; func: midiin.hw.getVoct(1) }
+    OutJack { label: "gate2"; func: midiin.hw.getGate(1) }
+    OutJack { label: "vel2"; func: midiin.hw.getVel(1) }
+    OutJack { label: "voct3"; func: midiin.hw.getVoct(2) }
+    OutJack { label: "gate3"; func: midiin.hw.getGate(2) }
+    OutJack { label: "vel3"; func: midiin.hw.getVel(2) }
+    OutJack { label: "cv"; func: midiin.hw.getCv() }
 
-    OutJack { label: "voct1"; outFunc: midiin.hw.getVoct(0) }
-    OutJack { label: "gate1"; outFunc: midiin.hw.getGate(0) }
-    OutJack { label: "vel1"; outFunc: midiin.hw.getVel(0) }
-    OutJack { label: "voct2"; outFunc: midiin.hw.getVoct(1) }
-    OutJack { label: "gate2"; outFunc: midiin.hw.getGate(1) }
-    OutJack { label: "vel2"; outFunc: midiin.hw.getVel(1) }
-    OutJack { label: "voct3"; outFunc: midiin.hw.getVoct(2) }
-    OutJack { label: "gate3"; outFunc: midiin.hw.getGate(2) }
-    OutJack { label: "vel3"; outFunc: midiin.hw.getVel(2) }
-    OutJack { label: "cv"; outFunc: midiin.hw.getCv() }
-
-
-    property var hw: new MIDIInFunction();
-    function eventCallback(ev) {
-        //console.log(ev.type,ev.channel,ev.key,ev.val)
-    }
-    property var devChoice: -1
+    property int devChoice: -1
     onDevChoiceChanged: {
         if (devChoice === -1) return;
+        
         midiin.hw.open(devChoice)
-        midiin.hw.setJSCallback(midiin.eventCallback);
     }
     property var chanList:  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
     property var msgList: ['Note On','Note Off','Ctrl Change','Pitch Wheel']
@@ -51,10 +47,12 @@ Module {
             height: 16
             anchors.top: parent.top
             anchors.horizontalCenter: parent.horizontalCenter
-            label.text: "Device"
-            control.currentIndex: midiin.devChoice
-            choiceLabels: midiin.hw.listDevices()
-            onChosen: midiin.devChoice = index
+            label: "Device"
+            choice: midiin.devChoice == -1 ? '' : model[midiin.devChoice]
+            model: midiin.hw.listDevices()
+            onChosen: (newChoice) => {
+                          midiin.devChoice = model.indexOf(newChoice)
+                      }
         }
 
         OhmChoiceArea {
@@ -101,6 +99,25 @@ Module {
             heading: 'Key Filter'
             onChosen: midiin.hw.setKeyFilter(choices)
 
+        }
+        
+        OhmText {
+            id: evlog
+            font.pixelSize: 8
+            anchors.top: keyChoice.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: 13
+        }       
+        
+        Timer {
+            running: true
+            interval: 100
+            repeat: true
+            onTriggered: {
+                const ev = midiin.hw.lastEvent()
+                if (ev !== undefined) 
+                    evlog.text = `Last Event: (channel ${ev.channel}, ${ev.type}, key ${ev.key}, val ${ev.val})`
+            }
         }
 
     }

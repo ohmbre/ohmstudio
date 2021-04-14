@@ -21,15 +21,19 @@ Module {
         translate: v => 200 * 1.5**v
         unit: 'ms'
     }
-    Variable { label: 'phase' }
-    Variable { label: 't'; value: 99999999 }
-    Variable { label: 'gate' }
+
     OutJack {
         label: 'signal'
-        expression:
-            't := (gate == 0) and (trig > 3) ? 0 : t + 1;
-             gate := trig > 3 ? 1 : 0;
-             phase += 220Hz * 2^(ctrlFreq+inFreq);
-             (inGain+ctrlGain)*atan(sin(phase)/(cos(phase)+exp(t/(200ms * 1.5^(inDecay + ctrlDecay)))))'
+        calc: `double t = DBL_MAX;
+               double phase = 0;
+               bool was_hi = false;
+               double calc() {
+                   bool hi = trig > 3;
+                   if (hi && !was_hi)
+                       t = 0;
+                   was_hi = hi;
+                   phase += 220*Hz * pow(2., ctrlFreq + inFreq);
+                   return (inGain+ctrlGain) * atan(sin(phase)/(cos(phase)+exp(t++/(200*ms * pow(1.5, inDecay+ctrlDecay)))));
+               }`
     }
 }

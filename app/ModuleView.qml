@@ -45,23 +45,29 @@ Item {
         for (var j = 0; j < module.nJacks; j++)
             module.jack(j).view.extend()
     }
-
-    OhmText {
-        id: moduleLabel
-        text: module.label
-        padding: 5
+    
+    Loader {
         anchors.fill: parent
-        horizontalAlignment: Text.AlignHCenter
-        fontSizeMode: Text.Fit
-        color: 'black'
-        font.family: asapSemiBold.name
-        font.weight: Font.Bold
-        font.pixelSize: 10
-        minimumPixelSize: 8
-        maximumLineCount: 2
-        elide: Text.ElideNone
-        wrapMode: Text.WordWrap
+        id: innerView
+        property Component normal: OhmText {
+            text: module.label
+            padding: 5
+            anchors.fill: parent
+            horizontalAlignment: Text.AlignHCenter
+            fontSizeMode: Text.Fit
+            color: 'black'
+            font.family: asapSemiBold.name
+            font.weight: Font.Bold
+            font.pixelSize: 10
+            minimumPixelSize: 8
+            maximumLineCount: 2
+            elide: Text.ElideNone
+            wrapMode: Text.WordWrap
+        }
+        sourceComponent: module.preview || normal
+        active: true
     }
+    
 
     Rectangle {
         id: perimeter

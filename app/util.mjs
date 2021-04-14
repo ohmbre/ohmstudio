@@ -92,6 +92,13 @@ global.arrayToObject = (a) => {
     return o;
 }
 
+
+global.logistic = (loval,hival,zeroval,growth) => {
+    const a = hival-loval
+    const za = (zeroval-loval)/a
+    return (v) => loval + a*Math.pow(za, Math.exp(-growth*v))
+}
+
 global.toQML = (model) => {
     const valToQML = (o) => {
         if (typeof(o) == 'string' && o.startsWith('#'))

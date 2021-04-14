@@ -5,7 +5,9 @@ Module {
 
     OutJack {
         label: 'out'
-        expression: 'input >= 3 ? 0 : 10'
+        calc: `double calc() {
+                   return (input >= 3) ? 0 : 10;
+               }`
     }
 
 

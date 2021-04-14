@@ -1,11 +1,13 @@
+import ohm 1.0
 import QtQuick
 
 Jack {
     id: outJack
     dir: "out"
-    property var expression
-    property var outFunc: null
-
+    property string header: ''
+    property string calc: ''
+    property var func: null
+       
     property list<Cable> cables
     property bool hasCable: cables.length > 0
     signal cableRemoved(Cable cable)
@@ -20,16 +22,6 @@ Jack {
     }
 
     signal outFuncUpdated(var outFunc)
-    function createOutFunc() {
-        if (expression)
-            outFunc = new SymbolicFunction(label, expression)
-        outFuncUpdated(outFunc)
-        return outFunc
-    }
-
-    function setVar(key,val) {
-        if (outFunc) outFunc.setVar(key,val);
-    }
 
     exports: ({label: 'label'})
 

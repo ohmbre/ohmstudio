@@ -1,22 +1,32 @@
-#include "midi.hpp"
+#include "midi.h"
 
 static void anonCallback(double deltatime, std::vector<unsigned char> *message, void *userData = nullptr) {
-   ((MIDIInFunction *) userData)->callback(deltatime, message);
+   ((MIDIInFunc *) userData)->callback(deltatime, message);
 }
 
 QMap<quint8,QString> MIDIEvent::nibToType = {{0x9,"Note On"}, {0x8,"Note Off"}, {0xB,"Ctrl Change"}, {0xE,"Pitch Wheel"}};
 QMap<QString,quint8> MIDIEvent::typeToNib = {{"Note On", 0x9}, {"Note Off",0x8}, {"Ctrl Change",0xB}, {"Pitch Wheel",0xE}};
 
-Q_INVOKABLE MIDIInFunction::MIDIInFunction(): QObject(QGuiApplication::instance()),
-     gate1(0), gate2(0), gate3(0), voct1(0), voct2(0), voct3(0),
-     vel1(0), vel2(0), vel3(0), cv(0), wheel(0), keyed({0,0,0}), keys({0,0,0}), keyPos(0)
-{
-    gates = {&gate1, &gate2, &gate3};
-    vocts = {&voct1, &voct2, &voct3};
-    vels = {&vel1, &vel2, &vel3};
+Q_INVOKABLE MIDIInFunc::MIDIInFunc(QObject *parent): QObject(parent), gates(MIDIPOLY), vocts(MIDIPOLY), vels(MIDIPOLY),
+    keyed(MIDIPOLY), keys(MIDIPOLY), keyPos(0) {
+    lastEv = QVariant();
+    for (int i = 0; i < MIDIPOLY; i++) {
+        gates[i] = new MutableFunc();
+        vocts[i] = new MutableFunc();
+        vels[i] = new MutableFunc();
+        keyed[i] = keys[i] = 0;
+    }
 }
 
-QStringList MIDIInFunction::listDevices() {
+Q_INVOKABLE MIDIInFunc::~MIDIInFunc() {
+    for (int i = 0; i < MIDIPOLY; i++) {
+        delete gates[i];
+        delete vocts[i];
+        delete vels[i];
+    }
+}
+
+QStringList MIDIInFunc::listDevices() {
     unsigned int nPorts = midiin.getPortCount();
     QStringList devList;
     for (unsigned int i = 0; i < nPorts; i++) {
@@ -29,18 +39,25 @@ QStringList MIDIInFunction::listDevices() {
     return devList;
 }
 
-void MIDIInFunction::open(unsigned int portNum) {
+void MIDIInFunc::open(unsigned int portNum) {
+    unsigned int nPorts = midiin.getPortCount();
+    if (portNum >= nPorts) return;
     midiin.openPort( portNum );
     midiin.setCallback( &anonCallback, this );
-    //midiin->ignoreTypes( false, false, false );
+    midiin.ignoreTypes( false, false, false );
 }
 
-void MIDIInFunction::callback(double, std::vector<unsigned char> *message) {
+Q_INVOKABLE QVariant MIDIInFunc::lastEvent() {
+    return lastEv;
+}
+
+void MIDIInFunc::callback(double, std::vector<unsigned char> *message) {
     MIDIEvent ev(message->data(), (unsigned long) message->size());
     if (!chanFilter.contains(ev.channel)) return;
     if (!typeFilter.contains(ev.type)) return;
     if (!keyFilter.contains(ev.key)) return;
-    jsCallback.call(QJSValueList() << QQmlEngine::contextForObject(this)->engine()->toScriptValue(ev.asVariant()));
+    lastEv = ev.asVariant();
+    
     int pos;
 
     if (ev.type == 0x9) {
@@ -57,7 +74,7 @@ void MIDIInFunction::callback(double, std::vector<unsigned char> *message) {
                 }
             pos = minpos;
         }
-        vocts[pos]->val = ((V)ev.key - 53.0)/12.0;
+        vocts[pos]->val = ((double)ev.key - 53.0)/12.0;
         vels[pos]->val = ev.val / 127.0 * 10;
         gates[pos]->val = 10;
         keyed[pos] = ++keyPos;
@@ -77,27 +94,27 @@ void MIDIInFunction::callback(double, std::vector<unsigned char> *message) {
     }
 }
 
-Q_INVOKABLE void MIDIInFunction::setJSCallback(QJSValue cb) {
+Q_INVOKABLE void MIDIInFunc::setJSCallback(QJSValue cb) {
     if (cb.isCallable()) jsCallback = cb;
 }
 
-Q_INVOKABLE void MIDIInFunction::setChanFilter(QVariantList chans) {
+Q_INVOKABLE void MIDIInFunc::setChanFilter(QVariantList chans) {
     chanFilter.clear();
-    foreach (QVariant chan, chans)
+    for (QVariant chan : chans)
         chanFilter.insert(chan.toInt()-1);
 }
 
-Q_INVOKABLE void MIDIInFunction::setTypeFilter(QStringList types) {
+Q_INVOKABLE void MIDIInFunc::setTypeFilter(QStringList types) {
     typeFilter.clear();
-    foreach(QString type, types) {
+    for(QString type : types) {
         if (MIDIEvent::typeToNib.contains(type))
             typeFilter.insert(MIDIEvent::typeToNib[type]);
     }
 }
 
-Q_INVOKABLE void MIDIInFunction::setKeyFilter(QVariantList keys) {
+Q_INVOKABLE void MIDIInFunc::setKeyFilter(QVariantList keys) {
     keyFilter.clear();
-    foreach(QVariant key, keys)
+    for(QVariant key : keys)
         keyFilter.insert(key.toInt());
 }
 

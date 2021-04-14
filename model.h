@@ -1,7 +1,10 @@
-#ifndef INCLUDE_MODEL_HPP
-#define INCLUDE_MODEL_HPP
+#pragma once
 
-#include "function.hpp"
+#include <QObject>
+#include <QVariantMap>
+#include <QQmlEngine>
+
+
 
 class Model : public QObject{
     Q_OBJECT
@@ -9,6 +12,7 @@ class Model : public QObject{
     Q_PROPERTY(QVariantMap exports MEMBER exports)
     Q_PROPERTY(QString modelName READ getModelName CONSTANT)
     Q_PROPERTY(bool isModel READ isModel CONSTANT)
+    QML_ELEMENT
     public:
 
         bool isModel() { return true; }
@@ -18,14 +22,9 @@ class Model : public QObject{
             return s.split("_")[0];
         }
         
-     signals:
-        void viewChanged();
-        void exportsChanged();
-        
+       
      private:
         QVariantMap exports;
 };
 
 
-
-#endif

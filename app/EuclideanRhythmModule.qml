@@ -2,6 +2,7 @@ Module {
 
     label: 'Euclid Rhythm'
     InJack { label: 'clock' }
+    InJack { label: 'reset' }
     InJack { label: 'inSteps' }
     InJack { label: 'inPulses' }
 
@@ -16,58 +17,35 @@ Module {
         translate: v => Math.floor(v*1.55+16.5)
         decimals: 0
     }
-
-    Variable { label: 'gate' }
-    Variable { label: 'step' }
-    Variable { label: 't'; value: 99999999 }
-    Variable { label: 'remainder' }
-    Variable { label: 'a' }
-    Variable { label: 'b' }
-    Variable { label: 'count' }
+    
+    CV {
+        label: 'ctrlRotation'
+        translate: v => Math.floor(v*1.55+16.5)
+        decimals: 0
+    }
 
     OutJack {
         label: 'out'
-        expression:
-            'var pulses := floor((ctrlPulses+inPulses)*1.55+16.5);
-             var steps := floor((ctrlSteps+inSteps)*1.55+16.5);
-             if ((gate == 0) and (clock > 3))
-             {
-                if (step == 0)
-                {
-                  println(\'b\');
-                  remainder := (steps - pulses) % pulses;
-                  a := ((remainder == 0) or (floor(pulses/remainder) == 0)) ? 0 : floor((pulses-remainder)/floor(pulses/remainder));
-                  b := 0;
-                  count := 0;
-                };
-                step := (step + 1) % steps;
-                if (count == 0) 
-                {
-                  println(\'c\');
-                  t := 0;
-                  count := floor((steps-pulses)/pulses);
-                  if ((remainder > 0) and (b == 0)) 
-                  {
-                    println(\'d\');
-                    count := count + 1;
-                    remainder := remainder - 1;
-                    var wobble := (steps - pulses) % pulses;
-                    b := ((a > 0) or (wobble == 0)) ? 0 : floor(pulses/wobble);
-                    a := a - 1;
+        calc: `bool was_hi;
+               int bucket = 0;
+               double t = DBL_MAX;
+               double calc() {
+                  int pulses = (ctrlPulses+inPulses)*1.55 + 16.5;
+                  int steps = (ctrlSteps+inSteps)*1.55 + 16.5;
+                  int rot = ctrlRotation*1.55 + 16.5;
+                  if (reset > 3) bucket = rot % steps;
+                  bool hi = clock > 3;
+                  if (hi && !was_hi) {
+                     bucket += pulses;
+                     if (bucket >= steps) {
+                        bucket -= steps;
+                        t = 0;
+                     }
                   }
-                  else 
-                  {
-                    b := b - 1;
-                  };
-                }
-                else
-                {
-                  count := count - 1;
-                };
-             };
-             gate := clock > 3 ? 1 : 0;
-             t := t + 1;
-             (t <= 5ms) ? 10 : 0'
+                  was_hi = hi;
+                  t++;
+                  return t < 5*ms ? 10 : 0;
+               }`//'
     }
 
 }

@@ -7,6 +7,8 @@ Module {
     CV { label: 'ctrlShift' }
     OutJack {
         label: 'out'
-        expression: '(inGain + ctrlGain) * (input + inShift + ctrlShift)'
+        calc: `double calc() {
+                   return (inGain + ctrlGain) * (input + inShift + ctrlShift);
+               }`
     }
 }

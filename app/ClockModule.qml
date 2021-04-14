@@ -2,7 +2,8 @@ Module {
     label: 'Clock'
 
     InJack { label: 'inTempo'}
-
+    InJack { label: 'reset' }
+    
     CV {
         label: 'ctrlTempo'
         translate: v => 120*1.5**v
@@ -10,17 +11,16 @@ Module {
     }
 
     CV {
-        label: 'stepsPerBeat'
-        translate: v => Math.round(4*1.1**v)
+        label: 'nSteps'
+        translate: v => Math.round(4*1.2**v)
     }
-
-    Variable { label: 't' }
 
     OutJack {
         label: 'trig'
-        expression: 't := t + 1;
-                     t % (mins/120/round(4*1.2^stepsPerBeat) * 1.5^(-inTempo-ctrlTempo)) < 5ms ? 10 : 0'
-
+        calc: `double t = 0;
+               double calc() {
+                   if (reset > 3) t = 0;
+                   return fmod(t++,mins/120/round(4*pow(1.2,nSteps))*pow(1.5,-inTempo-ctrlTempo)) < 5*ms ? 10 : 0;
+               }`
     }
-
 }

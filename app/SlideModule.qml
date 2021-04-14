@@ -8,18 +8,24 @@ Module {
 
     CV {
         label: 'ctrlRise'
-        translate: v => 200*1.5**v
+        translate: v => 150*1.7**v
         unit: 'ms'
     }
     CV {
         label: 'ctrlFall'
-        translate: v => 200*1.5**v
+        translate: v => 150*1.7**v
         unit: 'ms'
     }
-    Variable { label: 'state' }
+
     OutJack {
         label: 'output'
-        expression: 'state := state + (input-state)/(200*1.5^(input > state ? (inRise+ctrlRise) : (inFall+ctrlFall)))'
+        calc: `double state = 0.;
+               double calc() {
+                   double speed = input > state ? (inRise + ctrlRise) : (inFall + ctrlFall);
+                   state += (input - state) / (150. * pow(1.7, speed));
+                   state = clamp(state,-10.,10.);
+                   return state;
+               }`
     }
 
 

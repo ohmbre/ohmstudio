@@ -1,5 +1,5 @@
 Module {
-
+    id: filter
     label: 'Notch Filter'
     tags: ['filter','fx']
 
@@ -15,48 +15,43 @@ Module {
         label: 'ctrlQ'
         translate: v => 1.5**v
     }
-    Variable { label: 'x1' }
-    Variable { label: 'x2' }
-    Variable { label: 'y1' }
-    Variable { label: 'y2' }
-    Variable { label: 'u1' }
-    Variable { label: 'u2' }
-    Variable { label: 'v1' }
-    Variable { label: 'v2' }
-    Variable { label: 'w1' }
-    Variable { label: 'w2' }
-    Variable { label: 'z1' }
-    Variable { label: 'z2'}
+
+    property string commonCalc:
+        `struct State { double x1; double x2; double y1; double y2; };
+         double f=0, a=0, m2cs=0;
+         double next(double v,struct State *s) {
+             double tmp = v + m2cs*s->x1 + s->x2 - m2cs*s->y1 + (a-1)*s->y2;
+             s->x2 = s->x1;
+             s->x1 = v;
+             s->y2 = s->y1;
+             s->y1 = clamp(tmp/(1+a), -10., 10.);
+             return s->y1;
+         }
+         void calcParam() {
+             f = 220*Hz * pow(2, ctrlFreq + inFreq);
+             a = sin(f)*sinh(log(2)/2 * f/(sin(f)*pow(1.5, ctrlQ+inQ)));
+             m2cs = -2*cos(f);
+         }`//'
+   
     OutJack {
         label: '12db'
-        expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
-                     var sn := sin(f);
-                     var q := 1.5^(ctrlQ + inQ);
-                     var alpha := sn * sinh(log(2)/2 * f / (sn * q));
-                     var m2cs := -2*cos(f);
-                     var tmp := clamp(-10, (input + m2cs*x1 + x2 - m2cs*y1 + (alpha-1)*y2) / (1 + alpha), 10);
-                     x2 := x1;
-                     x1 := input;
-                     y2 := y1;
-                     y1 := tmp;'
+        calc: filter.commonCalc + `
+               struct State state = {0,0,0,0};
+               double calc() {
+                   calcParam();
+                   return next(input,&state);
+               }`//'
     }
+        
     OutJack {
         label: '24db'
-        expression: 'var f := 220hz * 2^(ctrlFreq + inFreq);
-                     var sn := sin(f);
-                     var q := 1.5^(ctrlQ + inQ);
-                     var alpha := sn * sinh(log(2)/2 * f / (sn * q));
-                     var m2cs := -2*cos(f);
-                     var tmp := clamp(-10, (input + m2cs*u1 + u2 - m2cs*v1 + (alpha-1)*v2) / (1 + alpha), 10);
-                     u2 := u1;
-                     u1 := input;
-                     v2 := v1;
-                     v1 := tmp;
-                     tmp := clamp(-10, (v1 + m2cs*w1 + w2 - m2cs*z1 + (alpha-1)*z2) / (1 + alpha), 10);
-                     w2 := w1;
-                     w1 := v1;
-                     z2 := z1;
-                     z1 := tmp;'
+        calc: filter.commonCalc + `
+               struct State state1 = {0,0,0,0}, state2 = {0,0,0,0};
+               double calc() {
+                   calcParam();
+                   return next(next(input, &state1), &state2);
+               }`//'
     }
+    
 
 }

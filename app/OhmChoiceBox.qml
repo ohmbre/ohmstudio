@@ -16,6 +16,10 @@ Item {
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: 8
     }
+    onFocusChanged: {
+        if (!focus)
+            chooser.expanded = false
+    }
     property alias label: label.text
     Rectangle {
         id: chooser
@@ -28,13 +32,19 @@ Item {
         border.color: 'gray'
         border.width: 1
         property bool expanded: false
+
         MouseArea {
-            enabled: !parent.expanded
-            anchors.fill: parent
+            enabled: !chooser.expanded
+            preventStealing: true
+            anchors.fill: chooser
             hoverEnabled: enabled
-            onEntered: parent.border.color = 'black'
-            onExited: parent.border.color = 'gray'
-            onClicked: parent.expanded = true
+            scrollGestureEnabled: true
+            onEntered: chooser.border.color = 'black'
+            onExited: chooser.border.color = 'gray'
+            onClicked: {
+                chooser.expanded = true
+                choiceBox.focus = true;
+            }
         }
         OhmText {
             font.pixelSize: 8
@@ -70,6 +80,7 @@ Item {
                             choiceBox.chosen(parent.text)
                             chooser.expanded = false
                             parent.hovered = false
+                            choiceBox.focus = false
                         }
                     }
                 }

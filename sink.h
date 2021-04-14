@@ -1,13 +1,18 @@
-#ifndef INCLUDE_SINK_HPP
-#define INCLUDE_SINK_HPP
+#pragma once
 
-#include "conductor.hpp"
-#include "function.hpp"
+#include <QObject>
+#include <QQuickItem>
+
+#include "external/miniaudio.h"
+#include "conductor.h"
+#include "audio.h"
+#include "func.h"
+
 
 class Sink {
     public:
         Sink();
-        Function *func;
+        Func *func;
         ma_rb ringbuf;
 };
 
@@ -15,6 +20,7 @@ class Sink {
 class ShaderSink : public QQuickItem, public Sink {
     Q_OBJECT
     Q_PROPERTY(QString status READ getStatus WRITE setStatus NOTIFY statusChanged)
+    QML_ELEMENT
     public:
 
         ShaderSink(QQuickItem *parent = nullptr);
@@ -35,4 +41,4 @@ class ShaderSink : public QQuickItem, public Sink {
         
 };
 
-#endif
+

@@ -1,9 +1,17 @@
-#include "conductor.hpp"
-#include "midi.hpp"
-#include "sink.hpp"
-#include "model.hpp"
-#include "audio.hpp"
-#include "dsp.hpp"
+#include <QSurfaceFormat>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QJSValue>
+#include <QQmlContext>
+
+#include "conductor.h"
+#include "func.h"
+#include "audio.h"
+#include "midi.h"
+
+#define MA_IMPLEMENTATION
+#include "external/miniaudio.h"
+
 
 Conductor::Conductor() : ticks(1) {}
 
@@ -16,25 +24,24 @@ int Conductor::run(int argc, char **argv) {
     QSurfaceFormat::setDefaultFormat(fmt);
 
     QGuiApplication app(argc, argv);
-    AudioOut aOut;
-    audioOut = &aOut;
+    Audio aOut;
+    audio = &aOut;
     QQmlApplicationEngine engine;
+    engineP = &engine;
     QJSValue jsGlobal = engine.globalObject();
     QQmlContext *context = engine.rootContext();
     jsGlobal.setProperty("global", jsGlobal);
-    jsGlobal.setProperty("SymbolicFunction", engine.newQMetaObject(&SymbolicFunction::staticMetaObject));
-    jsGlobal.setProperty("MIDIInFunction", engine.newQMetaObject(&MIDIInFunction::staticMetaObject));
-    jsGlobal.setProperty("Fourier", engine.newQMetaObject(&Fourier::staticMetaObject));
-    qmlRegisterType<Model>("ohm", 1, 0, "Model");
-    qmlRegisterType<ShaderSink>("ohm", 1, 0, "ShaderSink");
-    context->setContextProperty("AUDIO_OUT", audioOut);
+    jsGlobal.setProperty("SymbolicFunc", engine.newQMetaObject(&SymbolicFunc::staticMetaObject));
+    jsGlobal.setProperty("MIDIInFunc", engine.newQMetaObject(&MIDIInFunc::staticMetaObject));
+       
+    context->setContextProperty("AUDIO", audio);
     context->setContextProperty("MAESTRO", this);
-    engine.load(QUrl("qrc:/app/OhmStudio.qml"));
-    ShaderSink sink;
+    engine.load("qrc:/app/OhmStudio.qml");
     app.exec();
     return 0;
 
 }
+
 
 
 Q_INVOKABLE bool Conductor::write(const QString &relPath, const QString &content) {
@@ -88,9 +95,9 @@ Q_INVOKABLE  QVariant Conductor::listDir(const QString &dname, const QString &ma
 #define DECODE_CHUNK 4096
 
 Q_INVOKABLE QJSValue Conductor::samplesFromFile(QUrl path) {
-    QList<V> samples;
+    QList<double> samples;
 
-    ma_decoder_config cfg = ma_decoder_config_init(ma_format_f32, 1, audioOut->sampleRate());
+    ma_decoder_config cfg = ma_decoder_config_init(ma_format_f32, 1, audio->sampleRate());
     ma_decoder decoder;
     ma_result result;
 
@@ -99,22 +106,24 @@ Q_INVOKABLE QJSValue Conductor::samplesFromFile(QUrl path) {
     result = ma_decoder_init_file(QDir::toNativeSeparators(path.toLocalFile()).toLatin1(), &cfg, &decoder);
     if (result != MA_SUCCESS) {
         qDebug() << "could not decode file" << path;
-        return qmlEngine(this)->newArray(0);
+        return engineP->newArray(0);
     }
-
+    
+    double norm = 0;
     while (true) {
         ma_uint64 nframes = ma_decoder_read_pcm_frames(&decoder, buf, DECODE_CHUNK);
-        for (ma_uint64 i = 0; i < nframes; i++)
+        for (ma_uint64 i = 0; i < nframes; i++) {
+            if (abs(buf[i]) > norm) norm = abs(buf[i]);
             samples.append(buf[i]);
+        }
         if (nframes != DECODE_CHUNK) break;
     }
 
     ma_decoder_uninit(&decoder);
-
-    QJSValue ret = qmlEngine(this)->newArray(samples.size());
+    
+    QJSValue ret = engineP->newArray(samples.size());
     for (int i = 0; i < samples.size(); i++)
-        ret.setProperty(i, samples[i]*10);
+        ret.setProperty(i, samples[i]/norm);
     return ret;
 }
-
 

@@ -10,6 +10,8 @@ Module {
     }
     OutJack {
         label: 'distorted'
-        expression: '20 / (1 + exp(-input * 2^ctrlHarsh)) - 10'
+        calc: `double calc() {
+                   return 20 / (1 + exp(-input * pow(2., ctrlHarsh + inHarsh))) - 10;
+               }`
     }
 }

@@ -118,8 +118,9 @@ Item {
             width: 46
             scale: globalScale
             contents: OhmButton {
-                x: centerInX(this,delModuleMenu)
-                y: centerInY(this,delModuleMenu.body)
+                id: delBtn
+                x: centerInX(delBtn,delModuleMenu)
+                y: centerInY(delBtn,delModuleMenu.body)
                 verticalAlignment: Text.AlignBottom
                 width: 26; height: 26
                 padding: 0
@@ -167,19 +168,30 @@ Item {
         ListView {
             id: mlv
             anchors.fill: parent
-            function listModules() {
-                if (!MAESTRO) return []
-                return MAESTRO.listDir(':/app','*Module.qml',":/app")
-                       .filter(m => m !== ':/app/Module.qml' && m.endsWith('.qml'))
-                       .map(fname => {
-                                const contents = MAESTRO.read(fname)
-                                let label = contents.match(/label:\s*[\'\"\`]([^\"\'\`]+)[\'\"\`]/)
-                                if (label) return {path: fname, label: label[1]}
-                                const parts = fname.split('/')
-                                return {path: fname, label: parts[parts.length-1]}
-                            })
-                .sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
+            property string tag: ''
+            function listTags() {
+                let tags = new Set()
+                Object.values(moduleDefs).forEach(m => m.tags.forEach(t => tags.add(t)))
+                return [...tags].map(t => ({label: t, isTag: true}))
             }
+            function listModules() {
+                patchCanvas.loadModuleDefs()
+                if (!tag || tag == '..') return listTags()
+                let ms = Object.values(moduleDefs).filter(m => m.tags.includes(tag))                
+                ms.sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
+                return [{label: '..', isTag: true}].concat(ms)
+            }
+            function chosen(m) {
+                if (m.isTag) {
+                    tag = m.label
+                } else {
+                    pView.placeModule(m)
+                    mMenu.visible = false;
+                    tag = ''
+                }
+                model = listModules()
+            }
+                
             model: listModules()
             header: Rectangle {
                 width: parent.width
@@ -211,10 +223,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: {
-                        pView.placeModule(modelData.path)
-                        mMenu.visible = false;
-                    }
+                    onClicked: mlv.chosen(modelData)
                 }
             }
             onFocusChanged: {
@@ -225,21 +234,21 @@ Item {
         }
     }
 
-    function placeModule(path) {
+    function placeModule(m) {
         const outside = (p1,p2) => ((p1.x-26)>(p2.x+26))||((p2.x-26)>(p1.x+26))||((p1.y-18)>(p2.y+18))||((p2.y-18)>(p1.y+18))
         const fits = p => {
             for (let i = 0; i < pView.patch.modules.length; i++)
               if (!outside(p, Qt.point(pView.patch.modules[i].x, pView.patch.modules[i].y))) return false
             return true;
         }
-        // whip it round in an archimedes spiral
+        // archimedes spiral
         let t = 0
         let p = Qt.point(0,0)
         while (!fits(p)) {
             t += Math.PI/(t+1)
             p = Qt.point(13/9*t*Math.cos(t), t*Math.sin(t))
         }
-        pView.patch.addModule(path, p.x, p.y);
+        pView.patch.addModule(m, p.x, p.y);
     }
 
     property alias contentItem: content
