@@ -37,7 +37,6 @@ add_executable(ohm
     conductor.cpp
     func.cpp
     audio.cpp
-    model.cpp
     sink.cpp
     midi.cpp
     external/RtMidi.cpp
