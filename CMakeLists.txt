@@ -39,6 +39,7 @@ add_executable(ohm
     audio.cpp
     sink.cpp
     midi.cpp
+    model.h
     external/RtMidi.cpp
 )
 
