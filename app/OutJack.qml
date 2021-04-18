@@ -13,12 +13,10 @@ Jack {
     signal cableRemoved(Cable cable)
     onCableRemoved: (cable) => {
         cables = filterList(cables, c => c !== cable)
-        parent.parent.cablesChanged()
     }
     signal cableAdded(Cable cable)
     onCableAdded: (cable) => {
         cables.push(cable)
-        parent.parent.cablesChanged()
     }
 
     signal outFuncUpdated(var outFunc)

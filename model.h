@@ -17,7 +17,7 @@ class Model : public QObject{
 
         bool isModel() { return true; }
        
-        QString getModelName() {
+        Q_INVOKABLE QString getModelName() {
             QString s = this->metaObject()->className();
             return s.split("_")[0];
         }

@@ -4,10 +4,29 @@ import QtQml 2.15
 
 Item {
     id: pView
-    width: xpct(100)
-    height: ypct(100)
+    
     property alias moduleOverlay: moduleOverlay
     property Patch patch: Patch {}
+    
+    function newPatch() {
+        patch.destroy()
+        patch = patchComponent.createObject(pView, {})
+    }
+    
+    Timer {
+        id: autoSaveTimer
+        interval: 2000; running: false; repeat: true
+        onTriggered: savePatch(pView.patch, 'autosave.json')
+    }
+    
+    Component.onCompleted: {
+        loadModules(pView);
+        mlv.model = listModules()
+        if (!loadPatch(patch, 'autosave.json'))
+            loadPatch(patch, 'qrc:/app/defaultpatch.json')
+        autoSaveTimer.start()
+    }
+    
     ModuleOverlay {
         id: moduleOverlay
     }
@@ -153,7 +172,7 @@ Item {
         onClicked: mMenu.visible = true
         border: 4
     }
-
+    
     Rectangle {
         id: mMenu
         visible: false
@@ -169,18 +188,7 @@ Item {
             id: mlv
             anchors.fill: parent
             property string tag: ''
-            function listTags() {
-                let tags = new Set()
-                Object.values(moduleDefs).forEach(m => m.tags.forEach(t => tags.add(t)))
-                return [...tags].map(t => ({label: t, isTag: true}))
-            }
-            function listModules() {
-                patchCanvas.loadModuleDefs()
-                if (!tag || tag == '..') return listTags()
-                let ms = Object.values(moduleDefs).filter(m => m.tags.includes(tag))                
-                ms.sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
-                return [{label: '..', isTag: true}].concat(ms)
-            }
+
             function chosen(m) {
                 if (m.isTag) {
                     tag = m.label
@@ -189,7 +197,7 @@ Item {
                     mMenu.visible = false;
                     tag = ''
                 }
-                model = listModules()
+                model = listModules(tag)
             }
                 
             model: listModules()
@@ -248,7 +256,7 @@ Item {
             t += Math.PI/(t+1)
             p = Qt.point(13/9*t*Math.cos(t), t*Math.sin(t))
         }
-        pView.patch.addModule(m, p.x, p.y);
+        pView.patch.addModule(m, {x:p.x, y:p.y});
     }
 
     property alias contentItem: content

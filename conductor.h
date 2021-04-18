@@ -25,17 +25,14 @@ public:
     double sym_s, sym_ms, sym_mins, sym_hz;
 
     Audio *audio;
-    
+    QString dataDir;
     Q_INVOKABLE bool write(const QString &fname, const QString &content);
     Q_INVOKABLE QString read(const QString &fname);
     Q_INVOKABLE QString pwd();
     Q_INVOKABLE QVariant listDir(const QString &dname, const QString &match, const QString &base);
     Q_INVOKABLE QJSValue samplesFromFile(QUrl path);
-    
+    Q_INVOKABLE QQmlComponent* loadModule(QString name);
     QQmlApplicationEngine *engineP;
-
-
-
 };
 
 inline Conductor maestro;

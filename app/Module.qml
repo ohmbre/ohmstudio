@@ -34,8 +34,7 @@ Model {
     property real y
     property bool testCreate: false    
     property var view: null
-
-    exports: ({ x:'x', y:'y', cvs: 'default'})
+    property var save: []
 
     default property var contents
     onContentsChanged: {

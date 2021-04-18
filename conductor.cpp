@@ -4,6 +4,8 @@
 #include <QJSValue>
 #include <QQmlContext>
 
+#include <git2.h>
+
 #include "conductor.h"
 #include "func.h"
 #include "audio.h"
@@ -18,28 +20,48 @@ Conductor::Conductor() : ticks(1) {}
 Conductor::~Conductor() {}
 
 int Conductor::run(int argc, char **argv) {
-
+    
     QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
     fmt.setSamples(2);
     QSurfaceFormat::setDefaultFormat(fmt);
-
+    
     QGuiApplication app(argc, argv);
+    
+    dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+       
     Audio aOut;
     audio = &aOut;
+    
     QQmlApplicationEngine engine;
     engineP = &engine;
+            
     QJSValue jsGlobal = engine.globalObject();
     QQmlContext *context = engine.rootContext();
+    
     jsGlobal.setProperty("global", jsGlobal);
     jsGlobal.setProperty("SymbolicFunc", engine.newQMetaObject(&SymbolicFunc::staticMetaObject));
     jsGlobal.setProperty("MIDIInFunc", engine.newQMetaObject(&MIDIInFunc::staticMetaObject));
-       
-    context->setContextProperty("AUDIO", audio);
-    context->setContextProperty("MAESTRO", this);
+    jsGlobal.setProperty("MAESTRO", engine.toScriptValue<Conductor*>(this));
+    jsGlobal.setProperty("AUDIO", engine.toScriptValue<Audio*>(audio));
+    
+    QUrl murl = QSettings("ohm").value("module_url", "https://github.com/ohmbre/ohmstudio-modules.git").toUrl();
+    std::string moduleDir = (dataDir + "/modules").toStdString();
+    git_repository *repo = NULL;
+    git_libgit2_init();
+    int ret = git_repository_open(&repo, moduleDir.c_str());
+    if (ret < 0)
+        ret = git_clone(&repo, murl.toString().toStdString().c_str(), moduleDir.c_str(), NULL);
+    if (ret < 0)
+        qDebug() << "Error cloning repo";
+    
+    //engineP->addImportPath("qrc:/app");
+    
     engine.load("qrc:/app/OhmStudio.qml");
+    
     app.exec();
+    audio->pause();
+    
     return 0;
-
 }
 
 
@@ -47,7 +69,6 @@ int Conductor::run(int argc, char **argv) {
 Q_INVOKABLE bool Conductor::write(const QString &relPath, const QString &content) {
     QString relDir = relPath.section('/',0,-2);
     QString fileName = relPath.section('/',-1);
-    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QString dirPath = QDir::cleanPath(dataDir + "/" + relDir);
     QDir::root().mkpath(dirPath);
     QString path = dirPath + "/" + fileName;
@@ -63,7 +84,7 @@ Q_INVOKABLE bool Conductor::write(const QString &relPath, const QString &content
 
 Q_INVOKABLE  QString Conductor::read(const QString &relpath) {
     QString path = relpath.startsWith(":/") || relpath.startsWith("/") ? relpath
-      : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + relpath;
+      : dataDir + "/" + relpath;
     QFile f(path);
     QString ret = f.open(QIODevice::ReadOnly|QIODevice::Text) ? QTextStream(&f).readAll() : "";
     return ret;
@@ -74,7 +95,7 @@ Q_INVOKABLE  QString Conductor::pwd() {
 }
 
 Q_INVOKABLE  QVariant Conductor::listDir(const QString &dname, const QString &match, const QString &base) {
-    QString dpath = dname.startsWith(":/") ? dname : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + dname;
+    QString dpath = dname.startsWith(":/") ? dname : dataDir + "/" + dname;
     QDirIterator modIt(dpath,QStringList()<<match,QDir::Files|QDir::NoDot|QDir::NoDotDot|QDir::AllDirs,QDirIterator::FollowSymlinks);
     QStringList fnames,subnames;
     if (dname != base) subnames << dname + "/..";
@@ -125,5 +146,16 @@ Q_INVOKABLE QJSValue Conductor::samplesFromFile(QUrl path) {
     for (int i = 0; i < samples.size(); i++)
         ret.setProperty(i, samples[i]/norm);
     return ret;
+}
+
+
+QQmlComponent* Conductor::loadModule(QString name) {
+    QString filename = name + ".qml";
+    QString path = dataDir + "/modules/" + filename;
+    QFile f(path);
+    QByteArray data = f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray();
+    QQmlComponent *c = new QQmlComponent(engineP);
+    c->setData(data, QUrl("qrc:/app/"+filename));
+    return c;
 }
 

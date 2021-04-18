@@ -99,36 +99,81 @@ global.logistic = (loval,hival,zeroval,growth) => {
     return (v) => loval + a*Math.pow(za, Math.exp(-growth*v))
 }
 
-global.toQML = (model) => {
-    const valToQML = (o) => {
-        if (typeof(o) == 'string' && o.startsWith('#'))
-        return o.slice(1)
-        if (o.isModel) return toQML(o)
-        return JSON.stringify(o)
-    }
-    let entries = Object.entries(model.exports).map(
-            ([propKey,lbl]) => {
-                let propVal = model[propKey]
-                if (propVal && propVal.call) propVal = propVal()
-                if (propVal === undefined || propVal === null) return [lbl,null]
-                if (propVal.push) {
-                    if (propVal.length === 0) return [lbl,null]
-                    const listVals = mapList(propVal,valToQML).filter(qml=>qml !== null)
-                    if (listVals.length === 0) {
-                        return [lbl,null];
-                    }
-                    if (lbl === 'default') {
-                        const lvstr = listVals.join('\n')
-                        return [lbl, lvstr]
-                    }
-                    return [lbl, '[\n' + listVals.join(', ') + '\n]'];
-                }
-                return [lbl, valToQML(propVal)]
-            })
-    .filter(([lbl,qml]) => qml !== null)
-    .map(([lbl,qml]) => lbl == 'default' ? qml : `${ lbl }: ${ qml }`)
-    .join('\n')
+global.lastAutoSave = ''
 
-    return `${model.modelName} {\n${entries}\n}`
+global.savePatch = (patch,fileName)  => {
+    const p = {modules: [], cables: []}
+    forEach(patch.modules, (module,idx) => {
+        const m = {x: module.x, y: module.y, cvs: [], idx: idx, name:module.getModelName()}
+        forEach(module.cvs, cv => { m.cvs.push({label: cv.label, volts: cv.volts}) })
+        forEach(module.save, field => { m[field] = module[field] })
+        p.modules.push(m)
+    })
+    forEach(patch.cables, cable => {
+        const jackRep = j => ({ midx: listIndex(patch.modules, j.parent), label: j.label })
+        p.cables.push({ inp: jackRep(cable.inp), out: jackRep(cable.out) })
+    })
+    const data = JSON.stringify(p,null,2)
+    if (fileName == 'autosave.json') {
+        if (lastAutoSave == data) return;
+        lastAutoSave = data;
+    }
+    MAESTRO.write(fileName, data)
 }
-    
+
+global.loadPatch = (patch,fileName) => {
+    const data = MAESTRO.read(fileName)
+    if (!data) return false;
+    const p = JSON.parse(data)
+    const createdModules = []
+    p.modules.forEach((m,idx) => {
+        const def = moduleDefs[m.name]
+        if (def) {
+            const props = {}
+            Object.keys(m).forEach(k=>{
+                if (['cvs','idx','name'].indexOf(k) < 0)
+                props[k] = m[k]              
+            })
+            patch.addModule(def, props)
+            createdModules.push(patch.modules[patch.modules.length-1])
+        } else console.error("Could not find definition for module",m.name)
+    })
+    p.cables.forEach(c => {
+        patch.addCable(createdModules[c.inp.midx].jack(c.inp.label),
+                       createdModules[c.out.midx].jack(c.out.label))
+    })
+    return true
+}
+
+global.moduleDefs = {}
+
+global.loadModules = (parent) => { 
+    MAESTRO.listDir('modules','*Module.qml',"modules")
+    .map(path => {
+             const name = path.split('/').pop().split('.')[0]
+             const c = MAESTRO.loadModule(name)
+             if (c.status !== 1) {
+                 console.error("Error creating module", c.errorString());
+                 return;
+             }
+             const m = c.createObject(parent, {testCreate: true});
+             moduleDefs[name] = {label:m.label,tags:m.tags,path:path,name:name,component:c}
+             m.destroy()
+    })
+}
+
+global.listModules = (tag) => {
+    if (!tag || tag == '..') return listTags()
+    let ms = Object.values(moduleDefs).filter(m => m.tags.includes(tag))                
+    ms.sort((a,b) => a.label.toUpperCase() < b.label.toUpperCase() ? -1 : 1)
+    return [{label: '..', isTag: true}].concat(ms)
+}
+
+global.listTags = () => {
+    let tags = new Set()
+    Object.values(moduleDefs).forEach(m => m.tags.forEach(t => tags.add(t)))
+    return [...tags].map(t => ({label: t, isTag: true}))
+}
+
+global.cableComponent = Qt.createComponent("qrc:/app/Cable.qml")
+global.patchComponent = Qt.createComponent("qrc:/app/Patch.qml")

@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.16.0)
 project(ohmstudio VERSION 0.5.0 LANGUAGES CXX)
 
+
+
+
+
+
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CXX_EXTENSIONS OFF)
@@ -21,11 +27,22 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 file(GLOB_RECURSE resource_files RELATIVE ${CMAKE_SOURCE_DIR} 
-    app/*.qml app/*.mjs app/*.png app/*.svg app/*.ttf)
+    app/*.qml app/*.mjs app/*.png app/*.svg app/*.ttf app/*.json)
 
 find_package(Qt6 COMPONENTS Quick QuickControls2 Svg Qml ShaderTools REQUIRED)
 find_package(LLVM REQUIRED CONFIG HINTS ${LLVM_DIR})
 find_package(Clang REQUIRED)
+
+include(ExternalProject)
+SET(LIBGIT2_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libgit2)
+EXTERNALPROJECT_ADD(libgit2
+  GIT_REPOSITORY https://github.com/libgit2/libgit2
+  GIT_TAG v1.1.0
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${LIBGIT2_PREFIX} -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF -DTHREADSAFE=ON
+)
+INCLUDE_DIRECTORIES(${LIBGIT2_PREFIX}/include)
+LINK_DIRECTORIES(${LIBGIT2_PREFIX}/lib)
+
 
 include_directories(${CMAKE_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 include_directories(${Qt6ShaderTools_PRIVATE_INCLUDE_DIRS})
@@ -43,14 +60,17 @@ add_executable(ohm
     external/RtMidi.cpp
 )
 
+add_dependencies(ohm libgit2)
+
 llvm_map_components_to_libnames(llvm_libnames core orcjit native support)
 target_link_libraries(ohm PRIVATE ${llvm_libnames} clangAST clangBasic clangLex clangCodeGen clangFrontendTool
     clangFrontend clangEdit clangSerialization clangSema clangDriver clangParse clangAnalysis)
 target_link_libraries(ohm PRIVATE Qt6::Core Qt6::Gui Qt6::Svg Qt6::Qml Qt6::Quick Qt6::ShaderTools)
 if (MSVC)
-    target_link_libraries(ohm PRIVATE winmm)
+    target_link_libraries(ohm PRIVATE winmm winhttp rpcrt4 crypt32)
 endif()
 
+target_link_libraries(ohm PRIVATE git2)
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E touch tmp.cpp)
 execute_process(COMMAND ${LLVM_TOOLS_BINARY_DIR}/clang -v -std=c++17 -S -emit-llvm -o tmp.bc tmp.cpp

@@ -19,7 +19,7 @@ RoundButton {
     }
     contentItem: OhmText {
         text: control.text
-        font.family: asapSemiBold.name
+        font.family: "Asap SemiBold"
         font.pixelSize: control.font.pixelSize
         font.weight: Font.Bold
         color: control.down ? 'white' : 'black'

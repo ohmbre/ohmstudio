@@ -1,0 +1,49 @@
+{
+    "modules": [
+        {
+            "x": 5.999999821185838,
+            "y": 27.299999186396576,
+            "cvs": [],
+            "idx": 0,
+            "name": "AudioOutModule"
+        },
+        {
+            "x": -80.71066251883326,
+            "y": -32.44342816480537,
+            "cvs": [
+                {
+                    "label": "ctrlFreq",
+                    "volts": 0
+                },
+                {
+                    "label": "ctrlGain",
+                    "volts": 3
+                }
+            ],
+            "idx": 1,
+            "name": "SineVCOModule"
+        }
+    ],
+    "cables": [
+        {
+            "inp": {
+                "midx": 0,
+                "label": "ch1"
+            },
+            "out": {
+                "midx": 1,
+                "label": "sinusoid"
+            }
+        },
+        {
+            "inp": {
+                "midx": 0,
+                "label": "ch2"
+            },
+            "out": {
+                "midx": 1,
+                "label": "sinusoid"
+            }
+        }
+    ]
+}

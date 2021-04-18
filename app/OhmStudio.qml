@@ -114,11 +114,14 @@ ApplicationWindow {
             }
 
             property Component loadPatchMenu: OhmFileChoose {
+                property bool merge: false
                 forLoading: true
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    patchCanvas.loadPatch(MAESTRO.read(fileURL))
+                    if (!merge) 
+                        pView.loadPatch('Patch {}')
+                    loadPatch(pView.patch, fileURL);
                     menu.close()
                 }
             }
@@ -128,7 +131,7 @@ ApplicationWindow {
                 directory: 'patches'
                 extension: 'qml'
                 onFileChosen: function(fileURL) {
-                    pView.patch.saveTo(fileURL);
+                    savePatch(pView.patch, fileURL)
                     menu.close()
                 }
             }
@@ -191,18 +194,28 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 MenuBtn {
-                    text: "New"
+                    text: "New Patch"
                     onClicked: {
-                        patchCanvas.loadPatch('Patch {}')
+                        pView.newPatch()
                         menu.close()
                     }
                 }
                 MenuBtn {
-                    text: "Load"
-                    onClicked: menu.submenu = menu.loadPatchMenu
+                    text: "Open Patch"
+                    onClicked: {
+                        menu.loadPatchMenu.merge = false
+                        menu.submenu = menu.loadPatchMenu
+                    }
                 }
                 MenuBtn {
-                    text: "Save"
+                    text: "Merge Patch"
+                    onClicked: {
+                        menu.loadPatchMenu.merge = true
+                        menu.submenu = menu.loadPatchMenu
+                    }
+                }
+                MenuBtn {
+                    text: "Save Patch"
                     onClicked: {
                         if (menu.submenu != menu.savePatchMenu) {
                             menu.submenu = menu.savePatchMenu
@@ -219,84 +232,16 @@ ApplicationWindow {
         }
     }
 
-
-    Item {
-        id: patchCanvas
-        width: globalWidth
-        height: globalHeight
-        scale: globalScale
-        transformOrigin: Item.TopLeft
-        z: 1
-
-        function loadAutoSave() {
-            var rawdata = MAESTRO.read('autosave.qml');
-            if (!rawdata) rawdata = MAESTRO.read(':/app/default.qml')
-            if (rawdata)
-                loadPatch(rawdata, 'qrc:/app/autosave.qml')
-
-        }
-
-        function loadPatch(raw,url) {
-            try {
-                if (pView.patch) pView.patch.destroy();
-                pView.patch = Qt.createQmlObject(raw, pView, url || "dynamic");
-                autoSaveTimer.start()
-            } 
-            catch(err) {
-                console.log("could not load ",url || "dynamic",":",err);
-            }            
-        }
-
-        PatchView {
-            id: pView
-        }
-
-        Timer {
-            id: autoSaveTimer
-            interval: 2000; running: false; repeat: true
-            property var lastSave: ''
-            onTriggered: {
-                const qml = toQML(pView.patch);
-                if (qml !== lastSave) {
-                    MAESTRO.write('autosave.qml', qml)
-                    lastSave = qml;
-                }
-            }
-        }
-        
-        function loadModuleDefs() {
-            if (global.moduleDefs) return
-            MAESTRO.listDir(':/app','*Module.qml',":/app")
-            .filter(path => path !== ':/app/Module.qml' && path.endsWith('.qml'))
-            .map(path => {
-                     const c = Qt.createComponent(path.replace(':/app/',''))
-                     if (c.status !== Component.Ready) {
-                         console.error('Warning: QML error in',path);
-                         console.error(c.errorString())
-                         return
-                     }
-                     const m = c.createObject(window, {testCreate: true});
-                     const defs = {
-                         label: m.label,
-                         tags: m.tags || [],
-                         path: path,
-                         name: path.split('/').pop().split('.')[0],
-                         component: c
-                     }
-                         
-                     if (!global.moduleDefs) 
-                        global.moduleDefs = {}
-                     global.moduleDefs[defs.name] = defs;
-                        
-            })
-        }
-
-        Component.onCompleted: {
-            loadModuleDefs()
-            loadAutoSave()
-        }
+    PatchView {
+      id: pView
+      width: xpct(100)
+      height: ypct(100)
+      scale: globalScale
+      transformOrigin: Item.TopLeft
+      z: 1
     }
     
 
+    
 }
 
