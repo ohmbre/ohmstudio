@@ -137,14 +137,13 @@ void Audio::reset() {
     maestro.sym_mins = sampleRate()*60;
     maestro.sym_hz = 2*M_PI/sampleRate();
 
-    qDebug() << "audio output initialized";
+    /*qDebug() << "audio output initialized";
     qDebug() << "   output device: " << outName();
     qDebug() << "   input device: " << inName();
     qDebug() << "   sample rate: " << sampleRate();
     qDebug() << "   num output channels: " << outChanCount();
     qDebug() << "   num input channels: " << inChanCount();
-    qDebug() << "   period: " << period();
-
+    qDebug() << "   period: " << period();*/
 
     ma_device_start(&dev);
 

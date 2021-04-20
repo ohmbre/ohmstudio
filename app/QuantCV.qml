@@ -4,7 +4,7 @@ CV {
     id: quantcv
     property var choices: []
     controller: OhmChoiceBox {
-        height: 6
+        lineHeight: 7
         label: quantcv.label
         choice: quantcv.choices[volts]
         model: quantcv.choices

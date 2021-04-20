@@ -26,6 +26,8 @@ int Conductor::run(int argc, char **argv) {
     QSurfaceFormat::setDefaultFormat(fmt);
     
     QGuiApplication app(argc, argv);
+    app.setOrganizationName("ohm");
+    app.setApplicationName("studio");   
     
     dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir::setCurrent(dataDir);
@@ -46,7 +48,7 @@ int Conductor::run(int argc, char **argv) {
     jsGlobal.setProperty("MAESTRO", engine.toScriptValue<Conductor*>(this));
     jsGlobal.setProperty("AUDIO", engine.toScriptValue<Audio*>(audio));
     
-    QUrl murl = QSettings("ohm").value("module_url", "https://github.com/ohmbre/ohmstudio-modules.git").toUrl();
+    QUrl murl = QSettings("ohm","studio").value("repo", "https://github.com/ohmbre/ohmstudio-modules.git").toUrl();
     std::string moduleDir = (dataDir + "/modules").toStdString();
     git_repository *repo = NULL;
     git_libgit2_init();
