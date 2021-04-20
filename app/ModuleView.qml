@@ -20,7 +20,7 @@ Item {
         color: "white"
         border: 3
         borderColor: 'black'
-        onPressAndHold: pView.contentItem.confirmDeleteModule(module)
+        onPressAndHold: pView.confirmDeleteModule(module)
         onClicked: {
             var anyExtended = false
             for (var j = 0; j < module.nJacks; j++)

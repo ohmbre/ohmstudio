@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQml 2.15
+import QtQuick
+import QtQuick.Controls
+import QtQml
 
 Item {
     id: pView
@@ -25,6 +25,11 @@ Item {
         if (!loadPatch(patch, 'autosave.json'))
             loadPatch(patch, 'qrc:/app/defaultpatch.json')
         autoSaveTimer.start()
+    }
+    
+    function confirmDeleteModule(module) {
+        delModule.candidate = module;
+        delModule.popup();
     }
     
     ModuleOverlay {
@@ -129,37 +134,35 @@ Item {
             }
         }
 
-
-        OhmPopup {
-            id: delModuleMenu
-            title: "Delete?"
-            height: 50
-            width: 46
-            scale: globalScale
-            contents: OhmButton {
-                id: delBtn
-                x: centerInX(delBtn,delModuleMenu)
-                y: centerInY(delBtn,delModuleMenu.body)
-                verticalAlignment: Text.AlignBottom
-                width: 26; height: 26
-                padding: 0
-                text: "×"
-                font.pixelSize:27
-                onClicked: {
-                    patch.deleteModule(delModuleMenu.candidate);
-                    delModuleMenu.close();
+        Menu {
+            id: delModule
+            property Module candidate
+            width: 70
+            Menu {
+                title: "Delete?"
+                font.weight: Font.Bold
+                enabled: false
+            }
+            MenuItem { 
+                text: 'Yes' 
+                onTriggered: {
+                    patch.deleteModule(delModule.candidate)
+                    delModule.close()
+                }                
+            }
+            MenuItem {
+                text: 'No'
+                onTriggered: delModule.close()
+            }
+            delegate: MenuItem {
+                id: menuItem
+                arrow: Item {}
+                contentItem: OhmText {
+                    text: menuItem.text
+                    font.pixelSize: 14
                 }
             }
-            property Module candidate
         }
-
-        function confirmDeleteModule(module) {
-            delModuleMenu.candidate = module;
-            delModuleMenu.popup();
-        }
-
-
-
     }
 
     OhmButton {
@@ -259,7 +262,6 @@ Item {
         pView.patch.addModule(m, {x:p.x, y:p.y});
     }
 
-    property alias contentItem: content
     property alias cableDragView: childCableDragView
 
 

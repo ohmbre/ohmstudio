@@ -28,6 +28,8 @@ int Conductor::run(int argc, char **argv) {
     QGuiApplication app(argc, argv);
     
     dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir::setCurrent(dataDir);
+    
        
     Audio aOut;
     audio = &aOut;
@@ -53,8 +55,7 @@ int Conductor::run(int argc, char **argv) {
         ret = git_clone(&repo, murl.toString().toStdString().c_str(), moduleDir.c_str(), NULL);
     if (ret < 0)
         qDebug() << "Error cloning repo";
-    
-    //engineP->addImportPath("qrc:/app");
+    QDir(dataDir).mkdir("patches");
     
     engine.load("qrc:/app/OhmStudio.qml");
     
@@ -67,24 +68,23 @@ int Conductor::run(int argc, char **argv) {
 
 
 Q_INVOKABLE bool Conductor::write(const QString &relPath, const QString &content) {
-    QString relDir = relPath.section('/',0,-2);
-    QString fileName = relPath.section('/',-1);
-    QString dirPath = QDir::cleanPath(dataDir + "/" + relDir);
-    QDir::root().mkpath(dirPath);
-    QString path = dirPath + "/" + fileName;
+    QString path = relPath;
+    if (path.contains("://")) path = QUrl(path).toLocalFile();
     QFile f(path);
-    if (!f.open(QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text))
+    if (!f.open(QIODevice::ReadWrite|QIODevice::Truncate|QIODevice::Text)) {
+        qDebug() << "could not write to" << path;
         return false;
+    }
     QTextStream out(&f);
     out << content << Qt::endl;
     f.close();
-    QFile::setPermissions(path, QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup|QFileDevice::ReadOther);
+
     return true;
 }
 
-Q_INVOKABLE  QString Conductor::read(const QString &relpath) {
-    QString path = relpath.startsWith(":/") || relpath.startsWith("/") ? relpath
-      : dataDir + "/" + relpath;
+Q_INVOKABLE QString Conductor::read(const QString &relpath) {
+    QString path = relpath;
+    if (path.contains("://")) path = QUrl(path).toLocalFile();
     QFile f(path);
     QString ret = f.open(QIODevice::ReadOnly|QIODevice::Text) ? QTextStream(&f).readAll() : "";
     return ret;
@@ -154,7 +154,7 @@ QQmlComponent* Conductor::loadModule(QString name) {
     QString path = dataDir + "/modules/" + filename;
     QFile f(path);
     QByteArray data = f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray();
-    QQmlComponent *c = new QQmlComponent(engineP);
+    QQmlComponent *c = new QQmlComponent(engineP, this);
     c->setData(data, QUrl("qrc:/app/"+filename));
     return c;
 }

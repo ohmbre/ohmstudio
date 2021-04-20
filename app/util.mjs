@@ -126,6 +126,7 @@ global.loadPatch = (patch,fileName) => {
     if (!data) return false;
     const p = JSON.parse(data)
     const createdModules = []
+    const fresh = patch.modules.length == 0
     p.modules.forEach((m,idx) => {
         const def = moduleDefs[m.name]
         if (def) {
@@ -134,6 +135,10 @@ global.loadPatch = (patch,fileName) => {
                 if (['cvs','idx','name'].indexOf(k) < 0)
                 props[k] = m[k]              
             })
+            if (!fresh) {
+                props.x += 40
+                props.y += 40
+            }
             patch.addModule(def, props)
             createdModules.push(patch.modules[patch.modules.length-1])
         } else console.error("Could not find definition for module",m.name)

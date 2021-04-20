@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Shapes
+import Qt.labs.platform
 
 import "qrc:/app/util.mjs" as Util
 
@@ -107,33 +108,9 @@ ApplicationWindow {
                 submenu = emptyMenu
             }
 
-
             property Component emptyMenu: Rectangle {
                 height: globalHeight
                 width: 0
-            }
-
-            property Component loadPatchMenu: OhmFileChoose {
-                property bool merge: false
-                forLoading: true
-                directory: 'patches'
-                extension: 'qml'
-                onFileChosen: function(fileURL) {
-                    if (!merge) 
-                        pView.loadPatch('Patch {}')
-                    loadPatch(pView.patch, fileURL);
-                    menu.close()
-                }
-            }
-
-            property Component savePatchMenu: OhmFileChoose {
-                forSaving: true
-                directory: 'patches'
-                extension: 'qml'
-                onFileChosen: function(fileURL) {
-                    savePatch(pView.patch, fileURL)
-                    menu.close()
-                }
             }
 
             property Component audioMenu: Rectangle {
@@ -186,6 +163,23 @@ ApplicationWindow {
                 }
             }
 
+            FileDialog {
+                id: patchFile
+                folder: StandardPaths.writableLocation(StandardPaths.AppDataLocation)+'/patches'
+                defaultSuffix: 'json'
+                property var callback: (file)=>{}
+                nameFilters: ['JSON files (*.json)']
+                selectedNameFilter.index: 1
+                onAccepted: {
+                    callback(file)
+                    patchFile.close()                    
+                    menu.close()
+                }
+                onRejected: {
+                    patchFile.close()
+                    menu.close()
+                }
+            }
 
             property Component mainMenu: Column {
                 spacing: 10; width: 85; y: 20
@@ -203,25 +197,32 @@ ApplicationWindow {
                 MenuBtn {
                     text: "Open Patch"
                     onClicked: {
-                        menu.loadPatchMenu.merge = false
-                        menu.submenu = menu.loadPatchMenu
+                        patchFile.fileMode = FileDialog.OpenFile
+                        patchFile.callback = (file) => {
+                            pView.newPatch()
+                            loadPatch(pView.patch, file)
+                        }
+                        patchFile.open()
                     }
                 }
                 MenuBtn {
                     text: "Merge Patch"
                     onClicked: {
-                        menu.loadPatchMenu.merge = true
-                        menu.submenu = menu.loadPatchMenu
+                        patchFile.fileMode = FileDialog.OpenFile
+                        patchFile.callback = (file) => {
+                            loadPatch(pView.patch, file)
+                        }
+                        patchFile.open()
                     }
                 }
                 MenuBtn {
                     text: "Save Patch"
                     onClicked: {
-                        if (menu.submenu != menu.savePatchMenu) {
-                            menu.submenu = menu.savePatchMenu
-                        } else {
-                            menu.subItem.fileChosen(menu.subItem.saveFile)
+                        patchFile.fileMode = FileDialog.SaveFile
+                        patchFile.callback = (file) => {
+                            savePatch(pView.patch, file)
                         }
+                        patchFile.open()
                     }
                 }
                 MenuBtn {
