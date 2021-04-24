@@ -86,23 +86,19 @@ add_executable(ohm
 add_dependencies(ohm libgit2 llvm)
 
 target_link_libraries(ohm PRIVATE Qt6::Core Qt6::Gui Qt6::Svg Qt6::Qml Qt6::Quick Qt6::ShaderTools)
+
 if (MSVC)
     target_link_libraries(ohm PRIVATE winmm winhttp rpcrt4 crypt32 version)
 endif()
 
-find_package(LLVM REQUIRED CONFIG HINTS ${LLVM_PREFIX})
-llvm_map_components_to_libnames(llvm_libnames core orcjit native support option lto coverage)
-
-
-target_link_libraries(ohm PRIVATE ${llvm_libnames}
+target_link_libraries(ohm PRIVATE LLVMCore LLVMOrcJIT LLVMSupport LLVMOption LLVMLTO LLVMCoverage
+  LLVM${arch}CodeGen LLVM${arch}AsmParser LLVM${arch}Desc LLVM${arch}Disassembler LLVM${arch}Info
   clangAST clangBasic clangLex clangCodeGen clangFrontendTool clangFrontend clangEdit clangRewrite 
   clangRewriteFrontend clangSerialization clangStaticAnalyzerFrontend clangSema clangDriver 
   clangParse clangAnalysis clangArcMigrate clangASTMatchers clangAnalysis clangStaticAnalyzerCore
   clangStaticAnalyzerCheckers clangCrossTU clangToolingCore clangIndex)
 
 target_link_libraries(ohm PRIVATE git2)
-
-target_compile_definitions(ohm PRIVATE "CXXJIT_ARGS=")
 
 set_target_properties(ohm PROPERTIES
     QT_QML_MODULE_VERSION 1.0
@@ -111,10 +107,3 @@ set_target_properties(ohm PROPERTIES
 qt_qml_type_registration(ohm)
 
 qt_add_resources(ohm "ohm" PREFIX "/" FILES ${resource_files})
-
-
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
